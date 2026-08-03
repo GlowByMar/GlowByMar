@@ -755,3 +755,6 @@ app.post('/api/registrar-venta', (req, res) => {
 // 🔥 ARRANCAR MOTOR DEL SERVIDOR
 // ==========================================
 const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Servidor de la tienda corriendo exitosamente en el puerto ${PORT}`);
+});
