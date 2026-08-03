@@ -684,7 +684,9 @@ renderizarProductosFiltrados(todosLosProductos);
 
     productosA_Mostrar.forEach(prod => {
     // 1. Configuramos imagen y stock
-    const rutaImagen = prod.fotoUrl || (prod.imagen_original ? `/${prod.imagen_original.replace(/^\//, '')}` : 'https://via.placeholder.com/200');
+    const rutaImagen = prod.imagen && prod.imagen.startsWith('http') 
+    ? prod.imagen 
+    : (prod.imagen_original || `imagenes/${prod.imagen || 'default.jpg'}`);
     const estaAgotado = prod.stock <= 0;
     
     // 2. EL ÚNICO DESCUENTO: Priorizamos el individual, si no hay, tomamos el masivo

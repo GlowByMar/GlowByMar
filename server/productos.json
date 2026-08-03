@@ -8,5 +8,15 @@
     "descuento": 0,
     "stock": 2,
     "imagen_original": "imagenes/joya-1785730421313.jpeg"
+  },
+  {
+    "id": 1785732739141,
+    "nombre": "Aretes de corazón rosado",
+    "categoria": "Aretes",
+    "precio": 30000,
+    "costo": 15000,
+    "descuento": 0,
+    "stock": 2,
+    "imagen_original": "imagenes/joya-1785732739139.jpeg"
   }
 ]
