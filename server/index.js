@@ -750,7 +750,7 @@ app.post('/api/registrar-venta', (req, res) => {
         return res.status(500).json({ exito: false, mensaje: 'Error interno en el servidor.' });
     }
 });
-
+// Intento de despliegue final
 // ==========================================
 // 🔥 ARRANCAR MOTOR DEL SERVIDOR
 // ==========================================
