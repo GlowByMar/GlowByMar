@@ -35,17 +35,18 @@ mongoose.connect(process.env.MONGO_URL)
     .then(() => console.log('¡Conectado permanentemente a MongoDB Atlas!'))
     .catch(err => console.error('Error al conectar a MongoDB:', err));
 
-// // MODELO DE BASE DE DATOS PARA PRODUCTOS
-const productoSchema = new mongoose.Schema({
-    nombre: String,
-    categoria: String,
-    precioVenta: Number,
-    costoCompra: Number,
-    cantidadStock: Number,
-    descuento: Number,
-    imagen: String // Aquí se guardará el link eterno de Cloudinary
+// // MODELO DE BASE DE DATOS PARA PEDIDOS
+const pedidoSchema = new mongoose.Schema({
+    idPedido: String,
+    fecha: { type: Date, default: Date.now },
+    cliente: String,
+    contacto: String,
+    direccion: String,
+    productos: Array,
+    total: Number,
+    estado: { type: String, default: 'PENDIENTE' }
 });
-const Producto = mongoose.model('Producto', productoSchema, 'productos');
+const Pedido = mongoose.model('Pedido', pedidoSchema, 'pedidos');
 
 // Variable global para controlar las promociones del panel
 let ofertasTemporales = {
@@ -212,7 +213,7 @@ app.post('/api/comprar', upload.single('comprobante'), (req, res) => {
 // y reemplaza el .push dentro del forEach por esto:
 
 // ... dentro de tu forEach ...
-desgloseArticulos.push({
+    desgloseArticulos.push({
     nombre: prodBD.nombre,
     cantidad: itemIntento.cantidad,
     precioOriginal: prodBD.precio, 
@@ -285,46 +286,63 @@ app.delete('/api/productos/:id', (req, res) => {
     });
 });
 
-// ==========================================
-// RUTA 5: Traer todos los pedidos realizados
-// ==========================================
-app.get('/api/pedidos', (req, res) => {
-    const rutaPedidos = path.join(__dirname, 'pedidos.json');
-    fs.readFile(rutaPedidos, 'utf8', (err, data) => {
-        if (err || !data) return res.json([]);
-        try { res.json(JSON.parse(data)); } catch(e) { res.json([]); }
-    });
+// // RUTA 5: Traer todos los pedidos realizados directamente desde MongoDB Atlas
+app.get('/api/pedidos', async (req, res) => {
+    try {
+        // Busca todos los pedidos guardados en la nube organizados por los más recientes
+        const pedidos = await Pedido.find({});
+        res.json(pedidos);
+    } catch (error) {
+        console.error('Error al traer pedidos de MongoDB:', error);
+        res.json([]); // Si falla, devuelve una lista vacía para que no se rompa el panel
+    }
 });
 
 // ==========================================
-// RUTAS 6 Y 7: Despachar y Entregar
-// ==========================================
-app.put('/api/pedidos/:id/despachar', (req, res) => {
-    const idPedido = parseInt(req.params.id);
-    const rutaPedidos = path.join(__dirname, 'pedidos.json');
-    fs.readFile(rutaPedidos, 'utf8', (err, data) => {
-        if (err) return res.status(500).json({ exito: false, mensaje: "Error al leer pedidos" });
-        let pedidos = JSON.parse(data || '[]');
-        const pedido = pedidos.find(p => p.idPedido === idPedido);
-        if (!pedido) return res.status(404).json({ exito: false, mensaje: "Pedido no encontrado" });
-        pedido.estado = 'Despachado';
-        pedido.transportadora = req.body.transportadora;
-        pedido.numeroGuia = req.body.numeroGuia;
-        fs.writeFile(rutaPedidos, JSON.stringify(pedidos, null, 2), () => res.json({ exito: true }));
-    });
+// // RUTA 6: Despachar un pedido asignando transportadora y guía en MongoDB Atlas
+app.put('/api/pedidos/:id/despachar', async (req, res) => {
+    try {
+        const idPedido = req.params.id;
+        const { transportadora, numeroGuia } = req.body;
+
+        // Buscamos el pedido en la nube y le actualizamos sus campos en un segundo
+        const pedidoActualizado = await Pedido.findOneAndUpdate(
+            { idPedido: idPedido },
+            { 
+                estado: 'Despachado',
+                transportadora: transportadora,
+                numeroGuia: numeroGuia
+            },
+            { new: true }
+        );
+
+        if (!pedidoActualizado) return res.status(404).json({ exito: false, mensaje: "Pedido no encontrado." });
+
+        res.json({ exito: true, mensaje: "¡Pedido marcado como despachado con éxito!" });
+    } catch (error) {
+        console.error("Error al despachar:", error);
+        res.status(500).json({ exito: false, mensaje: "Error interno al despachar el pedido." });
+    }
 });
 
-app.put('/api/pedidos/:id/entregar', (req, res) => {
-    const idPedido = parseInt(req.params.id);
-    const rutaPedidos = path.join(__dirname, 'pedidos.json');
-    fs.readFile(rutaPedidos, 'utf8', (err, data) => {
-        if (err) return res.status(500).json({ exito: false, mensaje: "Error al leer pedidos" });
-        let pedidos = JSON.parse(data || '[]');
-        const pedido = pedidos.find(p => p.idPedido === idPedido);
-        if (!pedido) return res.status(404).json({ exito: false, mensaje: "Pedido no encontrado" });
-        pedido.estado = 'Entregado';
-        fs.writeFile(rutaPedidos, JSON.stringify(pedidos, null, 2), () => res.json({ exito: true }));
-    });
+// // RUTA 7: Entregar un pedido cambiando su estado final en MongoDB Atlas
+app.put('/api/pedidos/:id/entregar', async (req, res) => {
+    try {
+        const idPedido = req.params.id;
+
+        const pedidoActualizado = await Pedido.findOneAndUpdate(
+            { idPedido: idPedido },
+            { estado: 'Entregado' },
+            { new: true }
+        );
+
+        if (!pedidoActualizado) return res.status(404).json({ exito: false, mensaje: "Pedido no encontrado." });
+
+        res.json({ exito: true, mensaje: "¡Pedido marcado como entregado de forma permanente!" });
+    } catch (error) {
+        console.error("Error al entregar:", error);
+        res.status(500).json({ exito: false, mensaje: "Error interno al entregar el pedido." });
+    }
 });
 
 // ==========================================

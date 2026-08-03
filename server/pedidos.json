@@ -1,1 +1,27 @@
-[]
+[
+  {
+    "idPedido": 1,
+    "fecha": "3/8/2026, 12:02:53 a. m.",
+    "estado": "Entregado",
+    "cliente": "juan gutierrez",
+    "telefono": "3152404413",
+    "direccion": "calle 60 sur",
+    "total": 30000,
+    "comprobanteUrl": "/imagenes/joya-1785733373678.jpeg",
+    "articulosDetallados": [
+      {
+        "nombre": "Aretes de corazón rosado",
+        "cantidad": 1,
+        "precioOriginal": 30000,
+        "descuentoAplicado": 0,
+        "precioEfectivoUnidad": 30000,
+        "subtotal": 30000
+      }
+    ],
+    "articulos": [
+      "Aretes de corazón rosado (x1)"
+    ],
+    "transportadora": "servientrega",
+    "numeroGuia": "1324"
+  }
+]
