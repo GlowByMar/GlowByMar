@@ -3,32 +3,49 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const cors = require('cors');
-const PDFDocument = require('pdfkit'); 
+const PDFDocument = require('pdfkit');
+const mongoose = require('mongoose');
+const cloudinary = require('cloudinary').v2;
+require('dotenv').config();
 
 const app = express();
 
-// Configuración de Middlewares Básicos
+// // Configuración de Middlewares Básicos
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ==========================================
-// 🛠️ CONFIGURACIÓN DE RUTAS ESTÁTICAS Y DIRECTORIOS
-// ==========================================
-const carpetaImagenesFisica = path.join(__dirname, '../public/imagenes');
-if (!fs.existsSync(carpetaImagenesFisica)) {
-    fs.mkdirSync(carpetaImagenesFisica, { recursive: true });
-}
+// // CONFIGURACIÓN DE RUTAS ESTÁTICAS Y DIRECTORIOS
 app.use('/', express.static(path.join(__dirname, '../public')));
+app.use('/admin', express.static(path.join(__dirname, '../public/admin')));
 
-// ==========================================
-// 📂 CONFIGURACIÓN DE MULTER
-// ==========================================
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => { cb(null, carpetaImagenesFisica); },
-    filename: (req, file, cb) => { cb(null, `joya-${Date.now()}${path.extname(file.originalname)}`); }
-});
+// // CONFIGURACIÓN DE MULTER (Memoria temporal para Cloudinary)
+const storage = multer.diskStorage({});
 const upload = multer({ storage: storage });
+
+// // CONFIGURACIÓN DE CLOUDINARY
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// // CONEXIÓN A MONGODB ATLAS
+mongoose.connect(process.env.MONGO_URL)
+    .then(() => console.log('¡Conectado permanentemente a MongoDB Atlas!'))
+    .catch(err => console.error('Error al conectar a MongoDB:', err));
+
+// // MODELO DE BASE DE DATOS PARA PRODUCTOS
+const productoSchema = new mongoose.Schema({
+    nombre: String,
+    categoria: String,
+    precioVenta: Number,
+    costoCompra: Number,
+    cantidadStock: Number,
+    descuento: Number,
+    imagen: String // Aquí se guardará el link eterno de Cloudinary
+});
+const Producto = mongoose.model('Producto', productoSchema, 'productos');
 
 // Variable global para controlar las promociones del panel
 let ofertasTemporales = {
@@ -38,123 +55,116 @@ let ofertasTemporales = {
 };
 
 // ==========================================
-// RUTA 1: Traer todos los productos
+// RUTA 1: Traer todos los productos procesando ofertas globales, por categoría e individuales (VERSIÓN INDESTRUCTIBLE MONGODB)
 // ==========================================
-// ==========================================
-// RUTA 1: Traer todos los productos procesando ofertas globales, por categoría e individuales (VERSIÓN SEGURA)
-// ==========================================
-app.get('/api/productos', (req, res) => {
-    const rutaArchivo = path.join(__dirname, 'productos.json');
+app.get('/api/productos', async (req, res) => {
+    try {
+        // Traemos todos los productos desde MongoDB Atlas en lugar del archivo JSON local
+        let productos = await Producto.find({});
 
-    fs.readFile(rutaArchivo, 'utf8', (err, data) => {
-        if (err) return res.status(500).json({ mensaje: 'Error al leer los productos.' });
+        let productosProcesados = productos.map(doc => {
+            // Convertimos el documento de MongoDB a un objeto de JavaScript estándar
+            const prod = doc.toObject();
 
-        try {
-            let productos = JSON.parse(data || '[]');
+            const descIndividual = parseInt(prod.descuento || 0); // Usamos tu nuevo campo 'descuento'
+            const descGlobal = ofertasTemporales && ofertasTemporales.global ? parseInt(ofertasTemporales.global) : 0;
 
-            let productosProcesados = productos.map(prod => {
-                const descIndividual = parseInt(prod.descIndividual || 0);
-                const descGlobal = ofertasTemporales && ofertasTemporales.global ? parseInt(ofertasTemporales.global) : 0;
+            let descCategoria = 0;
+            if (ofertasTemporales && ofertasTemporales.categoria && prod.categoria) {
+                const catOferta = ofertasTemporales.categoria.toUpperCase().trim();
+                const catProducto = prod.categoria.toUpperCase().trim();
 
-                let descCategoria = 0;
-                if (ofertasTemporales && ofertasTemporales.categoria && prod.categoria) {
-                    // Limpiamos espacios y pasamos a mayúsculas
-                    const catOferta = ofertasTemporales.categoria.toUpperCase().trim();
-                    const catProducto = prod.categoria.toUpperCase().trim();
+                const coincidenExacto = (catOferta === catProducto);
+                const ofertaEsPlural = (catOferta === catProducto + 'S' || catOferta === catProducto + 'ES');
+                const productoEsPlural = (catProducto === catOferta + 'S' || catProducto === catOferta + 'ES');
 
-                    // COMPARACIÓN INTELIGENTE (Sin romper palabras como TENIS o GAFAS)
-                    const coincidenExacto = (catOferta === catProducto);
-                    const ofertaEsPlural = (catOferta === catProducto + 'S' || catOferta === catProducto + 'ES');
-                    const productoEsPlural = (catProducto === catOferta + 'S' || catProducto === catOferta + 'ES');
-
-                    if (coincidenExacto || ofertaEsPlural || productoEsPlural) {
-                        descCategoria = parseInt(ofertasTemporales.porcentajeCategoria || 0);
-                    }
+                if (coincidenExacto || ofertaEsPlural || productoEsPlural) {
+                    descCategoria = parseInt(ofertasTemporales.porcentajeCategoria || 0);
                 }
+            }
 
-                // ================================================================
-                // 🕵️‍♂️ EL ESPÍA ADSO FUNCIONANDO SIN ERRORES DE SINTAXIS
-                // ================================================================
-                if (prod.nombre && (prod.nombre.toLowerCase().includes('reloj') || prod.nombre.toLowerCase().includes('cadena') || prod.nombre.toLowerCase().includes('diglett'))) {
-                    console.log(`\n🕵️‍♂️ [ESPÍA ADSO] Producto: "${prod.nombre}"`);
-                    console.log(` - Categoría en JSON: "${prod.categoria}"`);
-                    console.log(` - Buscando Oferta de Categoría: "${ofertasTemporales ? ofertasTemporales.categoria : 'NINGUNA'}"`);
-                    console.log(` - Descuento final calculado: ${descCategoria}%`);
-                }
-                // ================================================================
+            // 🕵️‍♂️ EL ESPÍA ADSO FUNCIONANDO EN LA NUBE
+            if (prod.nombre && (prod.nombre.toLowerCase().includes('reloj') || prod.nombre.toLowerCase().includes('cadena') || prod.nombre.toLowerCase().includes('diglett'))) {
+                console.log(`\n🕵️‍♂️ [ESPÍA ADSO] Producto: "${prod.nombre}"`);
+                console.log(` - Categoría en DB: "${prod.categoria}"`);
+                console.log(` - Buscando Oferta de Categoría: "${ofertasTemporales ? ofertasTemporales.categoria : 'NINGUNA'}"`);
+                console.log(` - Descuento final calculado: ${descCategoria}%`);
+            }
 
-                // Prioridad de descuentos
-                // --- LÓGICA CORREGIDA ---
+            // Lógica de prioridad de descuentos original intacta
+            let descuentoApplied = 0;
 
+            if (descIndividual > 0) {
+                descuentoApplied = descIndividual;
+            } 
+            else if (descCategoria > 0) {
+                descuentoApplied = descCategoria;
+            } 
+            else if (descGlobal > 0) {
+                descuentoApplied = descGlobal;
+            }
 
-// DEPURACIÓN: Esto nos dirá si el servidor realmente ve el 50% o el 80% que pusiste
-console.log(`Producto: ${prod.nombre} | Viendo descIndividual: ${descIndividual}`);
+            // Aseguramos que use 'precioVenta' que es el nombre estándar del formulario del administrador
+            const precioBase = prod.precioVenta || prod.precio || 0;
 
-// --- Lógica mejorada de prioridad ---
-let descuentoApplied = 0;
+            return {
+                ...prod,
+                precio: precioBase, // Mapeo de compatibilidad con el frontend viejo
+                descuentoEfectivo: descuentoApplied, 
+                precioConDescuento: precioBase - (precioBase * (descuentoApplied / 100))
+            };
+        });
 
-// 1. Prioridad: Individual (si es mayor a 0)
-if (descIndividual > 0) {
-    descuentoApplied = descIndividual;
-} 
-// 2. Si no hay individual, miramos categoría (solo si aplica)
-else if (descCategoria > 0) {
-    descuentoApplied = descCategoria;
-} 
-// 3. Si tampoco hay categoría, miramos el global
-else if (descGlobal > 0) {
-    descuentoApplied = descGlobal;
-}
+        res.json(productosProcesados);
 
-// Y luego calculas el precio final con ese descuento
-let precioFinal = prod.precio - (prod.precio * (descuentoApplied / 100));
-
-// IMPORTANTE: Envía esto al frontend
-// ... dentro de tu map
-return {
-    ...prod,
-    // Aquí es donde el frontend debe ver el descuento
-    descuentoEfectivo: descuentoApplied, 
-    precioConDescuento: prod.precio - (prod.precio * (descuentoApplied / 100))
-};
-            });
-
-            res.json(productosProcesados);
-
-        } catch (e) {
-            res.status(500).json({ mensaje: 'Error al procesar el JSON de productos.' });
-        }
-    });
+    } catch (e) {
+        console.error('Error en Ruta 1:', e);
+        res.status(500).json({ mensaje: 'Error al procesar los productos desde MongoDB.' });
+    }
 });
 
 // ==========================================
-// RUTA 2: Recibir el accesorio nuevo
+// RUTA 2: Recibir el accesorio nuevo y guardarlo en la nube (AUTOMÁTICO 100%)
 // ==========================================
-app.post('/api/productos', upload.single('foto'), (req, res) => {
+app.post('/api/productos', upload.single('foto'), async (req, res) => {
     try {
-        const rutaProductos = path.join(__dirname, 'productos.json');
-        const productos = fs.existsSync(rutaProductos) ? JSON.parse(fs.readFileSync(rutaProductos, 'utf-8') || '[]') : [];
         const { nombre, categoria, precio, costo, stock, descripcion, descuento } = req.body;
 
-        if (!req.file) return res.status(400).json({ exito: false, mensaje: "Falta la foto." });
+        // Validamos que el administrador haya seleccionado un archivo
+        if (!req.file) {
+            return res.status(400).json({ exito: false, mensaje: "Falta la foto del accesorio." });
+        }
 
-        const nuevoProducto = {
-            id: Date.now(),
-            nombre,
-            categoria,
-            precio: parseInt(precio || 0),
-            costo: parseFloat(req.body.costo), // <--- ESTO ES LO NUEVO
-            descuento: parseInt(descuento || 0), 
-            stock: parseInt(stock || 0),
-            descripcion,
-            imagen_original: `imagenes/${req.file.filename}`
-        };
+        // 1. Enviamos la foto física directamente a tu cuenta de Cloudinary
+        const resultadoCloudinary = await cloudinary.uploader.upload(req.file.path, {
+            folder: "glowbymar_tienda" // Crea automáticamente una carpeta organizada en tu nube
+        });
 
-        productos.push(nuevoProducto);
-        fs.writeFileSync(rutaProductos, JSON.stringify(productos, null, 2), 'utf-8');
-        res.json({ exito: true, mensaje: "¡Producto guardado con éxito!" });
+        // 2. Armamos la información para MongoDB con el enlace eterno de la foto
+        const nuevoProducto = new Producto({
+            nombre: nombre,
+            categoria: categoria,
+            precioVenta: parseInt(precio || 0),
+            costoCompra: parseFloat(costo || 0),
+            cantidadStock: parseInt(stock || 0),
+            descuento: parseInt(descuento || 0),
+            imagen: resultadoCloudinary.secure_url // <-- El link que nos da Cloudinary (NUNCA se borra)
+        });
+
+        // 3. Guardamos los datos en tu base de datos indestructible
+        await nuevoProducto.save();
+
+        res.json({ 
+            exito: true, 
+            mensaje: "¡Accesorio guardado con éxito en MongoDB y Cloudinary!" 
+        });
+
     } catch (error) {
-        res.status(500).json({ exito: false, mensaje: "Error interno." });
+        console.error("Error al registrar el accesorio:", error);
+        res.status(500).json({ 
+            exito: false, 
+            mensaje: "Hubo un error interno en el servidor al subir la mercancía." 
+        });
     }
 });
 
