@@ -1,0 +1,11 @@
+# Dependencias de Node (¡Nunca se deben subir!)
+node_modules/
+server/node_modules/
+
+# Variables de entorno y contraseñas secretas
+.env
+server/.env
+
+# Archivos temporales del sistema operativo
+.DS_Store
+Thumbs.db

@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tienda de Accesorios - GlowByMar</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <style>
+    /* Tipografía elegante y variables de color */
+    @import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Playfair+Display:ital,wght@0,500;1,500&display=swap');
+
+    :root {
+        --color-oscuro: #111111;
+        --color-dorado: #d4af37;
+        --color-gris-claro: #f9f9f9;
+        --color-texto: #333333;
+    }
+
+    body { 
+        font-family: 'Lato', sans-serif; 
+        /* 🎨 DEGRADADO BICOLOR PREMIUM */
+        background: linear-gradient(135deg, #c4709e 0%, #e4d4cd 45%, #d1c4be 100%);
+        background-attachment: fixed;
+        letter-spacing: 0.5px;
+        margin: 0; 
+        padding-top: 80px; /* ⬅️ Espacio corregido para que la galería no se tape */
+        color: var(--color-texto);
+    }
+
+    /* Navbar Premium */
+    .navbar {
+        background: linear-gradient(135deg, #c4709e 0%, #ffffff 45%, #d1c4be 100%);
+        border-bottom: 1px solid #eaeaea;
+        padding: 9px 25px;
+        position: fixed; /* ⬅️ Cambiado a fixed para que el menú acompañe el scroll */
+        top: 25px;       /* ⬅️ Corregido el 'px' que faltaba */
+        left: 0;
+        right: 0;
+        display: flex;
+        width: 100%;
+        transition: top 0.3s; /* Esto hace que el movimiento sea elegante */
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        backdrop-filter: blur(5px);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+    }
+
+    /* 🛒 MINI EMERGENTE FLOTANTE (Corregido y posicionado al lado del botón) */
+    .mini-carrito-dropdown {
+        display: none;             /* ⬅️ Empieza oculto para que el script funcione */
+        position: fixed !important; 
+        bottom: 100px;              /* Abre justo encima del botón flotante */
+        right: 30px;               
+        background: white;
+        border: 1px solid #d4af37;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        z-index: 5000;             
+        width: 290px;
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 12px;
+    }
+
+    /* Clase que activa el JavaScript para mostrarlo */
+    .mini-carrito-dropdown.activo {
+        display: block !important;
+    }
+
+    .fila-mini-producto {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: #34495e;
+        padding: 8px 0;
+        border-bottom: 1px solid #f8f9fa;
+    }
+
+    .btn-ver-carrito-completo {
+        background-color: var(--color-oscuro);
+        color: white;
+        border: none;
+        width: 100%;
+        padding: 11px;
+        margin-top: 12px;
+        border-radius: 5px;
+        font-weight: bold;
+        font-size: 12px;
+        cursor: pointer;
+        transition: background 0.2s;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .btn-ver-carrito-completo:hover {
+        background-color: var(--color-dorado);
+    }
+
+    /* 💳 SECCIÓN COMPLETA DE REVISIÓN Y PAGO */
+    #seccion-carrito-completo {
+        display: none; 
+        margin: 40px auto;
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        border: 1px solid #eaeaea;
+        width: 100%;
+        max-width: 900px;
+        box-sizing: border-box;
+    }
+
+    .contenedor { 
+        max-width: 1200px; 
+        margin: 90px auto; 
+        padding: 0 20px;
+    }
+
+    h2.seccion-titulo {
+        font-family: 'Playfair Display', serif;
+        text-align: center;
+        font-weight: 550;
+        font-size: 30px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+        color: #c466ac;
+    }
+
+    #lista-productos { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+        gap: 35px; 
+    }
+
+    .producto-card { 
+        background: transparent !important; /* Tarjeta transparente */ 
+        border: none !important;            /* Sin bordes duros */
+        border-radius: 12px; 
+        overflow: hidden; 
+        box-shadow: none !important;        /* Sin sombra */
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #f0f0f0;
+   }
+
+    .producto-card:hover { 
+        transform: translateY(-8px); 
+        box-shadow: 0 15px 30px rgba(17, 17, 17, 0.08); 
+    }
+
+    .producto-imagen-wrapper {
+        width: 100%;
+        aspect-ratio: 1 / 1; 
+        overflow: hidden;
+        background-color: #ffffff;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px; 
+    }
+
+    .producto-card img { 
+        width: 99.4% !important; 
+        height: 99.5% !important; 
+        object-fit: cover !important; 
+        transition: transform 1.2s ease-out;
+        border-radius: 12px; 
+    }
+
+    .producto-card:hover img {
+        transform: scale(1.06);
+    }
+
+    .producto-info { 
+    padding: 10px 0; /* Reducimos el espacio arriba y abajo */
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+    .producto-categoria {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: #bfa3a7; 
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+    .producto-card h3 { 
+    margin: 0 0 8px 0; 
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--color-oscuro);
+    letter-spacing: 0.5px;
+    font-style: italic; /* <--- Esta es la línea mágica */
+    }
+
+    .producto-desc {
+       color: #4a4a4a; /* Un gris un poco más sólido */
+        margin-bottom: 10px; /* Reducimos la separación con el precio */
+    font-size: 14px;
+    }
+
+    .producto-meta {
+    display: flex;
+    justify-content: space-between; /* Mantiene precio a la izq y botón a la der */
+    align-items: center;
+    margin-top: 5px;               /* Un poquito más de separación */
+    padding-top: 10px;
+    border-top: 1px solid #f0f0f0;  /* Un tono un poco más visible para definir la sección */
+}
+
+    .producto-precio { 
+    font-size: 19px; 
+    font-weight: 800;   /* Un poco más negrita */
+    color: #000;        /* Un negro suave en lugar de muy oscuro */
+    letter-spacing: -0.5px; /* Las fuentes premium suelen ir más juntitas */
+}
+
+    .producto-stock {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-agregar {
+    background-color: #e938bd;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 50px; /* Bordes redondeados dan sensación de modernidad */
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: background-color 0.3s ease, transform 0.2s;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center; /* Alinea icono y texto verticalmente */
+    justify-content: center; /* Centra todo en el botón */
+    gap: 8px; /* Espacio entre el carrito y la palabra */
+    padding: 6px 16px;
+    font-size: 16px; /* Un tamaño de letra más elegante y pequeño */
+    width: 100%; /* Esto hará que el botón ocupe todo el ancho de la tarjeta */
+    box-sizing: border-box;
+}
+
+.btn-agregar svg {
+        flex-shrink: 0; /* Evita que el icono se encoja */
+        width: 16px !important;
+        height: 16px !important;
+    }
+
+.btn-agregar:hover {
+    background-color: #b8962d; /* Dorado un poco más oscuro al pasar el mouse */
+    transform: translateY(-1px); /* Un pequeño efecto de elevación */
+}
+
+    .btn-agotado {
+    background-color: #6cacd6 !important;
+    color: #ffffff !important;
+    border: 1px solid #e6e6e6 !important;
+    cursor: not-allowed !important;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 14px;      /* <--- AJUSTA ESTE VALOR (puedes probar con 9px u 8px) */
+    text-align: center;
+    line-height: 1;        /* Ayuda a que el texto no se desplace verticalmente */
+    padding: 5px;          /* Un pequeño espacio para que no toque los bordes */
+    word-wrap: break-word; /* Si la palabra fuera larga, evita que se salga del círculo */
+
+    }
+
+    #boton-qr {
+    background-color: #f8f8fa; /* Color de fondo suave */
+    border: 1px solid #d0ceda; /* Borde sutil */
+    color: #3e4144;            /* Color de letra profesional */
+    padding: 8px 15px;         /* Tamaño compacto */
+    border-radius: 5px;        /* Bordes redondeados */
+    font-weight: 500;
+    cursor: pointer;
+    width: 100%;               /* Que ocupe el ancho */
+    margin: 12px 0;            /* ¡ESTO ES LO QUE DA EL ESPACIO! */
+    text-align: center;
+    font-family: inherit;
+    transition: background 0.3s;
+}
+
+#boton-qr:hover {
+    background-color: #e2e6ea;
+}
+
+    /* 💎 ESTILOS DEL CARRITO FLOTANTE */
+    .carrito-flotante {
+        position: fixed;
+        bottom: 75px;      
+        right: 5px;       
+        background-color: #111111; 
+        color: #ffffff;
+        border: 1px solid #d4af37; 
+        width: 60px;
+        height: 60px;
+        border-radius: 50px; 
+        cursor: pointer;
+        z-index: 4000;     
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .carrito-flotante:hover {
+        transform: scale(1.1) translateY(-3px); 
+        background-color: #f9f0e2; 
+        color: #111111;
+        box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4); 
+    }
+
+    .carrito-contenido {
+        position: relative;
+        font-size: 22px; 
+    }
+
+    .contador-burbuja {
+        position: absolute;
+        top: -12px;
+        right: -12px;
+        background-color: #d4af37; 
+        color: #111111;
+        font-family: 'Montserrat', sans-serif;
+        font-size: 11px;
+        font-weight: 700;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #111111;
+    }
+    
+    .ocultar-visualmente {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+/* Esto solo afecta pantallas pequeñas (celulares) */
+@media (max-width: 600px) {
+    #barra-ofertas {
+        font-size: 11px !important;    /* Hacemos la letra más pequeña */
+        letter-spacing: 1px !important; /* Reducimos el espacio entre letras */
+        padding: 5px 2px !important;    /* Ajustamos el relleno para que no se desborde */
+    }
+}
+
+/* Contenedor principal de la cinta */
+.cinta-cuidados-container {
+    width: 100%;
+    background-color: #fcf6f0; /* Un tono nude/dorado muy sutil que combina con tu marca */
+    border-top: 2px solid #e8d5cc;
+    border-bottom: 2px solid #e8d5cc;
+    overflow: hidden;
+    white-space: nowrap;
+    padding: 0; /* Asegúrate de que esté en 0 */
+    margin: 0;  /* Agrega esto para quitarle espacio por fuera */
+    box-sizing: border-box;
+    position: relative;
+}
+
+/* Pista que contiene los textos y se mueve */
+.cinta-track {
+    display: inline-block;
+    white-space: nowrap;
+    animation: desplazarCinta 45s linear infinite;
+}
+
+/* Estilo individual de cada frase */
+.cinta-track span {
+    display: inline-block;
+    font-size: 13px;
+    color: #5a4a42;
+    font-weight: 500;
+    padding-right: 50px; /* Espacio de separación entre frase y frase */
+}
+
+/* Animación fluida de derecha a izquierda */
+@keyframes desplazarCinta {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+    </style>
+</head>
+<body>
+
+        <div id="barra-ofertas" style="
+        background: linear-gradient(90deg, #d4af37 0%, #f9f0e2 50%, #d4af37 100%);
+        color: #111111;
+        text-align: center;
+        padding: 0px 15px;
+        font-family: 'Montserrat', sans-serif;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        position: fixed; /* Cambiado a fixed para que acompañe el scroll */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 25px;
+        z-index: 3000; 
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        overflow: hidden;
+        display: flex;
+        align-items: center;      /* Centra los elementos verticalmente (de arriba a abajo) */
+        justify-content: center;  /* Centra los elementos horizontalmente (de izquierda a derecha) */
+    ">
+        <div id="texto-oferta" style="transition: opacity 0.5s ease-in-out; display: inline-block;">
+            ✨ Brilla con luz propia, te mereces todo lo lindo.
+        </div>
+    </div>
+        
+  
+<!-- 
+    /*El contenedor flotante*/
+    <div id="anuncio-flotante" style="position: fixed; top: 2px; left: 10px; z-index: 10000; background-color: #f2d9d9; padding: 10px 10px 10px 10px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); width: 100px;">
+        /* Botón de X */
+    <button onclick="document.getElementById('anuncio-flotante').style.display='none'" 
+            style="position: absolute; top: 10px; right: 5px; background: none; border: none; font: size 5px; cursor: pointer; color: #555; line-height: 1;">
+        &times;
+    </button>
+    <p id="texto-anuncio" style="margin: 0; font-size: 14px; color: #333; text-align: center;">Cargando ofertas...</p>
+</div>
+-->
+
+
+    <nav class="navbar" style="width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12.5px 0; background: linear-gradient(to bottom, #ffffff, #f2d9d9);">
+        <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+            <img src="imagenes/mi-logo.png" alt="Logo" style="height: 60px; width: auto; display: block;">
+            <div style="font-family: 'Playfair Display', serif; font-weight: 500; font-size: 23px; letter-spacing: 4px; color: #333; margin-top: 5px;">
+    GLOW BY MAR
+    <br>
+    <small style="font-size: 10px; letter-spacing: 4px; color: #4b4a4a; font-weight: 300; display: block; margin-top: 2px;">ACCESORIOS</small>
+</div>
+        </div>
+    </nav>
+    
+
+
+
+    <div class="contenedor">
+        <h2 class="seccion-titulo"> Nuestra Colección de Accesorios </h2>
+        
+        <!-- Botón Lupa -->
+<div id="contenedor-busqueda" style="text-align: center; margin-bottom: 35px;">
+    <button id="btn-lupa" onclick="toggleBuscador()" style="background: none; border: none; font-size: 24px; cursor: pointer;">🔍</button>
+
+    <!-- Buscador oculto -->
+    <div id="buscador-desplegable" style="display: none; margin-top: 15px;">
+        <select id="filtro-categoria" onchange="filtrarProductos(); toggleBuscador();" style="padding: 8px 20px; border-radius: 20px; border: 1px solid #ddd; outline: none;">
+            <option value="Todos">✨ Mostrar Todo</option>
+            <option value="Cadenas">Cadenas</option>
+            <option value="Pulseras">Pulseras</option>
+            <option value="Anillos">Anillos</option>
+            <option value="Relojes">Relojes</option>
+            <option value="Aretes">Aretes</option>
+            <option value="Juegos">Juegos</option>
+        </select>
+    </div>
+</div>
+
+        <div id="lista-productos"></div>
+    </div>
+
+    <div id="seccion-carrito-completo" style="display: none; margin-top: 30px; padding: 20px; border: 1px solid #eee; border-radius: 8px; background: #fff;">
+        <h3 style="margin-top:0; font-weight:600; text-transform:uppercase; letter-spacing:1px; color: var(--color-oscuro); text-align: center;">🛒 Resumen de su Pedido</h3>
+        
+        <table style="width: 100%; text-align: left; border-collapse: collapse; margin-bottom: 25px; font-size: 14px;">
+            <thead>
+                <tr style="border-bottom: 2px solid #111; height: 35px; text-transform:uppercase; font-size:12px; letter-spacing:1px;">
+                    <th style="padding: 10px 0;">Producto</th>
+                    <th>Precio U.</th>
+                    <th>Cantidad</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpo-tabla-carrito"></tbody>
+        </table>
+
+        <h3 style="font-family:Arial, Helvetica, sans-serif ;font-weight:600; text-transform:uppercase; letter-spacing:1px; color: var(--color-oscuro); text-align: center; margin-top: 30px;">📦 Datos de Envío</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+            <div style="display: flex; flex-direction: column; gap: 5px;">
+                <label style="font-family:Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif 10px; font-weight: 600; text-transform: uppercase;">Nombre Completo *</label>
+                <input type="text" id="envio-nombre" placeholder="Ej. Juan Pérez" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Montserrat' 11px;">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 5px;">
+                <label style="font-family:Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif 10px; font-weight: 600; text-transform: uppercase;">Teléfono / WhatsApp *</label>
+                <input type="tel" id="envio-telefono" placeholder="Ej. 3001234567" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Montserrat' 11px;">
+            </div>
+            <div style="display: grid; grid-column: 1 / -1; flex-direction: column; gap: 5px;">
+                <label style="font-family:Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif 10px; font-weight: 600; text-transform: uppercase;">Dirección de Entrega *</label>
+                <input type="text" id="envio-direccion" placeholder="Ej. Calle 10 # 45-20, Medellín" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Montserrat' 11px;">
+            </div>
+        </div>
+
+        <h3 style="font-weight:600; text-transform:uppercase; letter-spacing:1px; color: var(--color-oscuro); text-align: center; margin-top: 30px;">💵 Método de Pago</h3>
+        <div style="background-color: #fdfaf4; border: 1px solid #d4af37; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: left;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <span style="background-color: #700070; color: white; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; font-family: 'Montserrat';">NEQUI</span>
+                <!-- <strong style="color: #111; font-size: 14px;">Transferencia Directa</strong> -->
+            </div>
+            <p style="font-family:Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif 10px; color: #555; margin: 0 0 5px 0; line-height: 1.5; font-family: 'Montserrat' 9px;">
+                "¡Ya casi es tuyo! ✨ Para confirmar tu pedido, puedes hacer el pago o transferencia por Nequi a nuestra cuenta oficial:"
+                <br>
+                📱 <strong>Número Nequi: 3164457177 - Llave Nequi: @3164457177</strong> (Glow By Mar)
+            </p>
+            
+            <!--
+            <div class="seccion-qr">
+    <button type="button" id="boton-qr">
+    📸 QR Pagos
+</button>
+
+<div id="contenedor-qr" style="display: none; margin-bottom: 20px; text-align: center;">
+    <img src="imagenes/qr-nequi.png" alt="Código QR Nequi" style="width: 150px; border: 1px solid #ddd; border-radius: 8px;">
+</div>
+</div>
+-->
+            <div style="display: flex; flex-direction: column; gap: 5px;">
+                <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: #111;">Adjuntar comprobante de pago (Captura/Imagen) *</label>
+                <input type="file" id="envio-comprobante" accept="image/*" style="padding: 8px; background: white; border: 1px solid #ccc; border-radius: 5px; font-family: 'Montserrat'; font-size: 12px;">
+            </div>
+        </div>
+        
+        
+
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; width: 100%;">
+    
+    <h4 style="color: var(--color-oscuro); font-size: 20px; margin: 0 0 10px 0; font-weight: 700; text-align: center;" id="total-precio-real">
+        Total a Pagar: $0 COP
+    </h4>
+
+    <button type="button" onclick="cerrarCompraCliente()" style="background: #439C69; color: white; border: none; padding: 10px; border-radius: 15px; cursor: pointer; font-weight: bold; font-size: 15px; text-transform: uppercase; letter-spacing: 1px; font-family: 'Montserrat'; width: 100%;">
+        Finalizar Compra 
+    </button>
+    
+    <button type="button" onclick="vaciarCarrito()" style="background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 15px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 14px; letter-spacing: 1px; font-family: 'Montserrat'; width: 100%;">
+        Vaciar Carrito
+    </button>
+
+    </div>
+    </div>
+
+    <footer style="text-align: center; padding: 20px 20px 15px 20px; background-color: rgba(255, 255, 255, 0.65); margin-top: 50px; border-top: 1px solid rgba(0,0,0,0.05); backdrop-filter: blur(5px);">
+        <p style="font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--color-oscuro); margin-bottom: 10px;">
+            ✨ Conéctate con Glow By Mar ✨
+        </p>
+        
+        <div style="display: flex; justify-content: center; gap: 25px;">
+            <a href="https://instagram.com/glowbymaraccesorios?utm_source=qr" target="_blank" style="color: #bc2a8d; font-size: 28px; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
+                <i class="fab fa-instagram"></i>
+            </a>
+            <a href="https://www.tiktok.com/@glowbymar11?_r=1&_t=ZS-98XJfT1c4KV" target="_blank" style="color: #000000; font-size: 28px; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
+                <i class="fab fa-tiktok"></i>
+            </a>
+            <a href="https://wa.me/573204315042?text=Hola!%20Vengo%20de%20la%20tienda%20Glow%20By%20Mar%20y%20me%20gustaría%20recibir%20asesoría%20sobre%20sus%20accesorios." target="_blank" style="color: #25d366; font-size: 28px; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
+                <i class="fab fa-whatsapp"></i>
+            </a>
+            <a href="https://www.facebook.com/share/1DDCcWAQhv/?mibextid=wwXIfr/" target="_blank" style="color: #1877f2; font-size: 28px; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
+                <i class="fab fa-facebook"></i>
+            </a>
+        </div>
+        
+        <p style="font-size: 10px; color: #888; margin-top: 25px; letter-spacing: 1px;">
+            &copy; 2023 GLOW BY MAR - Todos los derechos reservados.
+        </p>
+    </footer>
+
+    <div id="carrito-emergente" class="mini-carrito-dropdown">
+        <p style="margin: 10px 0; font-size: 13px; color: #8d8d7f; text-align: center;" id="mensaje-mini-vacio">Tu carrito está vacío.</p>
+        <div id="items-mini-contenedor"></div>
+        
+        <div id="info-mini-total" style="display: none; margin-top: 10px;">
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 10px 0;">
+            <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 13px; color: #111111;">
+                <span>Total:</span>
+                <span id="precio-mini-total">$0 COP</span>
+            </div>
+            <button class="btn-ver-carrito-completo" onclick="irAlCarritoCompleto()">Ver mi carrito 💳</button>
+            <p style="font-size: 10px; color: #2e2e2edc; text-align: center; margin-top: 8px; line-height: 1.2;">
+    * Sabaneta: Entrega gratis a domicilio.<br>
+    * Medellín/Área metro/Nacional: Envío pago contra entrega.
+</p>
+        </div>
+    </div>
+
+    <button id="btn-carrito-flotante" class="carrito-flotante" onclick="toggleCarritoEmergente()">
+        <div class="carrito-contenido">
+            <i class="fas fa-shopping-bag"></i>
+            <span id="contador-nav" class="contador-burbuja">0</span>
+        </div>
+    </button>
+
+    <div class="cinta-cuidados-container">
+    <div class="cinta-track">
+        <!-- Bloque 1 de mensajes -->
+        <span>✨ Evita el contacto con perfumes, cremas y alcohol para proteger el baño de rodio.</span>
+        <span>💎 Guarda tus accesorios por separado para evitar rayones y conservar su brillo.</span>
+        <span>🌸 Retira tus joyas antes de dormir, bañarte o hacer ejercicio.</span>
+        <span>💧 Limpia tus piezas suavemente con un paño seco y limpio después de usarlas.</span>
+        
+        <!-- Bloque 2 repetido (necesario para que el desplazamiento infinito sea fluido y sin saltos) -->
+        <span>✨ Evita el contacto con perfumes, cremas y alcohol para proteger el baño de rodio.</span>
+        <span>💎 Guarda tus accesorios por separado para evitar rayones y conservar su brillo.</span>
+        <span>🌸 Retira tus joyas antes de dormir, bañarte o hacer ejercicio.</span>
+        <span>💧 Limpia tus piezas suavemente con un paño seco y limpio después de usarlas.</span>
+    </div>
+</div>
+
+    <script>
+    let carrito = JSON.parse(localStorage.getItem('carrito-joyas')) || [];
+    let todosLosProductos = []; 
+
+    document.addEventListener('DOMContentLoaded', () => {
+        cargarProductos();
+        actualizarInterfazCarrito();
+    });
+
+    async function cargarProductos() {
+    try {
+        const respuesta = await fetch('http://localhost:3000/api/productos');
+        todosLosProductos = await respuesta.json(); 
+        
+        // DEBUG: Vamos a ver qué le llega al frontend
+console.log("Primer producto recibido:", todosLosProductos[0]);
+renderizarProductosFiltrados(todosLosProductos);
+
+        // 1. Pintamos los productos
+        renderizarProductosFiltrados(todosLosProductos);
+        
+        // 2. 🔥 ESTO ES LO QUE TE FALTABA: Limpiar fantasmas al cargar
+        carrito = carrito.filter(itemCarrito => 
+            todosLosProductos.some(p => p.id === itemCarrito.id)
+        );
+        localStorage.setItem('carrito-joyas', JSON.stringify(carrito));
+        
+        // 3. Actualizamos la burbuja y el carrito con la información real
+        actualizarInterfazCarrito();
+        
+    } catch (error) {
+        console.error('Error al conectar con el servidor:', error);
+    }
+}
+
+    function renderizarProductosFiltrados(productosA_Mostrar) {
+    const contenedor = document.getElementById('lista-productos'); 
+    contenedor.innerHTML = ''; 
+
+    if (productosA_Mostrar.length === 0) {
+        contenedor.innerHTML = `<p style="grid-column: 1/-1; text-align: center; font-weight: 600; color: #555; margin-top: 20px;">"Pronto tendremos sorpresas, en estos momentos estamos alistando nuevos diseños y piezas exclusivas para ti."</p>`;
+        return;
+    }
+
+    productosA_Mostrar.forEach(prod => {
+    // 1. Configuramos imagen y stock
+    const rutaImagen = prod.fotoUrl || (prod.imagen_original ? `/${prod.imagen_original.replace(/^\//, '')}` : 'https://via.placeholder.com/200');
+    const estaAgotado = prod.stock <= 0;
+    
+    // 2. EL ÚNICO DESCUENTO: Priorizamos el individual, si no hay, tomamos el masivo
+    const descuento = parseInt(prod.descIndividual || prod.descuento || 0);
+    
+    // 3. MATEMÁTICA REAL: Calculamos el precio final aquí mismo
+    const precioOriginal = parseFloat(prod.precio);
+    const precioFinal = descuento > 0 ? (precioOriginal * (1 - descuento / 100)) : precioOriginal;
+
+    // 4. PREPARAMOS EL HTML (Simple y directo)
+    let htmlPrecios = '';
+    let htmlBadge = '';
+
+    if (descuento > 0) {
+        htmlPrecios = `
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <span style="text-decoration: line-through; color: #a5a5a5; font-size: 15px;">$${precioOriginal.toLocaleString('es-CO')}</span>
+                <span style="color: #ffffff; font-weight: bold; font-size: 20px;">$${precioFinal.toLocaleString('es-CO')}</span>
+            </div>`;
+        htmlBadge = `
+            <div style="position: absolute; top: 10px; left: 9px; background: #e74c3c; color: white; padding: 4px 8px; border-radius: 60px; z-index: 1;">
+                🔥 ${descuento}% OFF
+            </div>`;
+    } else {
+        htmlPrecios = `<span style="font-weight: bold; font-size: 17px;">$${precioOriginal.toLocaleString('es-CO')}</span>`;
+    }
+
+    // 5. CONSTRUIMOS LA TARJETA
+    const tarjeta = document.createElement('div');
+    tarjeta.className = 'producto-card';
+    tarjeta.style.position = 'relative';
+    tarjeta.innerHTML = `
+        ${htmlBadge}
+        <div class="producto-imagen-wrapper"><img src="${rutaImagen}" alt="${prod.nombre}"></div>
+        <div class="producto-info">
+            <h3>${prod.nombre}</h3>
+
+            <!-- <p class="producto-desc">${prod.descripcion}</p> -->
+
+            <div class="producto-meta" style="display: flex; flex-direction: column; align-items: center;">
+                ${htmlPrecios}
+                <span class="producto-stock" style="margin-top: 7px; color: ${estaAgotado ? '#ffee8c' : '#009293'}; font-size: 14px;">
+                    ${estaAgotado ? ' ' : 'Disponibles: ' + prod.stock}
+                </span>
+            </div>
+            <button class="btn-agregar ${estaAgotado ? 'btn-agotado' : ''}" 
+                    onclick="agregarAlCarrito(${prod.id})" 
+                    ${estaAgotado ? 'disabled' : ''}>
+                ${estaAgotado ? 'Agotado' : 'Agregar'}
+            </button>
+        </div>
+    `;
+    contenedor.appendChild(tarjeta);
+});
+} // Cierre de la función
+
+    // 🔥 FILTRO INTELIGENTE CORREGIDO PARA COMPARAR PLURALES/SINGULARES Y MINÚSCULAS
+    function filtrarProductos() {
+    const categoriaSeleccionada = document.getElementById('filtro-categoria').value;
+    
+    if (categoriaSeleccionada === 'Todos') {
+        renderizarProductosFiltrados(todosLosProductos);
+    } else {
+        // Filtramos comparando categorías
+        const productosFiltrados = todosLosProductos.filter(prod => 
+            prod.categoria && prod.categoria.trim() === categoriaSeleccionada
+        );
+        renderizarProductosFiltrados(productosFiltrados);
+    }
+}
+
+    function agregarAlCarrito(id) {
+    // 1. Buscamos el producto en tu base de datos maestra
+    const productoBase = todosLosProductos.find(p => p.id === id);
+    
+    // Extraemos las variables que tu código necesita
+    const nombre = productoBase.nombre;
+    const stockMaximo = productoBase.stock;
+
+    // --- AQUÍ ESTÁ EL CAMBIO PARA EL PRECIO REAL ---
+    // Calculamos el descuento ganador tal como lo hicimos en la tarjeta
+    const descuento = parseInt(productoBase.descIndividual || productoBase.descuento || 0);
+    const precio = descuento > 0 
+        ? (productoBase.precio * (1 - descuento / 100)) 
+        : productoBase.precio;
+    // ------------------------------------------------
+
+    // 2. ALERTA: Producto Agotado
+    if (stockMaximo <= 0) {
+        Swal.fire({
+            title: 'Producto Agotado',
+            text: 'Lo sentimos, no quedan más productos disponibles de este accesorio.',
+            icon: 'error',
+            confirmButtonColor: '#e74c3c'
+        });
+        return;
+    }
+    
+    // ... el resto de tu código de agregar al carrito sigue igual ...
+
+    const productoEnCarrito = carrito.find(item => item.id === id);
+
+    if (productoEnCarrito) {
+        // 3. ALERTA: Inventario Máximo
+        if (productoEnCarrito.cantidad >= stockMaximo) {
+            Swal.fire({
+                title: '¡Estás a punto de agotarlo! 💎',
+                text: `Actualmente solo nos quedan ${stockMaximo} unidades de este diseño.`,
+                icon: 'warning',
+                confirmButtonColor: '#f39c12'
+            });
+            return;
+        }
+        productoEnCarrito.cantidad++;
+    } else {
+        // Guardamos usando los valores calculados
+        carrito.push({ id, nombre, precio, cantidad: 1 });
+    }
+
+    localStorage.setItem('carrito-joyas', JSON.stringify(carrito));
+    actualizarInterfazCarrito();
+}
+
+    function toggleCarritoEmergente() {
+        document.getElementById('carrito-emergente').classList.toggle('activo');
+    }
+
+    function irAlCarritoCompleto() {
+    const seccion = document.getElementById('seccion-carrito-completo');
+    if (seccion) {
+        seccion.style.display = 'block'; // Aquí sí lo activamos porque el usuario hizo clic
+        seccion.scrollIntoView({ behavior: 'smooth' }); // Esto hace que baje suavemente a la sección
+    }
+    
+    // Opcional: si quieres cerrar el mini-carrito al ir al completo:
+    const miniCarrito = document.getElementById('carrito-emergente');
+    if (miniCarrito) miniCarrito.style.display = 'none';
+}
+
+    function actualizarInterfazCarrito() {
+    const itemsMiniContenedor = document.getElementById('items-mini-contenedor');
+    const mensajeMiniVacio = document.getElementById('mensaje-mini-vacio');
+    const infoMiniTotal = document.getElementById('info-mini-total');
+    const precioMiniTotal = document.getElementById('precio-mini-total');
+    const contadorNav = document.getElementById('contador-nav');
+
+    const cuerpoTablaReal = document.getElementById('cuerpo-tabla-carrito');
+    const totalPrecioReal = document.getElementById('total-precio-real');
+    const seccionCarritoCompleto = document.getElementById('seccion-carrito-completo');
+
+    // 1. Limpieza inicial obligatoria de contenedores
+    if (itemsMiniContenedor) itemsMiniContenedor.innerHTML = '';
+    if (cuerpoTablaReal) cuerpoTablaReal.innerHTML = '';
+
+    let totalGeneral = 0;
+    let unidadesTotales = 0;
+
+    // ====================================================================
+    // 🛡️ CONTROL TOTAL CUANDO EL CARRITO QUEDA VACÍO
+    // ====================================================================
+    if (carrito.length === 0) {
+        // Forzamos que todas las burbujas y textos de precios pasen a CERO
+        if (contadorNav) contadorNav.innerText = '0';
+        if (precioMiniTotal) precioMiniTotal.innerText = '$0 COP';
+        if (totalPrecioReal) totalPrecioReal.innerText = 'Total a Pagar: $0 COP';
+        
+        // Manejo de etiquetas flotantes
+        if (mensajeMiniVacio) mensajeMiniVacio.style.display = 'block';
+        if (infoMiniTotal) infoMiniTotal.style.display = 'none';
+        if (seccionCarritoCompleto) seccionCarritoCompleto.style.display = 'none';
+        
+        return; // Ahora sí nos salimos de forma segura porque ya todo quedó en cero
+    }
+
+    // ====================================================================
+    // SI SÍ HAY ARTÍCULOS, PROCESAMOS EL CARRITO
+    // ====================================================================
+    if (mensajeMiniVacio) mensajeMiniVacio.style.display = 'none';
+    if (infoMiniTotal) infoMiniTotal.style.display = 'block';
+    
+
+    carrito.forEach(item => {
+        const subtotal = item.precio * item.cantidad;
+        totalGeneral += subtotal;
+        unidadesTotales += item.cantidad;
+
+        // Render del mini-carrito flotante sin amontonarse
+        if (itemsMiniContenedor) {
+            itemsMiniContenedor.innerHTML += `
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 12px 0; border-bottom: 1px solid #f2f2f2; font-family: 'Montserrat', sans-serif;">
+                    <div style="display: flex; flex-direction: column; gap: 6px; width: 60%; text-align: left;">
+                        <span style="font-weight: 600; color: #111111; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${item.nombre}">
+                            ${item.nombre}
+                        </span>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+    <button onclick="event.stopPropagation(); restarUnidadCarrito(${item.id})" 
+            style="background: #e74c3c; color: white; border: none; width: 22px; height: 22px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; display: flex; align-items: center; justify-content: center; padding: 0;">-</button>
+            
+    <span style="font-weight: 700; color: #333; font-size: 12px; min-width: 20px; text-align: center;">${item.cantidad}</span>
+    
+    <button onclick="event.stopPropagation(); sumarUnidadCarrito(${item.id})" 
+            style="background: #27ae60; color: white; border: none; width: 22px; height: 22px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; display: flex; align-items: center; justify-content: center; padding: 0;">+</button>
+</div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px; width: 40%; justify-content: flex-end;">
+                        <span style="font-weight: 700; color: #111111; font-size: 12px;">$${subtotal.toLocaleString('es-CO')}</span>
+                        <button onclick="eliminarTodoElGrupo(${item.id})" style="background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 11px; padding: 2px;" title="Eliminar artículo">❌</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render de la tabla del Resumen del Pedido
+        if (cuerpoTablaReal) {
+            cuerpoTablaReal.innerHTML += `
+                <tr style="border-bottom: 1px solid #eee; height: 50px;">
+                    <td style="font-weight:600;">${item.nombre}</td>
+                    <td>$${item.precio.toLocaleString('es-CO')}</td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+    <button onclick="event.preventDefault(); event.stopPropagation(); restarUnidadCarrito(${item.id})" 
+            style="background: #e74c3c; color: white; border: none; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">-</button>
+            
+    <span style="font-weight:600; color: #111; min-width: 20px; text-align: center;">${item.cantidad}</span>
+    
+    <button onclick="event.preventDefault(); event.stopPropagation(); sumarUnidadCarrito(${item.id})" 
+            style="background: #27ae60; color: white; border: none; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">+</button>
+</div>
+                    </td>
+                    <td style="font-weight:600;">$${subtotal.toLocaleString('es-CO')}</td>
+                    <td style="text-align: center;">
+                        <button onclick="eliminarTodoElGrupo(${item.id})" style="background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 16px;" title="Eliminar este artículo">❌</button>
+                    </td>
+                </tr>
+            `;
+        }
+    });
+
+    // 3. Renderizar totales finales cuando sí hay elementos en el carrito
+    if (contadorNav) contadorNav.innerText = unidadesTotales;
+    if (precioMiniTotal) precioMiniTotal.innerText = `$${totalGeneral.toLocaleString('es-CO')} COP`;
+    if (totalPrecioReal) totalPrecioReal.innerText = `Total a Pagar: $${totalGeneral.toLocaleString('es-CO')} COP`;
+}
+
+    function vaciarCarrito() {
+        carrito = [];
+        localStorage.removeItem('carrito-joyas');
+        actualizarInterfazCarrito();
+    }
+
+    // Resta una sola unidad. Si llega a 0, saca el producto del carrito.
+    function restarUnidadCarrito(idProducto) {
+        const item = carrito.find(p => p.id === idProducto);
+        if (item) {
+            item.cantidad--;
+            if (item.cantidad <= 0) {
+                // Si la cantidad es cero, limpiamos el producto por completo
+                carrito = carrito.filter(p => p.id !== idProducto);
+            }
+            localStorage.setItem('carrito-joyas', JSON.stringify(carrito));
+            actualizarInterfazCarrito();
+        }
+    }
+
+    // Suma una unidad directo desde el carrito respetando el stock disponible en bodega
+    function sumarUnidadCarrito(idProducto) {
+    // 1. Buscamos el producto en la lista original
+    const prodOriginal = todosLosProductos.find(p => p.id === idProducto);
+    const stockMaximo = prodOriginal ? prodOriginal.stock : 0;
+
+    // 2. Buscamos el item en el carrito
+    let item = carrito.find(p => p.id === idProducto);
+
+    // 3. VALIDACIÓN: ¿Existe y tenemos stock?
+    if (!item) {
+        // Si no está, lo agregamos con 1
+        carrito.push({ ...prodOriginal, cantidad: 1 });
+    } else if (item.cantidad < stockMaximo) {
+        // Si ya está y hay stock, sumamos
+        item.cantidad++;
+    } else {
+        // Si ya llegamos al límite
+        Swal.fire({
+            title: '¡Estás a punto de agotarlo! 💎',
+            text: `Actualmente solo nos quedan ${stockMaximo} unidades de este diseño.`,
+            icon: 'warning'
+        });
+        return; 
+    }
+
+    // 4. Guardamos y refrescamos
+    localStorage.setItem('carrito-joyas', JSON.stringify(carrito));
+    actualizarInterfazCarrito();
+    
+    // ESTO TE DIRÁ SI EL BOTÓN REALMENTE ESTÁ LLAMANDO A ESTA FUNCIÓN
+    console.log("Carrito actualizado:", carrito);
+}
+
+    // Esta es por si el cliente quiere borrar todos los aretes de golpe sin presionar el menos varias veces
+    function eliminarTodoElGrupo(idProducto) {
+        carrito = carrito.filter(item => item.id !== idProducto);
+        localStorage.setItem('carrito-joyas', JSON.stringify(carrito));
+        actualizarInterfazCarrito();
+    }
+
+    // Dejamos esta función mapeada igual por si el mini carrito de la esquina la sigue llamando directamente
+    function eliminarDelCarrito(idProducto) {
+        restarUnidadCarrito(idProducto);
+    }
+    
+    async function cerrarCompraCliente() {
+    const nombre = document.getElementById('envio-nombre').value.trim();
+    const telefono = document.getElementById('envio-telefono').value.trim();
+    const direccion = document.getElementById('envio-direccion').value.trim();
+    const comprobanteInput = document.getElementById('envio-comprobante'); // ⬅️ Capturamos el archivo
+
+    if (carrito.length === 0) return;
+
+    // 1. Validar datos básicos
+    if (!nombre || !telefono || !direccion) {
+        Swal.fire({
+            title: 'Campos Incompletos',
+            text: 'Por favor llene todos los campos de envío.',
+            icon: 'warning',
+            confirmButtonColor: '#f39c12'
+        });
+        return;
+    }
+
+    // 2. Validar que subió el capture de Nequi
+    if (comprobanteInput.files.length === 0) {
+        Swal.fire({
+            title: 'Falta el Pago',
+            text: 'Hola debes adjuntar la captura del comprobante para poder verificar tu pago.',
+            icon: 'warning',
+            confirmButtonColor: '#f39c12'
+        });
+        return;
+    }
+
+    // Nota técnica de ADSO: Para enviar imágenes al servidor por fetch,
+    // se usa FormData en vez de JSON.stringify.
+    const formData = new FormData();
+    formData.append('nombre', nombre);
+    formData.append('telefono', telefono);
+    formData.append('direccion', direccion);
+    formData.append('comprobante', comprobanteInput.files[0]); // Va la foto real
+    formData.append('carrito', JSON.stringify(carrito)); // Convertimos el array a texto para el envío
+
+    try {
+        const respuesta = await fetch('http://localhost:3000/api/comprar', {
+            method: 'POST',
+            body: formData // ⬅️ Enviamos como formulario con archivo incluido
+        });
+
+        const resultado = await respuesta.json();
+
+        if (respuesta.ok && resultado.exito) {
+            Swal.fire({
+                title: '¡Muchas gracias! 🌸',
+                text: '"Hemos recibido tu orden y el comprobante. Pronto estaremos preparando tus accesorios con mucho amor". ✨',
+                icon: 'success',
+                confirmButtonColor: '#2ecc71'
+            });
+
+            // Pégalo aquí, justo después del cierre del Swal
+            avisarAlDueñoPorWhatsApp(nombre);
+            
+            // Limpieza total
+            carrito = [];
+            localStorage.removeItem('carrito-joyas');
+            document.getElementById('envio-nombre').value = '';
+            document.getElementById('envio-telefono').value = '';
+            document.getElementById('envio-direccion').value = '';
+            comprobanteInput.value = ''; // Limpiar archivo
+
+            cargarProductos();
+            actualizarInterfazCarrito();
+        } else {
+            Swal.fire({
+                title: 'Error',
+                text: resultado.mensaje || 'Error al procesar el pago.',
+                icon: 'error',
+                confirmButtonColor: '#e74c3c'
+            });
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+            title: 'Error de servidor',
+            text: 'Socio, el servidor no pudo recibir el archivo del comprobante.',
+            icon: 'error',
+            confirmButtonColor: '#e74c3c'
+        });
+    }
+}
+
+function avisarAlDueñoPorWhatsApp(nombreCliente) {
+    const numeroTienda = "573204315042"; 
+    const mensaje = `¡Hola! Glow By Mar, un nuevo cliente llamado ${nombreCliente} acaba de realizar un pedido. Por favor verifica la cuenta bancaria.`;
+    const url = `https://wa.me/${numeroTienda}?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, '_blank');
+}
+    </script>
+
+    
+    <script>
+    const ofertas = [
+        /*"✨ ¡Envío gratis por compras mayores a $250.000! 💎",*/
+        /*"👑 Joyería en Rodio 👑",*/
+        "✨ Brilla con luz propia, te mereces todo lo lindo.",
+        "💖 Cada detalle cuenta, porque tú eres única y especial.",
+        "🌸 Lleva contigo la elegancia de sentirte segura y radiante.",
+        "💫 Un pequeño toque de brillo para la mujer increíble que eres.",
+        "🌷 Date el gusto de brillar hoy y siempre."
+        
+        
+    ];
+
+    let ofertaActual = 0;
+    const barraTexto = document.getElementById("texto-oferta");
+
+    if (barraTexto) {
+        setInterval(() => {
+            barraTexto.style.opacity = 0; 
+            setTimeout(() => {
+                ofertaActual = (ofertaActual + 1) % ofertas.length;
+                barraTexto.innerHTML = ofertas[ofertaActual]; 
+                barraTexto.style.opacity = 1; 
+            }, 500);
+        }, 4000); 
+    }
+
+
+
+
+    // Este código va al final de tu index.js (el de la carpeta public)
+document.addEventListener('click', function(event) {
+    const carritoEmergente = document.getElementById('carrito-emergente');
+    const botonCarrito = document.getElementById('btn-carrito-flotante');
+
+    // Si el carrito está activo, y el usuario hizo clic afuera del carrito Y afuera del botón, lo cerramos
+    if (carritoEmergente && botonCarrito) {
+        if (!carritoEmergente.contains(event.target) && !botonCarrito.contains(event.target)) {
+            carritoEmergente.classList.remove('activo');
+        }
+    }
+});
+
+
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    const boton = document.getElementById('boton-qr');
+    const contenedor = document.getElementById('contenedor-qr');
+
+    if (boton && contenedor) {
+        boton.addEventListener('click', () => {
+            if (contenedor.style.display === 'none') {
+                contenedor.style.display = 'block';
+            } else {
+                contenedor.style.display = 'none';
+            }
+        });
+    } else {
+        console.error("No se encontró el botón o el contenedor del QR");
+    }
+});
+    </script>
+
+<script>
+    let prevScrollpos = window.pageYOffset;
+    window.onscroll = function() {
+        let currentScrollPos = window.pageYOffset;
+        let navbar = document.querySelector(".navbar");
+        let barraOfertas = document.getElementById("barra-ofertas");
+
+        // Obtenemos la altura del navbar dinámicamente si quieres ser más preciso
+        // O simplemente usa un valor fijo grande si lo prefieres
+        let navbarHeight = navbar.offsetHeight;
+        let offsetHeight = barraOfertas.offsetHeight;
+        
+        if (prevScrollpos > currentScrollPos) {
+            // Si subes, aparecen en su posición original
+            barraOfertas.style.top = "0";
+            
+            // La navbar debe estar debajo de la barra de ofertas
+            // Puedes usar offsetHeight para que sea preciso:
+            navbar.style.top = `${offsetHeight}px`; 
+        } else {
+            // Si bajas, los escondemos COMPLETAMENTE
+            // Moveremos la barra de ofertas hacia arriba más de su altura
+            barraOfertas.style.top = `-${offsetHeight + 10}px`; 
+            
+            // Moveremos la navbar hacia arriba más de la altura de ambas juntas
+            navbar.style.top = `-${navbarHeight + offsetHeight + 10}px`; 
+        }
+        prevScrollpos = currentScrollPos;
+    }
+</script>
+
+<script>
+    function toggleBuscador() {
+        const buscador = document.getElementById("buscador-desplegable");
+        if (buscador.style.display === "none" || buscador.style.display === "") {
+            buscador.style.display = "block";
+        } else {
+            buscador.style.display = "none";
+        }
+    }
+
+    
+</script>
+
+<!--<script>
+    const mensajes = [
+        /*"🔥 ¡50% OFF en toda la tienda!",*/
+        "🚚 ¡Envío gratis por compras mayores a $250.000!",
+        /*"💎 ¡Nueva colección de accesorios disponible!",*/
+        "✨ ¡Joyeria en Rodio!"
+    ];
+
+    let i = 0;
+    const textoElemento = document.getElementById("texto-anuncio");
+
+    function cambiarMensaje() {
+        textoElemento.innerText = mensajes[i];
+        i = (i + 1) % mensajes.length; // Esto hace que vuelva al primer mensaje cuando termina
+    }
+
+    // Cambia el mensaje cada 5000 milisegundos (5 segundos)
+    setInterval(cambiarMensaje, 5000);
+
+    // Llamada inicial para que no aparezca vacío al cargar
+    cambiarMensaje();
+</script>-->
+
+</body>
+</html>

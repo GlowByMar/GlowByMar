@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrador</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f9; margin: 0; padding: 40px; display: flex; flex-direction: column; align-items: center; }
+        .contenedor { background-color: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 500px; box-sizing: border-box; }
+        h2 { color: #2c3e50; margin-top: 0; text-align: center; }
+        .grupo-campo { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #34495e; }
+        input[type="text"], input[type="number"], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        textarea { resize: vertical; height: 80px; }
+        /* Botón base: igual para ambos estados */
+/* Fuerza total al botón */
+#btn-guardar {
+    display: block !important;
+    width: 100% !important;
+    max-width: 400px !important; /* Que no sea gigante, pero centrado */
+    margin: 20px auto !important; /* Centrado automático */
+    padding: 15px !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    color: #ffffff !important;
+    cursor: pointer !important;
+    transition: background-color 0.3s ease !important;
+    /* Quitamos cualquier opacidad que lo haga invisible */
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Colores definitivos */
+.btn-verde {
+  background: linear-gradient(135deg, #346334 0%,  #71dd9e 100%) !important;
+  border: none;
+  color: #ffffff;
+}
+.btn-azul {
+  background: linear-gradient(135deg, #053068 0%,  #7186e6 100%) !important;
+  border: none;
+  color: #ffffff;
+}
+
+
+
+        .btn-volver { background-color: #7f8c8d; color: white; text-decoration: none; padding: 10px 15px; border-radius: 6px; font-size: 14px; font-weight: bold; display: inline-block; margin-bottom: 20px; transition: background 0.3s; }
+        .btn-volver:hover { background-color: #95a5a6; }
+
+        .contenedor-tabla {
+    background-color: white;
+    padding: 15px; /* Reduje un poco el padding para ganar espacio en celular */
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    width: 95%; /* Cambiado de 100% a 95% para que no toque los bordes del celular */
+    max-width: 800px;
+    box-sizing: border-box;
+    margin: 40px auto 0 auto; /* El 'auto' aquí es el que centra el bloque en la pantalla */
+    overflow-x: auto; /* IMPORTANTE: Esto evita que la tabla rompa el diseño si es muy ancha */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center; /* Cambiado de 'left' a 'center' para alinear todo */
+    margin-top: 15px;
+    font-size: 13px; /* Un pelín más pequeño para que no se amontone en móvil */
+}
+
+th {
+    background-color: #2c3e50;
+    color: white;
+    padding: 10px 5px; /* Padding reducido para ganar espacio */
+}
+
+td {
+    padding: 10px 5px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle; /* Asegura que el contenido quede centrado verticalmente */
+}
+       /* Botones de acción estandarizados */
+.btn-editar, .btn-eliminar {
+    width: 100%;
+    max-width: 120px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    transition: background 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 2px 0; /* Un pequeño margen para que no se peguen */
+}
+
+.btn-editar { background-color: #f39c12; color: white; }
+.btn-editar:hover { background-color: #d68910; }
+
+.btn-eliminar { background-color: #e74c3c; color: white; }
+.btn-eliminar:hover { background-color: #c0392b; }
+        
+        .select-placeholder { color: #757575; }
+
+        #tabla-pedidos-admin tr:hover {
+            background-color: #fcfcfd;
+            transition: background-color 0.2s ease;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="/" onclick="window.location.href='/index.html?v=' + Date.now(); return false;" class="btn-volver"> ❤️ Ir a la Tienda</a>
+
+    <div class="contenedor">
+        <h2>💎 Ingreso de mercancía</h2>
+        
+        <form id="formulario-admin" enctype="multipart/form-data" autocomplete="off">
+            <input type="hidden" id="edit-product-id" name="id" value="">
+
+            <div class="grupo-campo">
+                <label>Nombre del Accesorio:</label>
+                <input type="text" id="nombre" name="nombre" spellcheck="true" required placeholder="Ej: Cadena de Oro 18k">
+            </div>
+
+            <div class="grupo-campo">
+                <label>Categoría:</label>
+                <select id="categoria" name="categoria" class="select-placeholder" required onchange="this.className=''">
+                    <option value="" disabled selected hidden>Seleccione una categoría...</option>
+                    <option value="Anillos">Anillo</option>
+                    <option value="Aretes">Arete</option>
+                    <option value="Cadenas">Cadena</option>
+                    <option value="Juegos">Juegos</option>
+                    <option value="Pulseras">Pulsera</option>
+                    <option value="Relojes">Reloj</option>
+                </select>
+            </div>
+
+            <div class="grupo-campo">
+                <label>Precio Venta (COP):</label>
+                <input type="number" id="precio" name="precio" required placeholder="Ej: 50000">
+            </div>
+
+            <div class="form-group">
+    <label for="costoProducto">Costo Compra:</label>
+    <input type="number" id="costoProducto" name="costo" placeholder="Lo que te costó a ti" >
+</div>
+
+            <div class="grupo-campo">
+                <label>Cantidad en Stock (Inventario):</label>
+                <input type="number" id="stock" name="stock" required placeholder="Ej: 10">
+            </div>
+
+            <div class="grupo-campo">
+                <label for="edit-descIndividual">Descuento Individual (%):</label>
+                <input type="number" id="edit-descIndividual" name="descIndividual" placeholder="0" min="0" max="100">
+            </div>
+            
+            <!--<div class="grupo-campo">
+                <label>Descripción del Producto:</label>
+                <textarea name="descripcion" id="descripcion" spellcheck="true" required placeholder="Breve descripción del accesorio..."></textarea>
+            </div>
+        -->
+
+            <div class="grupo-campo" id="campo-foto">
+                <label>Foto del Producto:</label>
+                <input type="file" name="foto" accept="image/*">
+                <small style="color: #7f8c8d; display:block; margin-top:2px;">*Si estás editando, no necesitas volver a subir la foto a menos que quieras cambiarla.</small>
+            </div>
+
+            <button type="submit" id="btn-guardar" class="btn-verde">Guardar Producto</button>
+        </form>
+    </div>
+
+<div class="contenedor" style="margin-top: 20px; border: 2px dashed #e67e22; padding: 20px; background-color: #fff9f5; border-radius: 8px;">
+    <h2 style="color: #d80606; margin-top: 0;">🔥 Panel de Ofertas Masivas 🔥 </h2>
+    <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Desde aquí puedes aplicar promociones relámpago a toda la tienda o congelar descuentos por categorías.</p>
+    
+    <form id="formulario-ofertas" autocomplete="off" style="display: flex; flex-direction: column; gap: 15px;">
+        <div class="grupo-campo" style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-weight: bold; color: #333;">Tipo de Descuento:</label>
+            <select id="tipo-oferta" required onchange="conmutarCamposOferta()" style="padding: 10px; border: 1px solid #ccc; border-radius: 6px; width: 100%;">
+                <option value="global">🛒 Toda la Tienda </option>
+                <option value="categoria">💎 Por Categoría </option>
+            </select>
+        </div>
+
+        <div class="grupo-campo" id="campo-categoria-oferta" style="display: none; flex-direction: column; gap: 5px;">
+            <label style="font-weight: bold; color: #333;">Selecciona la Categoría:</label>
+            <select id="categoria-oferta" style="padding: 10px; border: 1px solid #ccc; border-radius: 6px; width: 100%;">
+                <option value="Aretes">Aretes</option>
+                <option value="Cadenas">Cadenas</option>
+                <option value="Pulseras">Pulseras</option>
+                <option value="Anillos">Anillos</option>
+                <option value="Relojes">Relojes</option>
+                <option value="Juegos">Juegos</option>
+            </select>
+        </div>
+
+        <div class="grupo-campo" style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-weight: bold; color: #333;">Porcentaje de Oferta (%):</label>
+            <input type="number" id="porcentaje-oferta" min="1" max="100" required placeholder="Ej: 10" style="padding: 10px; border: 1px solid #ccc; border-radius: 6px; width: 100%;">
+        </div>
+
+        <button type="submit" style="background-color: #e67e22; color: white; padding: 12px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; text-transform: uppercase; width: 100%;">Lanzar Promoción 🚀</button>
+        <button type="button" onclick="apagarOfertas()" style="background-color: #d32f2f; color: white; padding: 12px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; text-transform: uppercase; width: 100%; margin-top: 5px;">Apagar Todas las Ofertas 🛑</button>
+    </form>
+    
+    <p id="estado-ofertas" style="text-align: center; font-weight: bold; color: #7f8c8d; font-size: 14px; margin-top: 15px; padding: 10px; background: #eee; border-radius: 6px;"></p>
+</div>
+
+    <div style="display: flex; justify-content: center; margin: 20px 0;">
+        <div style="background: linear-gradient(135deg, #2c3e50, #1a252f); color: white; padding: 15px 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; min-width: 300px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+            <span style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #bdc3c7;">Ventas Totales del Mes</span>
+            <h2 id="total-ventas-banner" style="margin: 0; font-size: 28px; color: #2ecc71; font-weight: bold;">$0 COP</h2>
+            
+            <button onclick="descargarReporteMensual()" style="background: #e67e22; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; margin-top: 5px; transition: background 0.3s;">
+                📄 Reporte Ventas
+            </button>
+        </div>
+    </div>
+
+    <div class="contenedor-tabla">
+        <h3 style="margin-top: 0; color: #2c3e50; text-align: center;">📦 Inventario Actual en Sistema</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Precio Compra</th> <!-- <--- Nueva columna -->
+                    <th>Precio</th>
+                    <th>Descuento</th>
+                    <th>Stock</th>
+                    <th>Acción</th>
+
+                </tr>
+            </thead>
+            <tbody id="tabla-inventario"></tbody>
+        </table>
+    </div>
+
+    <div style="width: 100%; overflow-x: auto; background: white; padding: 15px; border-radius: 8px; margin-top: 40px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; min-width: 1000px;">
+            <thead>
+                <tr style="background: #2c3e50; color: white; height: 45px;">
+                    <th style="padding: 10px; width: 50px; border-top-left-radius: 6px; border-bottom-left-radius: 6px; text-align: center;">ID</th>
+                    <th style="width: 140px;">Fecha / Hora</th>
+                    <th style="width: 180px;">Cliente / Contacto</th>
+                    <th style="width: 150px;">Dirección Entrega</th>
+                    <th style="width: 160px;">Productos Solicitados</th>
+                    <th style="width: 110px;">Total Neto</th>
+                    <th style="width: 110px; text-align: center;">Estado</th>
+                    <th style="padding: 10px; text-align: center; width: 340px; border-top-right-radius: 6px; border-bottom-right-radius: 6px;">Operaciones / Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-pedidos-admin"></tbody>
+        </table>
+    </div>
+
+
+
+<button onclick="registrarVentaExterna()" style="background: #ddc36e; color: #111; padding: 10px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">
+    Registrar Venta Externa
+</button>
+
+
+
+<script>
+function descargarFactura(idPedido) {
+    const ventanaImpresion = window.open(`http://localhost:3000/api/pedidos/${idPedido}/factura`, '_blank', 'width=900,height=700');
+    
+    if (ventanaImpresion) {
+        ventanaImpresion.onload = function() {
+            ventanaImpresion.print();
+        };
+    } else {
+        Swal.fire({
+            icon: 'error',
+            title: 'Ventana bloqueada',
+            text: 'Por favor, permite las ventanas emergentes en tu navegador para ver la factura.'
+        });
+    }
+}
+
+function descargarReporteMensual() {
+    window.open('/api/reportes/mensual', '_blank');
+}
+
+async function cargarPedidosAdmin() {
+    try {
+        const respuesta = await fetch('http://localhost:3000/api/pedidos');
+        const pedidos = await respuesta.json();
+        const tabla = document.getElementById('tabla-pedidos-admin');
+        
+        if (!tabla) return;
+        tabla.innerHTML = '';
+
+        if (pedidos.length === 0) {
+            tabla.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:#888;">No se han registrado pedidos aún.</td></tr>`;
+            const reporteElemento = document.getElementById('total-ventas-banner');
+            if (reporteElemento) reporteElemento.innerText = `$0 COP`;
+            return;
+        }
+
+        let totalCaja = 0; 
+
+        pedidos.reverse().forEach(pedido => { 
+            const estadoActual = pedido.estado || 'Pendiente';
+            const totalNetoPedido = parseInt(pedido.total || 0);
+            totalCaja += totalNetoPedido;
+
+            let colorEstado = '#e67e22'; 
+            if (estadoActual.toLowerCase() === 'despachado') colorEstado = '#3498db'; 
+            if (estadoActual.toLowerCase() === 'entregado') colorEstado = '#27ae60'; 
+
+            let botonAccionDinamico = '';
+            if (estadoActual.toLowerCase() === 'pendiente') {
+                botonAccionDinamico = `<button onclick="marcarDespachado(${pedido.idPedido})" style="background: #e67e22; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase;">📦 Despachar</button>`;
+            } else if (estadoActual.toLowerCase() === 'despachado') {
+                botonAccionDinamico = `<button onclick="marcarEntregado(${pedido.idPedido})" style="background: #27ae60; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase;">✅ Entregar</button>`;
+            } else {
+                botonAccionDinamico = `<span style="color: #27ae60; font-weight: bold; font-size: 11px;">🏁 VENTA FINALIZADA</span>`;
+            }
+
+            let textoMensaje = "";
+            let colorBotonWA = "#25d366";
+            let etiquetaWA = "💬 WhatsApp";
+
+            if (estadoActual.toLowerCase() === 'pendiente') {
+                textoMensaje = `Hola ${pedido.cliente}. Te habla Glow By Mar. Confirmamos que tu pago de $${totalNetoPedido.toLocaleString('es-CO')} COP fue recibido con éxito.`;
+            } else {
+                textoMensaje = `Hola ${pedido.cliente}. Te habla Glow By Mar. Tu pedido ya fue despachado por: ${pedido.transportadora || 'Transportadora'} con la guía: ${pedido.numeroGuia || 'Pendiente'}, gracias por tu compra.`;
+                colorBotonWA = "#3498db";
+                etiquetaWA = "🚀 Notificar Envío";
+            }
+
+            const mensajeWhatsApp = encodeURIComponent(textoMensaje);
+            let telefonoFormateado = pedido.telefono.trim().replace(/\s+/g, '');
+            if (!telefonoFormateado.startsWith('57')) telefonoFormateado = '57' + telefonoFormateado;
+            const urlWhatsApp = `https://wa.me/${telefonoFormateado}?text=${mensajeWhatsApp}`;
+
+            tabla.innerHTML += `
+                <tr style="border-bottom: 1px solid #eee; height: 55px;">
+                    <td style="padding: 10px; font-weight: bold;">#${pedido.idPedido}</td>
+                    <td style="color: #666; font-size: 12px;">${pedido.fecha}</td>
+                    <td><strong>${pedido.cliente}</strong><br><small style="color:#777;">📱 ${pedido.telefono}</small></td>
+                    <td>
+                        ${pedido.direccion}
+                        <button onclick="verGuiaEnvio('${pedido.cliente}', '${pedido.telefono}', '${pedido.direccion}', '${totalNetoPedido}')" style="background: none; border: none; color: #3498db; cursor: pointer; font-size: 11px; text-decoration: underline; padding: 0; display: block; margin-top:3px;">📋 Copiar Datos</button>
+                    </td>
+                    <td style="font-size: 12px;">${pedido.articulos.join(', ')}</td>
+                    <td style="font-weight: bold; color: #27ae60;">$${totalNetoPedido.toLocaleString('es-CO')} COP</td>
+                    <td>
+                        <span style="background: ${colorEstado}; color: white; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; text-transform: uppercase;">${estadoActual}</span>
+                    </td>
+                    <td style="padding: 10px; text-align: center;">
+                        <div style="display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                            <a href="${pedido.comprobanteUrl}" target="_blank" style="background: #700070; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase;">👁️ Pago</a>
+                            <a href="${urlWhatsApp}" target="_blank" style="background: ${colorBotonWA}; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase;">${etiquetaWA}</a>
+                            
+                            <button onclick="descargarFactura(${pedido.idPedido})" style="background: #7f8c8d; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; cursor: pointer;">📄 Factura</button>
+                            
+                            ${botonAccionDinamico}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        const reporteElemento = document.getElementById('total-ventas-banner');
+        if (reporteElemento) {
+            reporteElemento.innerText = `$${totalCaja.toLocaleString('es-CO')} COP`;
+        }
+
+    } catch (error) {
+        console.error("Error al cargar los pedidos:", error);
+    }
+}
+
+async function marcarDespachado(id) {
+    if (!confirm("¿Seguro que ya despachó este pedido?")) return;
+    const empresa = prompt("Empresa de transporte:");
+    if (!empresa) return;
+    const guia = prompt("Número de guía:");
+    if (!guia) return;
+
+    try {
+        const res = await fetch(`http://localhost:3000/api/pedidos/${id}/despachar`, { 
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transportadora: empresa, numeroGuia: guia })
+        });
+        if (res.ok) cargarPedidosAdmin();
+    } catch (error) { console.error(error); }
+}
+
+async function marcarEntregado(id) {
+    if (!confirm("¿Confirma que el paquete fue entregado?")) return;
+    try {
+        const res = await fetch(`http://localhost:3000/api/pedidos/${id}/entregar`, { method: 'PUT' });
+        if (res.ok) cargarPedidosAdmin();
+    } catch (error) { console.error(error); }
+}
+
+function verGuiaEnvio(cliente, tel, dir, total) {
+    alert(`📋 DATOS DE ENVIO:\n\nDESTINATARIO: ${cliente}\nTELEFONO: ${tel}\nDIRECCION: ${dir}\nTOTAL NETO A COBRAR: $${parseInt(total).toLocaleString('es-CO')} COP`);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    obtenerInventario();  
+    cargarPedidosAdmin(); 
+    obtenerEstadoOfertas();
+});
+
+// ====== AQUÍ SE REORGANIZÓ LA TABLA PARA INCLUIR EL BOTÓN EDITAR ======
+async function obtenerInventario() {
+    try {
+        const respuesta = await fetch('http://localhost:3000/api/productos');
+        const productos = await respuesta.json();
+        const cuerpoTabla = document.getElementById('tabla-inventario');
+        if (!cuerpoTabla) return;
+        cuerpoTabla.innerHTML = '';
+
+        if (productos.length === 0) {
+            cuerpoTabla.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#95a5a6;">No hay mercancía.</td></tr>`;
+            return;
+        }
+
+        let costoTotalInventario = 0;
+
+        productos.forEach(prod => {
+            let colorStock = '#27ae60';
+            if (prod.stock <= 0) colorStock = '#e74c3c';
+            else if (prod.stock <= 2) colorStock = '#c0392b';
+
+            // Cálculo del costo total invertido
+            const costo = prod.costo || 0;
+            const stockActual = prod.stock !== undefined ? prod.stock : 0;
+            costoTotalInventario += (costo * stockActual);
+
+            // Buscamos el descuento real ganador
+            const valorIndividual = parseInt(prod.descIndividual || 0);
+            const valorMasivo = parseInt(prod.descuento || 0);
+
+            // Si el individual existe y es mayor a 0, usamos ese. Si no, usamos el masivo.
+            const descuentoFinal = valorIndividual > 0 ? valorIndividual : valorMasivo;
+
+            // Ahora pintamos la etiqueta basándonos en el valor ganador
+            const etiquetaDescuento = descuentoFinal > 0 
+                ? `<span style="background: #e67e22; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">${descuentoFinal}% OFF</span>` 
+                : `<span style="color: #95a566;">Sin desc.</span>`;
+    
+            // Creamos una cadena de texto limpia del objeto para pasarla de forma segura al onclick
+            const stringProducto = JSON.stringify(prod).replace(/"/g, '&quot;');
+
+            cuerpoTabla.innerHTML += `
+                <tr>
+                    <td style="font-weight: bold; color: #34495e;">${prod.nombre}</td>
+                    <td>$${costo.toLocaleString('es-CO')}</td>
+                    <td>$${prod.precio.toLocaleString('es-CO')}</td>
+                    <td>${etiquetaDescuento}</td>
+                    <td style="color: ${colorStock};">${prod.stock} unds</td>
+                    <td style="display: flex; flex-direction: column; gap: 5px; align-items: center;">
+                        <button class="btn-editar" onclick="editarProducto(${prod.id})">✏️ Editar</button>
+                        <button class="btn-eliminar" onclick="eliminarProducto(${prod.id})">❌ Eliminar</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        // Fila final con el total invertido
+        cuerpoTabla.innerHTML += `
+            <tr style="font-weight: bold; background-color: #f8f8f8;">
+                <td style="text-align: right;">TOTAL INVERTIDO:</td>
+                <td colspan="5" style="color: #2c3e50;">$${costoTotalInventario.toLocaleString('es-CO')} COP</td>
+            </tr>
+        `;
+
+    } catch (error) { console.error(error); }
+}
+
+// ====== LOGICA MODIFICADA PARA MANEJAR "CREACIÓN" O "EDICIÓN" EN EL SUBMIT ======
+document.getElementById('formulario-admin').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const idEdicion = document.getElementById('edit-product-id').value;
+    const datosFormulario = new FormData(e.target);
+    
+    try {
+        Swal.fire({ title: idEdicion ? 'Actualizando producto...' : 'Guardando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        
+        let url = 'http://localhost:3000/api/productos';
+        
+        // Si hay un ID en el campo oculto, cambiamos el destino a la ruta de editar
+        if (idEdicion) {
+            url = 'http://localhost:3000/api/productos/editar';
+            
+            // Para enviar datos por FormData a una ruta JSON tradicional, los convertimos a un objeto simple
+            const objetoDatos = Object.fromEntries(datosFormulario.entries());
+            
+            const respuesta = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(objetoDatos)
+            });
+            
+            if (respuesta.ok) {
+                Swal.fire({ title: '¡Producto Actualizado!', icon: 'success' });
+                limpiarFormularioAdmin();
+                obtenerInventario();
+                 
+            }
+        } else {
+            // Flujo normal para crear un producto nuevo con archivos adjuntos (POST FormData)
+            const respuesta = await fetch(url, { method: 'POST', body: datosFormulario });
+            if (respuesta.ok) {
+                Swal.fire({ title: '¡Guardado!', icon: 'success' });
+                e.target.reset(); 
+                obtenerInventario(); 
+            }
+        }
+    } catch (error) { console.error(error); }
+});
+
+async function eliminarProducto(id) {
+    if (!confirm("¿Borrar producto?")) return;
+    try {
+        const respuesta = await fetch(`http://localhost:3000/api/productos/${id}`, { method: 'DELETE' });
+        if (respuesta.ok) obtenerInventario();
+    } catch (error) { console.error(error); }
+}
+
+function conmutarCamposOferta() {
+    const tipo = document.getElementById('tipo-oferta').value;
+    const campoCat = document.getElementById('campo-categoria-oferta');
+    campoCat.style.display = tipo === 'categoria' ? 'flex' : 'none';
+}
+
+document.getElementById('formulario-ofertas')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const tipo = document.getElementById('tipo-oferta').value;
+    const porcentaje = document.getElementById('porcentaje-oferta').value;
+    const categoria = document.getElementById('categoria-oferta').value;
+
+    try {
+        const respuesta = await fetch('http://localhost:3000/api/ofertas/activar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tipo, porcentaje, categoria })
+        });
+
+        if (respuesta.ok) {
+            Swal.fire({ title: '¡Oferta Activada!', text: 'El descuento masivo ya se refleja en la tienda.', icon: 'success' });
+            obtenerEstadoOfertas();
+            obtenerInventario(); 
+        }
+    } catch (error) { console.error("Error al activar oferta:", error); }
+});
+
+async function apagarOfertas() {
+    if (!confirm("¿Seguro que deseas remover todas las promociones masivas?")) return;
+    try {
+        const respuesta = await fetch('/api/ofertas/desactivar', { method: 'POST' });
+        const resultado = await respuesta.json();
+        
+        if (resultado.exito) {
+            Swal.fire({ title: 'Ofertas Removidas', text: 'Volviendo a precios normales.', icon: 'info' });
+            // REFRESCAR TODO EL SISTEMA DE AVISOS
+            await obtenerEstadoOfertas(); 
+            await obtenerInventario(); // Recarga la tabla de productos para ver el 0%
+        }
+    } catch (error) {
+        console.error("Error al apagar ofertas:", error);
+    }
+}
+
+// En tu admin/index.html dentro de <script>
+// Reemplaza tu función actual en admin/index.html por esta:
+async function obtenerEstadoOfertas() {
+    try {
+        const respuesta = await fetch('/api/productos');
+        const productos = await respuesta.json();
+        const letrero = document.getElementById('estado-ofertas');
+        
+        // Buscamos si existe al menos un producto con descuento > 0
+        const productoEnOferta = productos.find(p => p.descuento > 0);
+
+        if (productoEnOferta) {
+            letrero.innerHTML = `📢 CORRIENDO: <span style="color: #e74c3c;">Descuentos activos en productos.</span>`;
+        } else {
+            letrero.innerText = "⏸️ No hay ofertas activas.";
+        }
+    } catch (error) {
+        console.error("Error al consultar:", error);
+    }
+}
+
+async function editarProducto(id) {
+    try {
+        const respuesta = await fetch('http://localhost:3000/api/productos');
+        const productos = await respuesta.json();
+        const producto = productos.find(p => p.id == id);
+
+        if (producto) {
+            // Mapeo seguro: ID del elemento en HTML -> Valor del objeto
+            const campos = {
+                'edit-product-id': producto.id,
+                'nombre': producto.nombre,
+                'precio': producto.precio,
+                'categoria': producto.categoria,
+                'stock': producto.stock,
+                'edit-descIndividual': producto.descIndividual || 0,
+                'descripcion': producto.descripcion
+
+            };
+
+            for (const [idElemento, valor] of Object.entries(campos)) {
+                const elemento = document.getElementById(idElemento);
+                if (elemento) {
+                    elemento.value = valor || '';
+                } else {
+                    console.warn(`Campo no encontrado: ${idElemento}`);
+                }
+            }
+
+            // Cambiar el texto del botón de forma segura
+            const btn = document.getElementById('btn-guardar');
+            if (btn) {
+                btn.innerText = '🔄 Actualizar Producto';
+        btn.style.backgroundColor = '#3498db'; // Azul profesional
+        btn.className = 'btn-azul'; // Aplica el azul
+            }
+        }
+    window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+            
+            console.log("¡Scroll al tope realizado!");
+        }
+     catch (error) {
+        console.error("Error al editar:", error);
+    }
+}
+
+// Mapea los datos del producto seleccionado de vuelta al formulario
+function prepararEdicion(productoRecibido) {
+    const producto = typeof productoRecibido === 'string' ? JSON.parse(productoRecibido) : productoRecibido;
+    console.log("Datos del producto cargados:", producto);
+
+    // Mapeo de IDs que deben existir en tu HTML
+    const mapeo = {
+        'edit-product-id': producto.id,
+        'nombre': producto.nombre,
+        'precio': producto.precio,
+        'stock': producto.stock || 0,
+        'categoria': producto.categoria,
+        'descripcion': producto.descripcion
+    };
+
+    // Intentar rellenar campos de forma segura
+    for (const [id, valor] of Object.entries(mapeo)) {
+        const elemento = document.getElementById(id);
+        if (elemento) {
+            elemento.value = valor || '';
+        } else {
+            console.warn(`⚠️ Atención: El campo con ID "${id}" no existe en tu HTML. Verifica el formulario.`);
+        }
+    }
+
+    // Configuración del botón
+    const botonGuardar = document.getElementById('btn-guardar');
+    if (botonGuardar) botonGuardar.innerText = '🔄 Actualizar Producto';
+
+   setTimeout(() => {
+        const form = document.getElementById('formulario-admin');
+        if (form) {
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            console.warn("No se encontró el formulario para hacer scroll.");
+        }
+    }, 100); // 100 milisegundos son suficientes para que el navegador reaccione
+}
+
+
+// Limpia el formulario y lo restaura a su modo original de creación
+function limpiarFormularioAdmin() {
+    // 1. Limpiar campos
+    const form = document.getElementById('formulario-admin');
+    if (form) form.reset();
+    
+    // 2. Limpiar ID oculto
+    const idOculto = document.getElementById('edit-product-id');
+    if (idOculto) idOculto.value = ''; 
+
+    // 3. RESTAURAR BOTÓN A ESTADO "GUARDAR" (VERDE)
+    const btn = document.getElementById('btn-guardar');
+    if (btn) {
+        btn.innerText = 'Guardar Producto';
+        
+        // Quitamos la clase azul y ponemos la verde
+        btn.classList.remove('btn-azul');
+        btn.classList.add('btn-verde');
+        
+        // Fuerza el estilo por si acaso
+        btn.style.backgroundColor = '#27ae60'; 
+    }
+}
+
+async function registrarVentaExterna() {
+    const nombreProducto = prompt("Ingrese el nombre exacto del producto (ej: cadena):");
+    if (!nombreProducto) return;
+
+    const cantidad = prompt("Ingrese la cantidad vendida:", "1");
+    if (!cantidad) return;
+
+    const cliente = prompt("Nombre del cliente (Opcional):", "Venta Externa");
+
+    try {
+        const respuesta = await fetch('/api/registrar-venta', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                nombreProducto: nombreProducto,
+                cantidad: Number(cantidad),
+                tipoVenta: "Venta Externa", // Esto llenará la casilla OBS como lo pidió
+                cliente: cliente
+            })
+        });
+
+        const resultado = await respuesta.json();
+        if (resultado.exito) {
+            alert(resultado.mensaje);
+            location.reload(); 
+        } else {
+            alert("Error: " + resultado.mensaje);
+        }
+    } catch (err) {
+        alert("Error de conexión con el servidor.");
+    }
+}
+
+</script>
+</body>
+</html>
