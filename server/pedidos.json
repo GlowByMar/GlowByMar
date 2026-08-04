@@ -23,5 +23,28 @@
     ],
     "transportadora": "servientrega",
     "numeroGuia": "1324"
+  },
+  {
+    "idPedido": 2,
+    "fecha": "3/8/2026, 12:24:05 a. m.",
+    "estado": "pendiente",
+    "cliente": "juan",
+    "telefono": "123",
+    "direccion": "13",
+    "total": 25000,
+    "comprobanteUrl": "/imagenes/joya-1785734645238.jfif",
+    "articulosDetallados": [
+      {
+        "nombre": "Cadena corazón blanco",
+        "cantidad": 1,
+        "precioOriginal": 25000,
+        "descuentoAplicado": 0,
+        "precioEfectivoUnidad": 25000,
+        "subtotal": 25000
+      }
+    ],
+    "articulos": [
+      "Cadena corazón blanco (x1)"
+    ]
   }
 ]

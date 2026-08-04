@@ -170,102 +170,72 @@ app.post('/api/productos', upload.single('foto'), async (req, res) => {
 });
 
 // ==========================================
-// RUTA 3: Procesar la compra
+// RUTA 3: Procesar la compra, validar stock en MongoDB y subir comprobante a Cloudinary
 // ==========================================
-app.post('/api/comprar', upload.single('comprobante'), (req, res) => {
+app.post('/api/comprar', upload.single('comprobante'), async (req, res) => {
     try {
         const { nombre, telefono, direccion } = req.body;
-        if (!req.body.carrito) return res.status(400).json({ exito: false, mensaje: 'El carrito está vacío.' });
-        
-        const productosComprados = JSON.parse(req.body.carrito); 
-        const rutaArchivo = path.join(__dirname, 'productos.json');
-        const rutaPedidos = path.join(__dirname, 'pedidos.json');
 
-        console.log("Archivo recibido:", req.file);
-        console.log("Datos del cuerpo:", req.body);
+        // 1. Validaciones iniciales del formulario
+        if (!req.body.carrito) {
+            return res.status(400).json({ exito: false, mensaje: 'El carrito está vacío.' });
+        }
+        if (!req.file) {
+            return res.status(400).json({ exito: false, mensaje: 'Falta el comprobante de pago.' });
+        }
 
-        if (!req.file) return res.status(400).json({ exito: false, mensaje: 'Falta el comprobante.' });
+        const productosComprados = JSON.parse(req.body.carrito);
 
-        fs.readFile(rutaArchivo, 'utf8', (err, data) => {
-            if (err) return res.status(500).json({ exito: false, mensaje: 'Error al leer el inventario.' });
-
-            let productosBD = [];
-            try { productosBD = JSON.parse(data || '[]'); } catch(e) { productosBD = []; }
+        // 2. REVISIÓN Y DESCUENTO DE STOCK EN MONGODB ATLAS (Lógica de inventario)
+        for (const item of productosComprados) {
+            const productoEnBD = await Producto.findById(item._id || item.id);
             
-            let erroresStock = [];
-            let totalPagoPedido = 0;
-            let desgloseArticulos = [];
+            if (!productoEnBD) {
+                return res.status(404).json({ exito: false, mensaje: `El producto ${item.nombre} no existe en el inventario.` });
+            }
 
-            productosComprados.forEach(itemIntento => {
-    const prodBD = productosBD.find(p => p.id === itemIntento.id);
-    const stockActual = prodBD ? (prodBD.stock !== undefined ? prodBD.stock : prodBD.disponibles) : 0;
+            // Validamos si hay existencias suficientes
+            const stockActual = productoEnBD.cantidadStock || productoEnBD.stock || 0;
+            if (stockActual < item.cantidad) {
+                return res.status(400).json({ exito: false, mensaje: `Stock insuficiente para ${item.nombre}. Disponibles: ${stockActual}` });
+            }
 
-    if (!prodBD || stockActual < itemIntento.cantidad) {
-        erroresStock.push(`No hay suficiente stock de: ${itemIntento.nombre}.`);
-    } else {
-        // Usamos la variable correcta que definiste: precioFinalPorUnidad
-        const precioFinalPorUnidad = itemIntento.precio;
-        
-        // CORRECCIÓN AQUÍ: Cambiamos precioConDescuento por precioFinalPorUnidad
-        totalPagoPedido += (precioFinalPorUnidad * itemIntento.cantidad);
+            // Restamos la cantidad comprada directamente en la base de datos
+            productoEnBD.cantidadStock = stockActual - item.cantidad;
+            await productoEnBD.save();
+        }
 
-        // Busca este bloque dentro de tu app.post('/api/comprar')
-// y reemplaza el .push dentro del forEach por esto:
-
-// ... dentro de tu forEach ...
-    desgloseArticulos.push({
-    nombre: prodBD.nombre,
-    cantidad: itemIntento.cantidad,
-    precioOriginal: prodBD.precio, 
-    descuentoAplicado: Number(itemIntento.descIndividual) || Number(itemIntento.descuento) || Number(prodBD.descIndividual) || Number(prodBD.descuento) || 0,
-    precioEfectivoUnidad: itemIntento.precio,
-    subtotal: itemIntento.precio * itemIntento.cantidad
-});
-    }
-});
-            if (erroresStock.length > 0) return res.status(400).json({ exito: false, mensaje: erroresStock.join(' ') });
-
-            productosComprados.forEach(itemIntento => {
-                const prodBD = productosBD.find(p => p.id === itemIntento.id);
-                if (prodBD) {
-                    if (prodBD.stock !== undefined) prodBD.stock -= itemIntento.cantidad;
-                    else if (prodBD.disponibles !== undefined) prodBD.disponibles -= itemIntento.cantidad;
-                }
-            });
-
-            fs.writeFile(rutaArchivo, JSON.stringify(productosBD, null, 2), (errUpdate) => {
-                if (errUpdate) return res.status(500).json({ exito: false, mensaje: 'Error al actualizar inventario.' });
-                
-                fs.readFile(rutaPedidos, 'utf8', (errPedidos, dataPedidos) => {
-                    let pedidos = [];
-                    if (!errPedidos && dataPedidos) {
-                        try { pedidos = JSON.parse(dataPedidos); } catch(e) { pedidos = []; }
-                    }
-
-                    const nuevoPedido = {
-                        idPedido: pedidos.length > 0 ? pedidos[pedidos.length - 1].idPedido + 1 : 1,
-                        fecha: new Date().toLocaleString('es-CO'),
-                        estado: "pendiente",
-                        cliente: nombre,
-                        telefono: telefono,
-                        direccion: direccion,
-                        total: totalPagoPedido, 
-                        comprobanteUrl: `/imagenes/${req.file.filename}`,
-                        articulosDetallados: desgloseArticulos, 
-                        articulos: desgloseArticulos.map(p => `${p.nombre} (x${p.cantidad})`) 
-                    };
-
-                    pedidos.push(nuevoPedido);
-
-                    fs.writeFile(rutaPedidos, JSON.stringify(pedidos, null, 2), (errWrite) => {
-                        if (errWrite) console.error("Error al guardar pedidos.");
-                        return res.status(200).json({ exito: true, mensaje: '¡Compra procesada con éxito!' });
-                    });
-                });
-            });
+        // 3. SUBIDA DEL COMPROBANTE FÍSICO A CLOUDINARY
+        const resultadoCloud = await cloudinary.uploader.upload(req.file.path, {
+            folder: "glowbymar_comprobantes"
         });
+
+        // 4. REGISTRO DEL PEDIDO EN MONGODB ATLAS
+        const nuevoPedido = new Pedido({
+            idPedido: "PED-" + Date.now(),
+            fecha: new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota' }),
+            cliente: nombre,
+            contacto: telefono,
+            direccion: direccion,
+            productos: productosComprados,
+            total: productosComprados.reduce((sum, p) => sum + (p.precioConDescuento || p.precio || 0) * (p.cantidad || 1), 0),
+            estado: 'PENDIENTE',
+            comprobante: resultadoCloud.secure_url // Link eterno de la foto del pago
+        });
+
+        await nuevoPedido.save();
+
+        res.json({ 
+            exito: true, 
+            mensaje: "¡Tu compra fue registrada con éxito! El administrador verificará tu pago e inventario." 
+        });
+
     } catch (error) {
-        return res.status(500).json({ exito: false, mensaje: "Error crítico." });
+        console.error("Error al procesar la compra en la nube:", error);
+        res.status(500).json({ 
+            exito: false, 
+            mensaje: "Hubo un problema interno en el servidor al procesar la transacción." 
+        });
     }
 });
 
