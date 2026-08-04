@@ -8,6 +8,19 @@ const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
 require('dotenv').config();
 
+// // MODELO DE BASE DE DATOS PARA PEDIDOS
+const pedidoSchema = new mongoose.Schema({
+    idPedido: String,
+    fecha: { type: Date, default: Date.now },
+    cliente: String,
+    contacto: String,
+    direccion: String,
+    productos: Array,
+    total: Number,
+    estado: { type: String, default: 'PENDIENTE' }
+});
+const Pedido = mongoose.model('Pedido', pedidoSchema, 'pedidos');
+
 const app = express();
 
 // // Configuración de Middlewares Básicos
@@ -35,18 +48,6 @@ mongoose.connect(process.env.MONGO_URL)
     .then(() => console.log('¡Conectado permanentemente a MongoDB Atlas!'))
     .catch(err => console.error('Error al conectar a MongoDB:', err));
 
-// // MODELO DE BASE DE DATOS PARA PEDIDOS
-const pedidoSchema = new mongoose.Schema({
-    idPedido: String,
-    fecha: { type: Date, default: Date.now },
-    cliente: String,
-    contacto: String,
-    direccion: String,
-    productos: Array,
-    total: Number,
-    estado: { type: String, default: 'PENDIENTE' }
-});
-const Pedido = mongoose.model('Pedido', pedidoSchema, 'pedidos');
 
 // Variable global para controlar las promociones del panel
 let ofertasTemporales = {
