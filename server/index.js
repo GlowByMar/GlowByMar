@@ -53,11 +53,8 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// // CONEXIÓN A MONGODB ATLAS ULTRA ESTABLE
-mongoose.connect(process.env.MONGO_URL, {
-    serverSelectionTimeoutMS: 45000, // Espera hasta 45 segundos antes de rendirse
-    socketTimeoutMS: 45000,
-})
+// CONEXIÓN A MONGODB ATLAS
+mongoose.connect(process.env.MONGO_URL)
 .then(() => console.log('¡Conectado permanentemente a MongoDB Atlas!'))
 .catch(err => console.error('Error crítico al conectar a MongoDB:', err));
 
