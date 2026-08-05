@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
 require('dotenv').config();
 
-// // MODELO DE BASE DE DATOS PARA PEDIDOS
+// MODELO DE BASE DE DATOS PARA PEDIDOS
 const pedidoSchema = new mongoose.Schema({
     idPedido: String,
     fecha: { type: Date, default: Date.now },
@@ -20,6 +20,16 @@ const pedidoSchema = new mongoose.Schema({
     estado: { type: String, default: 'PENDIENTE' }
 });
 const Pedido = mongoose.model('Pedido', pedidoSchema, 'pedidos');
+
+// 👉 MODELO DE BASE DE DATOS PARA PRODUCTOS (FALTABA ESTE)
+const productoSchema = new mongoose.Schema({
+    nombre: String,
+    categoria: String,
+    precioVenta: Number,
+    precio: Number,
+    descuento: Number
+});
+const Producto = mongoose.model('Producto', productoSchema, 'productos');
 
 const app = express();
 
