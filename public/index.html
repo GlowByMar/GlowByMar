@@ -684,11 +684,13 @@ function renderizarProductosFiltrados(productosA_Mostrar) {
 
     productosA_Mostrar.forEach(prod => {
         // 1. Imagen blindada (soporta Cloudinary o respaldos locales)
-        let urlImagen = prod.imagen || prod.foto || 'default.jpg';
-// Limpiamos barras iniciales y la palabra imagenes/ si viene repetida
-urlImagen = urlImagen.replace(/^\/+/, '').replace(/^imagenes\//, '');
-if (urlImagen === 'default.jpg' || urlImagen === '/imagenes/default.jpg') {
-    urlImagen = 'default.jpg';
+        // Si prod.imagen o prod.foto tienen un valor real que no sea el default, úsalo; de lo contrario busca alternativas
+let urlImagen = 'default.jpg';
+
+if (prod.imagen && !prod.imagen.includes('default.jpg')) {
+    urlImagen = prod.imagen;
+} else if (prod.foto && !prod.foto.includes('default.jpg')) {
+    urlImagen = prod.foto;
 }
 
 const rutaImagen = urlImagen.startsWith('http') 
