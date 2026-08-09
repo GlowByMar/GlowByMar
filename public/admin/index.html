@@ -464,8 +464,8 @@ async function obtenerInventario() {
                     <td>${etiquetaDescuento}</td>
                     <td style="color: ${colorStock};">${prod.stock} unds</td>
                     <td style="display: flex; flex-direction: column; gap: 5px; align-items: center;">
-                        <button class="btn-editar" onclick="editarProducto(${prod.id})">✏️ Editar</button>
-                        <button class="btn-eliminar" onclick="eliminarProducto(${prod.id})">❌ Eliminar</button>
+                        <button class="btn-editar" onclick="editarProducto('${prod._id}')">✏️ Editar</button>
+                        <button class="btn-eliminar" onclick="eliminarProducto('${prod._id}')">❌ Eliminar</button>
                     </td>
                 </tr>
             `;
