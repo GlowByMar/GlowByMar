@@ -131,20 +131,22 @@ app.get('/api/productos', async (req, res) => {
 });
 
 // ==========================================
-// RUTA 2: Recibir el accesorio nuevo y guardarlo en la nube (AUTOMÁTICO 100%)
+// RUTA 2: Recibir el accesorio nuevo y guardarlo en la nube (BLINDADA)
 // ==========================================
-app.post('/api/productos', upload.single('foto'), async (req, res) => {
+app.post('/api/productos', upload.any(), async (req, res) => {
     try {
         const { nombre, categoria, precio, costo, stock, descripcion, descuento } = req.body;
 
-        // Validamos que el administrador haya seleccionado un archivo
-        if (!req.file) {
+        // Buscamos el archivo sin importar si el input se llamó 'foto', 'imagen' o cualquier otra cosa
+        const archivoSubido = req.files && req.files.length > 0 ? req.files[0] : null;
+
+        if (!archivoSubido) {
             return res.status(400).json({ exito: false, mensaje: "Falta la foto del accesorio." });
         }
 
         // 1. Enviamos la foto física directamente a tu cuenta de Cloudinary
-        const resultadoCloudinary = await cloudinary.uploader.upload(req.file.path, {
-            folder: "glowbymar_tienda" // Crea automáticamente una carpeta organizada en tu nube
+        const resultadoCloudinary = await cloudinary.uploader.upload(archivoSubido.path, {
+            folder: "glowbymar_tienda" // Carpeta organizada en tu nube
         });
 
         // 2. Armamos la información para MongoDB con el enlace eterno de la foto
@@ -155,10 +157,10 @@ app.post('/api/productos', upload.single('foto'), async (req, res) => {
             costoCompra: parseFloat(costo || 0),
             cantidadStock: parseInt(stock || 0),
             descuento: parseInt(descuento || 0),
-            imagen: resultadoCloudinary.secure_url // <-- El link que nos da Cloudinary (NUNCA se borra)
+            imagen: resultadoCloudinary.secure_url // Link eterno de Cloudinary
         });
 
-        // 3. Guardamos los datos en tu base de datos indestructible
+        // 3. Guardamos los datos en tu base de datos
         await nuevoProducto.save();
 
         res.json({ 
