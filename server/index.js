@@ -623,43 +623,60 @@ app.post('/api/ofertas/activar', (req, res) => {
 });
 
 // ====================================================
-// 🔥 RUTA CORREGIDA: Editar un producto existente
+// 🔥 RUTA CORREGIDA: Editar un producto existente (MongoDB + Cloudinary)
 // ====================================================
-app.post('/api/productos/editar', (req, res) => {
-    const { id, nombre, precio, stock, categoria, descripcion, descIndividual } = req.body;
-    const rutaArchivo = path.join(__dirname, 'productos.json');
+app.post('/api/productos/editar', upload.any(), async (req, res) => {
+    try {
+        const { id, nombre, precio, costo, stock, categoria, descripcion, descuento } = req.body;
 
-    fs.readFile(rutaArchivo, 'utf8', (err, data) => {
-        if (err) return res.status(500).json({ exito: false, mensaje: 'Error al leer' });
-
-        try {
-            let productos = JSON.parse(data || '[]');
-            
-            productos = productos.map(prod => {
-                if (prod.id === parseInt(id)) {
-                    return {
-                        ...prod,
-                        nombre,
-                        precio: parseInt(precio || 0),
-                        stock: parseInt(stock || 0),
-                        categoria,
-                        descripcion,
-                        descIndividual: parseFloat(descIndividual || 0) // Asegura que este campo se guarde
-                    };
-                }
-                return prod;
-            });
-
-            fs.writeFile(rutaArchivo, JSON.stringify(productos, null, 2), (err) => {
-                if (err) return res.status(500).json({ exito: false, mensaje: 'Error al guardar.' });
-                
-                // SOLO UNA RESPUESTA AQUÍ
-                return res.json({ exito: true, mensaje: '¡Producto actualizado!' });
-            });
-        } catch (e) {
-            return res.status(500).json({ exito: false, mensaje: 'Error procesando JSON.' });
+        if (!id) {
+            return res.status(400).json({ exito: false, mensaje: "Falta el ID del producto a editar." });
         }
-    });
+
+        // 1. Buscamos el producto actual en MongoDB para saber si ya tenía imagen
+        const productoExistente = await Producto.findById(id);
+        if (!productoExistente) {
+            return res.status(404).json({ exito: false, mensaje: "El producto no existe en la base de datos." });
+        }
+
+        let nuevaImagenUrl = productoExistente.imagen || productoExistente.foto;
+
+        // 2. Verificamos si el usuario subió una NUEVA foto en el formulario
+        const archivoSubido = req.files && req.files.length > 0 ? req.files[0] : null;
+
+        if (archivoSubido) {
+            // Si hay archivo nuevo, lo mandamos a Cloudinary
+            const resultadoCloudinary = await cloudinary.uploader.upload(archivoSubido.path, {
+                folder: "glowbymar_tienda"
+            });
+            nuevaImagenUrl = resultadoCloudinary.secure_url;
+        }
+
+        // 3. Actualizamos el producto en MongoDB
+        await Producto.findByIdAndUpdate(id, {
+            nombre: nombre,
+            categoria: categoria,
+            precioVenta: parseInt(precio || 0),
+            costoCompra: parseFloat(costo || 0),
+            cantidadStock: parseInt(stock || 0),
+            descripcion: descripcion,
+            descuento: parseInt(descuento || 0),
+            imagen: nuevaImagenUrl,
+            foto: nuevaImagenUrl
+        });
+
+        res.json({ 
+            exito: true, 
+            mensaje: '¡Producto actualizado con éxito en MongoDB y Cloudinary!' 
+        });
+
+    } catch (error) {
+        console.error("Error al editar el producto:", error);
+        res.status(500).json({ 
+            exito: false, 
+            mensaje: 'Error interno al procesar la actualización.' 
+        });
+    }
 });
 
 app.post('/api/ofertas/desactivar', (req, res) => {
