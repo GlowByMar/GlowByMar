@@ -67,18 +67,24 @@ let ofertasTemporales = {
 };
 
 // ==========================================
-// RUTA 1: Traer todos los productos procesando ofertas globales, por categoría e individuales (VERSIÓN INDESTRUCTIBLE MONGODB)
+// RUTA 1: Traer todos los productos (VERSIÓN UNIFICADA Y BLINDADA)
 // ==========================================
 app.get('/api/productos', async (req, res) => {
     try {
-        // Traemos todos los productos desde MongoDB Atlas en lugar del archivo JSON local
         let productos = await Producto.find({});
 
         let productosProcesados = productos.map(doc => {
-            // Convertimos el documento de MongoDB a un objeto de JavaScript estándar
             const prod = doc.toObject();
 
-            const descIndividual = parseInt(prod.descuento || 0); // Usamos tu nuevo campo 'descuento'
+            // Unificamos nombres para que el frontend nunca reciba "undefined"
+            const precioFinal = prod.precioVenta || prod.precio || 0;
+            const stockFinal = prod.cantidadStock !== undefined ? prod.cantidadStock : (prod.stock !== undefined ? prod.stock : 0);
+            const costoFinal = prod.costoCompra || prod.costo || 0;
+            
+            // Aseguramos que la imagen coja la de Cloudinary o una por defecto si no tiene
+            const imagenFinal = prod.imagen || prod.foto || '/imagenes/default.jpg';
+
+            const descIndividual = parseInt(prod.descuento || prod.descIndividual || 0);
             const descGlobal = ofertasTemporales && ofertasTemporales.global ? parseInt(ofertasTemporales.global) : 0;
 
             let descCategoria = 0;
@@ -95,35 +101,24 @@ app.get('/api/productos', async (req, res) => {
                 }
             }
 
-            // 🕵️‍♂️ EL ESPÍA ADSO FUNCIONANDO EN LA NUBE
-            if (prod.nombre && (prod.nombre.toLowerCase().includes('reloj') || prod.nombre.toLowerCase().includes('cadena') || prod.nombre.toLowerCase().includes('diglett'))) {
-                console.log(`\n🕵️‍♂️ [ESPÍA ADSO] Producto: "${prod.nombre}"`);
-                console.log(` - Categoría en DB: "${prod.categoria}"`);
-                console.log(` - Buscando Oferta de Categoría: "${ofertasTemporales ? ofertasTemporales.categoria : 'NINGUNA'}"`);
-                console.log(` - Descuento final calculado: ${descCategoria}%`);
-            }
-
-            // Lógica de prioridad de descuentos original intacta
             let descuentoApplied = 0;
-
-            if (descIndividual > 0) {
-                descuentoApplied = descIndividual;
-            } 
-            else if (descCategoria > 0) {
-                descuentoApplied = descCategoria;
-            } 
-            else if (descGlobal > 0) {
-                descuentoApplied = descGlobal;
-            }
-
-            // Aseguramos que use 'precioVenta' que es el nombre estándar del formulario del administrador
-            const precioBase = prod.precioVenta || prod.precio || 0;
+            if (descIndividual > 0) descuentoApplied = descIndividual;
+            else if (descCategoria > 0) descuentoApplied = descCategoria;
+            else if (descGlobal > 0) descuentoApplied = descGlobal;
 
             return {
                 ...prod,
-                precio: precioBase, // Mapeo de compatibilidad con el frontend viejo
+                _id: prod._id, // Aseguramos que viaje el ID de MongoDB
+                precio: precioFinal,
+                precioVenta: precioFinal,
+                stock: stockFinal,
+                cantidadStock: stockFinal,
+                costo: costoFinal,
+                costoCompra: costoFinal,
+                imagen: imagenFinal, // <--- Aquí va el link eterno de Cloudinary
+                foto: imagenFinal,
                 descuentoEfectivo: descuentoApplied, 
-                precioConDescuento: precioBase - (precioBase * (descuentoApplied / 100))
+                precioConDescuento: precioFinal - (precioFinal * (descuentoApplied / 100))
             };
         });
 
