@@ -693,9 +693,10 @@ if (prod.imagen && !prod.imagen.includes('default.jpg')) {
     urlImagen = prod.foto;
 }
 
-const rutaImagen = urlImagen.startsWith('http') 
+// Si no hay una URL válida de Cloudinary (http...), dejamos la ruta vacía o manejamos un contenedor alternativo
+const rutaImagen = urlImagen && urlImagen.startsWith('http') 
     ? urlImagen 
-    : `imagenes/${urlImagen}`;
+    : ''; // O una imagen placeholder online si prefieres
 
         const stockActual = prod.stock !== undefined ? prod.stock : (prod.cantidadStock || 0);
         const estaAgotado = stockActual <= 0;
@@ -731,7 +732,9 @@ const rutaImagen = urlImagen.startsWith('http')
         tarjeta.style.position = 'relative';
         tarjeta.innerHTML = `
             ${htmlBadge}
-            <div class="producto-imagen-wrapper"><img src="${rutaImagen}" alt="${prod.nombre}"></div>
+            <div class="producto-imagen-wrapper">
+    ${rutaImagen ? `<img src="${rutaImagen}" alt="${prod.nombre}">` : `<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#aaa;">Sin imagen</div>`}
+</div>
             <div class="producto-info">
                 <h3>${prod.nombre}</h3>
                 <div class="producto-meta" style="display: flex; flex-direction: column; align-items: center;">
