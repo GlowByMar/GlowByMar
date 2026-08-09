@@ -83,7 +83,11 @@ let productos = await Producto.find({}).sort({ _id: -1 });
             const costoFinal = prod.costoCompra || prod.costo || 0;
             
             // Aseguramos que la imagen coja la de Cloudinary o una por defecto si no tiene
-            const imagenFinal = prod.imagen || prod.foto || '/imagenes/default.jpg';
+            let imagenFinal = prod.imagen || prod.foto || '';
+            if (!imagenFinal || imagenFinal.includes('default.jpg')) {
+            imagenFinal = ''; 
+            }
+            
 
             const descIndividual = parseInt(prod.descuento || prod.descIndividual || 0);
             const descGlobal = ofertasTemporales && ofertasTemporales.global ? parseInt(ofertasTemporales.global) : 0;
