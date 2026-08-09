@@ -71,7 +71,8 @@ let ofertasTemporales = {
 // ==========================================
 app.get('/api/productos', async (req, res) => {
     try {
-        let productos = await Producto.find({});
+        // Cambia esto en tu Ruta 1:
+let productos = await Producto.find({}).sort({ _id: -1 });
 
         let productosProcesados = productos.map(doc => {
             const prod = doc.toObject();
