@@ -445,24 +445,19 @@ async function obtenerInventario() {
             const valorIndividual = parseInt(prod.descIndividual || 0);
             const valorMasivo = parseInt(prod.descuento || 0);
 
-            // Si el individual existe y es mayor a 0, usamos ese. Si no, usamos el masivo.
             const descuentoFinal = valorIndividual > 0 ? valorIndividual : valorMasivo;
 
-            // Ahora pintamos la etiqueta basándonos en el valor ganador
             const etiquetaDescuento = descuentoFinal > 0 
                 ? `<span style="background: #e67e22; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">${descuentoFinal}% OFF</span>` 
                 : `<span style="color: #95a566;">Sin desc.</span>`;
-    
-            // Creamos una cadena de texto limpia del objeto para pasarla de forma segura al onclick
-            const stringProducto = JSON.stringify(prod).replace(/"/g, '&quot;');
 
             cuerpoTabla.innerHTML += `
                 <tr>
                     <td style="font-weight: bold; color: #34495e;">${prod.nombre}</td>
                     <td>$${costo.toLocaleString('es-CO')}</td>
-                    <td>$${prod.precio.toLocaleString('es-CO')}</td>
+                    <td>$${(prod.precioVenta || prod.precio || 0).toLocaleString('es-CO')}</td>
                     <td>${etiquetaDescuento}</td>
-                    <td style="color: ${colorStock};">${prod.stock} unds</td>
+                    <td style="color: ${colorStock};">${stockActual} unds</td>
                     <td style="display: flex; flex-direction: column; gap: 5px; align-items: center;">
                         <button class="btn-editar" onclick="editarProducto('${prod._id}')">✏️ Editar</button>
                         <button class="btn-eliminar" onclick="eliminarProducto('${prod._id}')">❌ Eliminar</button>
@@ -479,10 +474,49 @@ async function obtenerInventario() {
             </tr>
         `;
 
-    } catch (error) { console.error(error); }
+    } catch (error) { console.error("Error al obtener inventario:", error); }
 }
 
-// ====== LOGICA MODIFICADA PARA MANEJAR "CREACIÓN" O "EDICIÓN" EN EL SUBMIT ======
+// ====== FUNCIÓN PARA CARGAR LOS DATOS EN EL FORMULARIO AL EDITAR ======
+async function editarProducto(id) {
+    try {
+        const respuesta = await fetch('/api/productos');
+        const productos = await respuesta.json();
+        
+        // Buscamos el producto por su _id de MongoDB
+        const producto = productos.find(p => String(p._id) === String(id));
+
+        if (producto) {
+            // Asignamos el _id al campo oculto para saber que estamos editando
+            if (document.getElementById('edit-product-id')) {
+                document.getElementById('edit-product-id').value = producto._id;
+            }
+
+            // Llenamos los inputs del formulario
+            if (document.getElementById('nombre')) document.getElementById('nombre').value = producto.nombre || '';
+            if (document.getElementById('categoria')) document.getElementById('categoria').value = producto.categoria || '';
+            if (document.getElementById('precio')) document.getElementById('precio').value = producto.precioVenta || producto.precio || '';
+            if (document.getElementById('costo')) document.getElementById('costo').value = producto.costo || '';
+            if (document.getElementById('stock')) document.getElementById('stock').value = producto.stock !== undefined ? producto.stock : '';
+            if (document.getElementById('descIndividual')) document.getElementById('descIndividual').value = producto.descIndividual || 0;
+
+            // Desplazamos la pantalla hacia arriba suavemente para ver el formulario cargado
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    } catch (error) {
+        console.error("Error al cargar producto para editar:", error);
+    }
+}
+
+// ====== FUNCIÓN PARA LIMPIAR EL FORMULARIO Y RESETEAR EL MODO EDICIÓN ======
+function limpiarFormularioAdmin() {
+    const formulario = document.getElementById('formulario-admin');
+    if (formulario) formulario.reset();
+    const inputId = document.getElementById('edit-product-id');
+    if (inputId) inputId.value = '';
+}
+
+// ====== LÓGICA MODIFICADA PARA MANEJAR "CREACIÓN" O "EDICIÓN" EN EL SUBMIT ======
 document.getElementById('formulario-admin').addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -494,12 +528,14 @@ document.getElementById('formulario-admin').addEventListener('submit', async (e)
         
         let url = '/api/productos';
         
-        // Si hay un ID en el campo oculto, cambiamos el destino a la ruta de editar
         if (idEdicion) {
             url = '/api/productos/editar';
             
-            // Para enviar datos por FormData a una ruta JSON tradicional, los convertimos a un objeto simple
+            // Convertimos el formulario a objeto
             const objetoDatos = Object.fromEntries(datosFormulario.entries());
+            // Aseguramos que viaje el _id con la propiedad exacta que espera MongoDB
+            objetoDatos._id = idEdicion;
+            objetoDatos.id = idEdicion; 
             
             const respuesta = await fetch(url, {
                 method: 'POST',
@@ -511,26 +547,37 @@ document.getElementById('formulario-admin').addEventListener('submit', async (e)
                 Swal.fire({ title: '¡Producto Actualizado!', icon: 'success' });
                 limpiarFormularioAdmin();
                 obtenerInventario();
-                 
+            } else {
+                Swal.fire({ title: 'Error al actualizar', icon: 'error' });
             }
         } else {
-            // Flujo normal para crear un producto nuevo con archivos adjuntos (POST FormData)
+            // Crear producto nuevo
             const respuesta = await fetch(url, { method: 'POST', body: datosFormulario });
             if (respuesta.ok) {
                 Swal.fire({ title: '¡Guardado!', icon: 'success' });
-                e.target.reset(); 
+                limpiarFormularioAdmin(); 
                 obtenerInventario(); 
+            } else {
+                Swal.fire({ title: 'Error al guardar', icon: 'error' });
             }
         }
-    } catch (error) { console.error(error); }
+    } catch (error) { 
+        console.error("Error en submit:", error); 
+        Swal.fire({ title: 'Error de conexión', icon: 'error' });
+    }
 });
 
+// ====== ELIMINAR PRODUCTO ======
 async function eliminarProducto(id) {
     if (!confirm("¿Borrar producto?")) return;
     try {
         const respuesta = await fetch(`/api/productos/${id}`, { method: 'DELETE' });
-        if (respuesta.ok) obtenerInventario();
-    } catch (error) { console.error(error); }
+        if (respuesta.ok) {
+            obtenerInventario();
+        } else {
+            alert("No se pudo eliminar el producto de la base de datos.");
+        }
+    } catch (error) { console.error("Error al eliminar:", error); }
 }
 
 function conmutarCamposOferta() {
