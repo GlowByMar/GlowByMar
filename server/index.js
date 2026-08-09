@@ -55,8 +55,8 @@ cloudinary.config({
 
 // CONEXIÓN A MONGODB ATLAS
 mongoose.connect(process.env.MONGO_URL)
-.then(() => console.log('¡Conectado permanentemente a MongoDB Atlas!'))
-.catch(err => console.error('Error crítico al conectar a MongoDB:', err));
+  .then(() => console.log('¡Conectado exitosamente a MongoDB Atlas!'))
+  .catch(err => console.error('Error al conectar a MongoDB:', err));
 
 
 // Variable global para controlar las promociones del panel
