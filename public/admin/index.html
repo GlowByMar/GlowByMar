@@ -508,15 +508,7 @@ async function editarProducto(id) {
     }
 }
 
-// ====== FUNCIÓN PARA LIMPIAR EL FORMULARIO Y RESETEAR EL MODO EDICIÓN ======
-function limpiarFormularioAdmin() {
-    const formulario = document.getElementById('formulario-admin');
-    if (formulario) formulario.reset();
-    const inputId = document.getElementById('edit-product-id');
-    if (inputId) inputId.value = '';
-}
-
-// ====== LÓGICA MODIFICADA PARA MANEJAR "CREACIÓN" O "EDICIÓN" CON FormData ======
+// ====== LÓGICA UNIFICADA PARA MANEJAR "CREACIÓN" O "EDICIÓN" CON FormData ======
 document.getElementById('formulario-admin').addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -524,30 +516,41 @@ document.getElementById('formulario-admin').addEventListener('submit', async (e)
     const datosFormulario = new FormData(e.target);
     
     try {
-        Swal.fire({ title: idEdicion ? 'Actualizando producto...' : 'Guardando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        Swal.fire({ 
+            title: idEdicion ? 'Actualizando producto...' : 'Guardando...', 
+            allowOutsideClick: false, 
+            didOpen: () => Swal.showLoading() 
+        });
         
         let url = '/api/productos';
         
         if (idEdicion) {
-            url = '/api/productos/editar';
-            // Añadimos el ID al FormData para que el servidor sepa cuál producto actualizar
+            url = '/api/productos/editar'; // O tu ruta PUT correspondiente
             datosFormulario.append('_id', idEdicion);
             datosFormulario.append('id', idEdicion);
         }
         
-        // Enviamos siempre usando FormData (sin headers de JSON para que viajen los archivos)
+        // ¡Importante! No agregues 'Content-Type': 'application/json' 
+        // cuando usas FormData con archivos. El navegador lo calcula solo.
         const respuesta = await fetch(url, {
             method: 'POST',
             body: datosFormulario
         });
         
+        const resultado = await respuesta.json().catch(() => ({}));
+
         if (respuesta.ok) {
-            Swal.fire({ title: idEdicion ? '¡Producto Actualizado!' : '¡Guardado!', icon: 'success' });
+            Swal.fire({ 
+                title: idEdicion ? '¡Producto Actualizado!' : '¡Guardado!', 
+                icon: 'success' 
+            });
             limpiarFormularioAdmin();
             obtenerInventario();
         } else {
-            const errorData = await respuesta.json().catch(() => ({}));
-            Swal.fire({ title: errorData.mensaje || 'Error al procesar la solicitud', icon: 'error' });
+            Swal.fire({ 
+                title: resultado.mensaje || 'Error al procesar la solicitud', 
+                icon: 'error' 
+            });
         }
     } catch (error) { 
         console.error("Error en submit:", error); 
