@@ -516,7 +516,7 @@ function limpiarFormularioAdmin() {
     if (inputId) inputId.value = '';
 }
 
-// ====== LÓGICA MODIFICADA PARA MANEJAR "CREACIÓN" O "EDICIÓN" EN EL SUBMIT ======
+// ====== LÓGICA MODIFICADA PARA MANEJAR "CREACIÓN" O "EDICIÓN" CON FormData ======
 document.getElementById('formulario-admin').addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -530,36 +530,24 @@ document.getElementById('formulario-admin').addEventListener('submit', async (e)
         
         if (idEdicion) {
             url = '/api/productos/editar';
-            
-            // Convertimos el formulario a objeto
-            const objetoDatos = Object.fromEntries(datosFormulario.entries());
-            // Aseguramos que viaje el _id con la propiedad exacta que espera MongoDB
-            objetoDatos._id = idEdicion;
-            objetoDatos.id = idEdicion; 
-            
-            const respuesta = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(objetoDatos)
-            });
-            
-            if (respuesta.ok) {
-                Swal.fire({ title: '¡Producto Actualizado!', icon: 'success' });
-                limpiarFormularioAdmin();
-                obtenerInventario();
-            } else {
-                Swal.fire({ title: 'Error al actualizar', icon: 'error' });
-            }
+            // Añadimos el ID al FormData para que el servidor sepa cuál producto actualizar
+            datosFormulario.append('_id', idEdicion);
+            datosFormulario.append('id', idEdicion);
+        }
+        
+        // Enviamos siempre usando FormData (sin headers de JSON para que viajen los archivos)
+        const respuesta = await fetch(url, {
+            method: 'POST',
+            body: datosFormulario
+        });
+        
+        if (respuesta.ok) {
+            Swal.fire({ title: idEdicion ? '¡Producto Actualizado!' : '¡Guardado!', icon: 'success' });
+            limpiarFormularioAdmin();
+            obtenerInventario();
         } else {
-            // Crear producto nuevo
-            const respuesta = await fetch(url, { method: 'POST', body: datosFormulario });
-            if (respuesta.ok) {
-                Swal.fire({ title: '¡Guardado!', icon: 'success' });
-                limpiarFormularioAdmin(); 
-                obtenerInventario(); 
-            } else {
-                Swal.fire({ title: 'Error al guardar', icon: 'error' });
-            }
+            const errorData = await respuesta.json().catch(() => ({}));
+            Swal.fire({ title: errorData.mensaje || 'Error al procesar la solicitud', icon: 'error' });
         }
     } catch (error) { 
         console.error("Error en submit:", error); 
