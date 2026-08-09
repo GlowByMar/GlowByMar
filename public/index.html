@@ -684,10 +684,12 @@ function renderizarProductosFiltrados(productosA_Mostrar) {
 
     productosA_Mostrar.forEach(prod => {
         // 1. Imagen blindada (soporta Cloudinary o respaldos locales)
-        const urlImagen = prod.imagen || prod.foto || 'default.jpg';
+        let urlImagen = prod.imagen || prod.foto || 'default.jpg';
+        // Limpiamos si por alguna razón trae barras de más o rutas repetidas
+        urlImagen = urlImagen.replace(/^\/+/, '').replace(/^imagenes\//, '');
         const rutaImagen = urlImagen.startsWith('http') 
-            ? urlImagen 
-            : `imagenes/${urlImagen}`;
+        ? urlImagen 
+        : `imagenes/${urlImagen}`;
 
         const stockActual = prod.stock !== undefined ? prod.stock : (prod.cantidadStock || 0);
         const estaAgotado = stockActual <= 0;
