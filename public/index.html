@@ -640,32 +640,31 @@
 
     <script>
     let carrito = JSON.parse(localStorage.getItem('carrito-joyas')) || [];
-    let todosLosProductos = []; 
+let todosLosProductos = []; 
 
-    document.addEventListener('DOMContentLoaded', () => {
-        cargarProductos();
-        actualizarInterfazCarrito();
-    });
+document.addEventListener('DOMContentLoaded', () => {
+    cargarProductos();
+    actualizarInterfazCarrito();
+});
 
-    async function cargarProductos() {
+async function cargarProductos() {
     try {
         const respuesta = await fetch('/api/productos');
         todosLosProductos = await respuesta.json(); 
         
-        // DEBUG: Vamos a ver qué le llega al frontend
-console.log("Primer producto recibido:", todosLosProductos[0]);
-renderizarProductosFiltrados(todosLosProductos);
+        // DEBUG: Ver qué le llega al frontend
+        console.log("Primer producto recibido:", todosLosProductos[0]);
 
-        // 1. Pintamos los productos
+        // 1. Pintamos los productos una sola vez
         renderizarProductosFiltrados(todosLosProductos);
         
-        // 2. 🔥 ESTO ES LO QUE TE FALTABA: Limpiar fantasmas al cargar
+        // 2. Limpiar fantasmas usando _id de MongoDB
         carrito = carrito.filter(itemCarrito => 
-            todosLosProductos.some(p => p.id === itemCarrito.id)
+            todosLosProductos.some(p => String(p._id) === String(itemCarrito.id || itemCarrito._id))
         );
         localStorage.setItem('carrito-joyas', JSON.stringify(carrito));
         
-        // 3. Actualizamos la burbuja y el carrito con la información real
+        // 3. Actualizamos la burbuja y el carrito
         actualizarInterfazCarrito();
         
     } catch (error) {
@@ -673,8 +672,9 @@ renderizarProductosFiltrados(todosLosProductos);
     }
 }
 
-    function renderizarProductosFiltrados(productosA_Mostrar) {
+function renderizarProductosFiltrados(productosA_Mostrar) {
     const contenedor = document.getElementById('lista-productos'); 
+    if (!contenedor) return;
     contenedor.innerHTML = ''; 
 
     if (productosA_Mostrar.length === 0) {
@@ -683,65 +683,65 @@ renderizarProductosFiltrados(todosLosProductos);
     }
 
     productosA_Mostrar.forEach(prod => {
-    // 1. Configuramos imagen y stock
-    const rutaImagen = prod.imagen && prod.imagen.startsWith('http') 
-    ? prod.imagen 
-    : (prod.imagen_original || `imagenes/${prod.imagen || 'default.jpg'}`);
-    const estaAgotado = prod.stock <= 0;
-    
-    // 2. EL ÚNICO DESCUENTO: Priorizamos el individual, si no hay, tomamos el masivo
-    const descuento = parseInt(prod.descIndividual || prod.descuento || 0);
-    
-    // 3. MATEMÁTICA REAL: Calculamos el precio final aquí mismo
-    const precioOriginal = parseFloat(prod.precio);
-    const precioFinal = descuento > 0 ? (precioOriginal * (1 - descuento / 100)) : precioOriginal;
+        // 1. Imagen blindada (soporta Cloudinary o respaldos locales)
+        const urlImagen = prod.imagen || prod.foto || 'default.jpg';
+        const rutaImagen = urlImagen.startsWith('http') 
+            ? urlImagen 
+            : `imagenes/${urlImagen}`;
 
-    // 4. PREPARAMOS EL HTML (Simple y directo)
-    let htmlPrecios = '';
-    let htmlBadge = '';
+        const stockActual = prod.stock !== undefined ? prod.stock : (prod.cantidadStock || 0);
+        const estaAgotado = stockActual <= 0;
+        
+        // 2. Descuento
+        const descuento = parseInt(prod.descIndividual || prod.descuento || 0);
+        
+        // 3. Matemáticas de precio
+        const precioOriginal = parseFloat(prod.precio || prod.precioVenta || 0);
+        const precioFinal = descuento > 0 ? (precioOriginal * (1 - descuento / 100)) : precioOriginal;
 
-    if (descuento > 0) {
-        htmlPrecios = `
-            <div style="display: flex; flex-direction: column; align-items: center;">
-                <span style="text-decoration: line-through; color: #a5a5a5; font-size: 15px;">$${precioOriginal.toLocaleString('es-CO')}</span>
-                <span style="color: #ffffff; font-weight: bold; font-size: 20px;">$${precioFinal.toLocaleString('es-CO')}</span>
-            </div>`;
-        htmlBadge = `
-            <div style="position: absolute; top: 10px; left: 9px; background: #e74c3c; color: white; padding: 4px 8px; border-radius: 60px; z-index: 1;">
-                🔥 ${descuento}% OFF
-            </div>`;
-    } else {
-        htmlPrecios = `<span style="font-weight: bold; font-size: 17px;">$${precioOriginal.toLocaleString('es-CO')}</span>`;
-    }
+        // 4. HTML de Precios y Badge
+        let htmlPrecios = '';
+        let htmlBadge = '';
 
-    // 5. CONSTRUIMOS LA TARJETA
-    const tarjeta = document.createElement('div');
-    tarjeta.className = 'producto-card';
-    tarjeta.style.position = 'relative';
-    tarjeta.innerHTML = `
-        ${htmlBadge}
-        <div class="producto-imagen-wrapper"><img src="${rutaImagen}" alt="${prod.nombre}"></div>
-        <div class="producto-info">
-            <h3>${prod.nombre}</h3>
+        if (descuento > 0) {
+            htmlPrecios = `
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <span style="text-decoration: line-through; color: #a5a5a5; font-size: 15px;">$${precioOriginal.toLocaleString('es-CO')}</span>
+                    <span style="color: #ffffff; font-weight: bold; font-size: 20px;">$${precioFinal.toLocaleString('es-CO')}</span>
+                </div>`;
+            htmlBadge = `
+                <div style="position: absolute; top: 10px; left: 9px; background: #e74c3c; color: white; padding: 4px 8px; border-radius: 60px; z-index: 1;">
+                    🔥 ${descuento}% OFF
+                </div>`;
+        } else {
+            htmlPrecios = `<span style="font-weight: bold; font-size: 17px;">$${precioOriginal.toLocaleString('es-CO')}</span>`;
+        }
 
-            <!-- <p class="producto-desc">${prod.descripcion}</p> -->
-
-            <div class="producto-meta" style="display: flex; flex-direction: column; align-items: center;">
-                ${htmlPrecios}
-                <span class="producto-stock" style="margin-top: 7px; color: ${estaAgotado ? '#ffee8c' : '#009293'}; font-size: 14px;">
-                    ${estaAgotado ? ' ' : 'Disponibles: ' + prod.stock}
-                </span>
+        // 5. Construcción de la tarjeta usando comillas invertidas y _id seguro de MongoDB
+        const tarjeta = document.createElement('div');
+        tarjeta.className = 'producto-card';
+        tarjeta.style.position = 'relative';
+        tarjeta.innerHTML = `
+            ${htmlBadge}
+            <div class="producto-imagen-wrapper"><img src="${rutaImagen}" alt="${prod.nombre}"></div>
+            <div class="producto-info">
+                <h3>${prod.nombre}</h3>
+                <div class="producto-meta" style="display: flex; flex-direction: column; align-items: center;">
+                    ${htmlPrecios}
+                    <span class="producto-stock" style="margin-top: 7px; color: ${estaAgotado ? '#ffee8c' : '#009293'}; font-size: 14px;">
+                        ${estaAgotado ? ' ' : 'Disponibles: ' + stockActual}
+                    </span>
+                </div>
+                <button class="btn-agregar ${estaAgotado ? 'btn-agotado' : ''}" 
+                        onclick="agregarAlCarrito('${prod._id}')" 
+                        ${estaAgotado ? 'disabled' : ''}>
+                    ${estaAgotado ? 'Agotado' : 'Agregar'}
+                </button>
             </div>
-            <button class="btn-agregar ${estaAgotado ? 'btn-agotado' : ''}" 
-                    onclick="agregarAlCarrito(${prod.id})" 
-                    ${estaAgotado ? 'disabled' : ''}>
-                ${estaAgotado ? 'Agotado' : 'Agregar'}
-            </button>
-        </div>
-    `;
-    contenedor.appendChild(tarjeta);
-});
-} // Cierre de la función
+        `;
+        contenedor.appendChild(tarjeta);
+    });
+}
 
     // 🔥 FILTRO INTELIGENTE CORREGIDO PARA COMPARAR PLURALES/SINGULARES Y MINÚSCULAS
     function filtrarProductos() {
