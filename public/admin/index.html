@@ -270,7 +270,7 @@ td {
 
 <script>
 function descargarFactura(idPedido) {
-    const ventanaImpresion = window.open(`http://localhost:3000/api/pedidos/${idPedido}/factura`, '_blank', 'width=900,height=700');
+    const ventanaImpresion = window.open(`/api/pedidos/${idPedido}/factura`, '_blank', 'width=900,height=700');
     
     if (ventanaImpresion) {
         ventanaImpresion.onload = function() {
@@ -291,7 +291,7 @@ function descargarReporteMensual() {
 
 async function cargarPedidosAdmin() {
     try {
-        const respuesta = await fetch('http://localhost:3000/api/pedidos');
+        const respuesta = await fetch('/api/pedidos');
         const pedidos = await respuesta.json();
         const tabla = document.getElementById('tabla-pedidos-admin');
         
@@ -388,7 +388,7 @@ async function marcarDespachado(id) {
     if (!guia) return;
 
     try {
-        const res = await fetch(`http://localhost:3000/api/pedidos/${id}/despachar`, { 
+        const res = await fetch(`/api/pedidos/${id}/despachar`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ transportadora: empresa, numeroGuia: guia })
@@ -400,7 +400,7 @@ async function marcarDespachado(id) {
 async function marcarEntregado(id) {
     if (!confirm("¿Confirma que el paquete fue entregado?")) return;
     try {
-        const res = await fetch(`http://localhost:3000/api/pedidos/${id}/entregar`, { method: 'PUT' });
+        const res = await fetch(`/api/pedidos/${id}/entregar`, { method: 'PUT' });
         if (res.ok) cargarPedidosAdmin();
     } catch (error) { console.error(error); }
 }
@@ -418,7 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ====== AQUÍ SE REORGANIZÓ LA TABLA PARA INCLUIR EL BOTÓN EDITAR ======
 async function obtenerInventario() {
     try {
-        const respuesta = await fetch('http://localhost:3000/api/productos');
+        const respuesta = await fetch('/api/productos');
         const productos = await respuesta.json();
         const cuerpoTabla = document.getElementById('tabla-inventario');
         if (!cuerpoTabla) return;
@@ -492,11 +492,11 @@ document.getElementById('formulario-admin').addEventListener('submit', async (e)
     try {
         Swal.fire({ title: idEdicion ? 'Actualizando producto...' : 'Guardando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         
-        let url = 'http://localhost:3000/api/productos';
+        let url = '/api/productos';
         
         // Si hay un ID en el campo oculto, cambiamos el destino a la ruta de editar
         if (idEdicion) {
-            url = 'http://localhost:3000/api/productos/editar';
+            url = '/api/productos/editar';
             
             // Para enviar datos por FormData a una ruta JSON tradicional, los convertimos a un objeto simple
             const objetoDatos = Object.fromEntries(datosFormulario.entries());
@@ -528,7 +528,7 @@ document.getElementById('formulario-admin').addEventListener('submit', async (e)
 async function eliminarProducto(id) {
     if (!confirm("¿Borrar producto?")) return;
     try {
-        const respuesta = await fetch(`http://localhost:3000/api/productos/${id}`, { method: 'DELETE' });
+        const respuesta = await fetch(`/api/productos/${id}`, { method: 'DELETE' });
         if (respuesta.ok) obtenerInventario();
     } catch (error) { console.error(error); }
 }
@@ -546,7 +546,7 @@ document.getElementById('formulario-ofertas')?.addEventListener('submit', async 
     const categoria = document.getElementById('categoria-oferta').value;
 
     try {
-        const respuesta = await fetch('http://localhost:3000/api/ofertas/activar', {
+        const respuesta = await fetch('/api/ofertas/activar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ tipo, porcentaje, categoria })
@@ -600,7 +600,7 @@ async function obtenerEstadoOfertas() {
 
 async function editarProducto(id) {
     try {
-        const respuesta = await fetch('http://localhost:3000/api/productos');
+        const respuesta = await fetch('/api/productos');
         const productos = await respuesta.json();
         const producto = productos.find(p => p.id == id);
 

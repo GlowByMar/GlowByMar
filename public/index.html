@@ -649,7 +649,7 @@
 
     async function cargarProductos() {
     try {
-        const respuesta = await fetch('http://localhost:3000/api/productos');
+        const respuesta = await fetch('/api/productos');
         todosLosProductos = await respuesta.json(); 
         
         // DEBUG: Vamos a ver qué le llega al frontend
@@ -1037,7 +1037,7 @@ renderizarProductosFiltrados(todosLosProductos);
     formData.append('carrito', JSON.stringify(carrito)); // Convertimos el array a texto para el envío
 
     try {
-        const respuesta = await fetch('http://localhost:3000/api/comprar', {
+        const respuesta = await fetch('/api/comprar', {
             method: 'POST',
             body: formData // ⬅️ Enviamos como formulario con archivo incluido
         });
