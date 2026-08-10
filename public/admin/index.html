@@ -785,21 +785,28 @@ async function registrarVentaExterna() {
 document.getElementById('formulario-admin').addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const idEdicion = document.getElementById('edit-product-id') ? document.getElementById('edit-product-id').value : '';
     const formData = new FormData(e.target);
     
+    // --- LÍNEA DE PRUEBA: Vamos a ver en la consola del navegador qué lleva el FormData ---
+    console.log("--- CONTENIDO DEL FORMDATA ---");
+    for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ', pair[1]);
+    }
+    // ---------------------------------------------------------------------------------
+
+    const idEdicion = document.getElementById('edit-product-id') ? document.getElementById('edit-product-id').value : '';
     let url = '/api/productos';
     let method = 'POST';
 
     if (idEdicion) {
-        url = `/api/productos/${idEdicion}`; // O tu ruta para actualizar
+        url = `/api/productos/${idEdicion}`;
         method = 'PUT';
     }
 
     try {
         const respuesta = await fetch(url, {
             method: method,
-            body: formData // Envía el archivo y los textos sin modificar headers
+            body: formData
         });
 
         const resultado = await respuesta.json();
