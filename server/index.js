@@ -140,21 +140,22 @@ let productos = await Producto.find({}).sort({ _id: -1 });
 // ==========================================
 app.post('/api/productos', upload.any(), async (req, res) => {
     try {
+        console.log("Archivos recibidos en el servidor:", req.files); // <- Esto te imprimirá en la terminal si el archivo llegó al backend
+        console.log("Datos de texto recibidos:", req.body);
+
         const { nombre, categoria, precio, costo, stock, descripcion, descuento } = req.body;
 
-        // Buscamos el archivo sin importar si el input se llamó 'foto', 'imagen' o cualquier otra cosa
         const archivoSubido = req.files && req.files.length > 0 ? req.files[0] : null;
 
         if (!archivoSubido) {
             return res.status(400).json({ exito: false, mensaje: "Falta la foto del accesorio." });
         }
 
-        // 1. Enviamos la foto física directamente a tu cuenta de Cloudinary
+        // Subimos a Cloudinary usando la ruta temporal del archivo
         const resultadoCloudinary = await cloudinary.uploader.upload(archivoSubido.path, {
-            folder: "glowbymar_tienda" // Carpeta organizada en tu nube
+            folder: "glowbymar_tienda"
         });
 
-        // 2. Armamos la información para MongoDB con el enlace eterno de la foto
         const nuevoProducto = new Producto({
             nombre: nombre,
             categoria: categoria,
@@ -162,10 +163,10 @@ app.post('/api/productos', upload.any(), async (req, res) => {
             costoCompra: parseFloat(costo || 0),
             cantidadStock: parseInt(stock || 0),
             descuento: parseInt(descuento || 0),
-            imagen: resultadoCloudinary.secure_url // Link eterno de Cloudinary
+            imagen: resultadoCloudinary.secure_url,
+            foto: resultadoCloudinary.secure_url // Por si tu esquema usa 'foto' o 'imagen' indistintamente
         });
 
-        // 3. Guardamos los datos en tu base de datos
         await nuevoProducto.save();
 
         res.json({ 
