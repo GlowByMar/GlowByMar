@@ -43,7 +43,6 @@ app.use('/', express.static(path.join(__dirname, '../public')));
 app.use('/admin', express.static(path.join(__dirname, '../public/admin')));
 
 // // CONFIGURACIÓN DE MULTER (Memoria temporal para Cloudinary)
-const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 
 // // CONFIGURACIÓN DE CLOUDINARY
