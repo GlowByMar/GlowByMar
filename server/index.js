@@ -43,8 +43,8 @@ app.use('/', express.static(path.join(__dirname, '../public')));
 app.use('/admin', express.static(path.join(__dirname, '../public/admin')));
 
 // // CONFIGURACIÓN DE MULTER (Memoria temporal para Cloudinary)
-const storage = multer.diskStorage({});
-const upload = multer({ storage: storage });
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
 
 // // CONFIGURACIÓN DE CLOUDINARY
 cloudinary.config({
@@ -140,21 +140,27 @@ let productos = await Producto.find({}).sort({ _id: -1 });
 // ==========================================
 app.post('/api/productos', upload.any(), async (req, res) => {
     try {
-        console.log("Archivos recibidos en el servidor:", req.files); // <- Esto te imprimirá en la terminal si el archivo llegó al backend
-        console.log("Datos de texto recibidos:", req.body);
-
         const { nombre, categoria, precio, costo, stock, descripcion, descuento } = req.body;
-
+        
+        let urlImagen = "";
         const archivoSubido = req.files && req.files.length > 0 ? req.files[0] : null;
 
-        if (!archivoSubido) {
-            return res.status(400).json({ exito: false, mensaje: "Falta la foto del accesorio." });
+        if (archivoSubido) {
+            const subirACloudinary = (buffer) => {
+                return new Promise((resolve, reject) => {
+                    const stream = cloudinary.uploader.upload_stream(
+                        { folder: "glowbymar_tienda" },
+                        (error, resultado) => {
+                            if (error) reject(error);
+                            else resolve(resultado);
+                        }
+                    );
+                    stream.end(buffer);
+                });
+            };
+            const resultadoCloudinary = await subirACloudinary(archivoSubido.buffer);
+            urlImagen = resultadoCloudinary.secure_url;
         }
-
-        // Subimos a Cloudinary usando la ruta temporal del archivo
-        const resultadoCloudinary = await cloudinary.uploader.upload(archivoSubido.path, {
-            folder: "glowbymar_tienda"
-        });
 
         const nuevoProducto = new Producto({
             nombre: nombre,
@@ -163,8 +169,8 @@ app.post('/api/productos', upload.any(), async (req, res) => {
             costoCompra: parseFloat(costo || 0),
             cantidadStock: parseInt(stock || 0),
             descuento: parseInt(descuento || 0),
-            imagen: resultadoCloudinary.secure_url,
-            foto: resultadoCloudinary.secure_url // Por si tu esquema usa 'foto' o 'imagen' indistintamente
+            imagen: urlImagen,
+            foto: urlImagen
         });
 
         await nuevoProducto.save();
