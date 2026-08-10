@@ -781,6 +781,43 @@ async function registrarVentaExterna() {
     }
 }
 
+// ====== MANEJADOR DEL FORMULARIO DE PRODUCTOS (CREAR / EDITAR) ======
+document.getElementById('formulario-admin').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const idEdicion = document.getElementById('edit-product-id') ? document.getElementById('edit-product-id').value : '';
+    const formData = new FormData(e.target);
+    
+    let url = '/api/productos';
+    let method = 'POST';
+
+    if (idEdicion) {
+        url = `/api/productos/${idEdicion}`; // O tu ruta para actualizar
+        method = 'PUT';
+    }
+
+    try {
+        const respuesta = await fetch(url, {
+            method: method,
+            body: formData // Envía el archivo y los textos sin modificar headers
+        });
+
+        const resultado = await respuesta.json();
+
+        if (respuesta.ok) {
+            alert('¡Producto guardado con éxito!');
+            document.getElementById('formulario-admin').reset();
+            if (typeof limpiarFormularioAdmin === 'function') limpiarFormularioAdmin();
+            if (typeof obtenerInventario === 'function') obtenerInventario();
+        } else {
+            alert('Error: ' + (resultado.mensaje || 'No se pudo guardar'));
+        }
+    } catch (error) {
+        console.error('Error en la petición:', error);
+        alert('Hubo un error de conexión con el servidor.');
+    }
+});
+
 </script>
 </body>
 </html>
