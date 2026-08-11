@@ -22,13 +22,18 @@ const pedidoSchema = new mongoose.Schema({
 const Pedido = mongoose.model('Pedido', pedidoSchema, 'pedidos');
 
 // 👉 MODELO DE BASE DE DATOS PARA PRODUCTOS (FALTABA ESTE)
-const productoSchema = new mongoose.Schema({
+const productosSchema = new mongoose.Schema({
     nombre: String,
     categoria: String,
     precioVenta: Number,
     precio: Number,
-    descuento: Number
+    costoCompra: Number,
+    cantidadStock: Number,
+    descuento: Number,
+    imagen: String,
+    foto: String
 });
+
 const Producto = mongoose.model('Producto', productoSchema, 'productos');
 
 const app = express();
