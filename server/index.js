@@ -139,12 +139,15 @@ let productos = await Producto.find({}).sort({ _id: -1 });
 // ==========================================
 app.post('/api/productos', upload.any(), async (req, res) => {
     try {
+        console.log("--- ARCHIVOS RECIBIDOS EN BACKEND ---", req.files);
+        console.log("--- DATOS RECIBIDOS EN BACKEND ---", req.body);
+
         const { nombre, categoria, precio, costo, stock, descripcion, descuento } = req.body;
         
         let urlImagen = "";
         const archivoSubido = req.files && req.files.length > 0 ? req.files[0] : null;
 
-        if (archivoSubido) {
+        if (archivoSubido && archivoSubido.buffer) {
             const subirACloudinary = (buffer) => {
                 return new Promise((resolve, reject) => {
                     const stream = cloudinary.uploader.upload_stream(
@@ -157,6 +160,7 @@ app.post('/api/productos', upload.any(), async (req, res) => {
                     stream.end(buffer);
                 });
             };
+
             const resultadoCloudinary = await subirACloudinary(archivoSubido.buffer);
             urlImagen = resultadoCloudinary.secure_url;
         }
@@ -180,7 +184,7 @@ app.post('/api/productos', upload.any(), async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Error al registrar el accesorio:", error);
+        console.error("Error detallado al registrar el accesorio:", error);
         res.status(500).json({ 
             exito: false, 
             mensaje: "Hubo un error interno en el servidor al subir la mercancía." 
