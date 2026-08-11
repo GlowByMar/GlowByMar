@@ -261,31 +261,23 @@ app.post('/api/comprar', upload.single('comprobante'), async (req, res) => {
 });
 
 // ==========================================
-// RUTA 4: Eliminar un producto
+// RUTA 4: Eliminar un producto de MongoDB
 // ==========================================
-app.delete('/api/productos/:id', (req, res) => {
-    const idBuscar = parseInt(req.params.id);
-    const rutaArchivo = path.join(__dirname, 'productos.json'); 
-    fs.readFile(rutaArchivo, 'utf8', (err, data) => {
-        if (err) return res.status(500).json({ exito: false, mensaje: "Error al leer BD" });
-        let productos = JSON.parse(data || '[]');
-        const filtrados = productos.filter(p => p.id !== idBuscar);
-        fs.writeFile(rutaArchivo, JSON.stringify(filtrados, null, 2), (err) => {
-            if (err) return res.status(500).json({ exito: false, mensaje: "Error al guardar BD" });
-            res.json({ exito: true, mensaje: "Producto eliminado." });
-        });
-    });
-});
-
-// // RUTA 5: Traer todos los pedidos realizados directamente desde MongoDB Atlas
-app.get('/api/pedidos', async (req, res) => {
+app.delete('/api/productos/:id', async (req, res) => {
     try {
-        // Busca todos los pedidos guardados en la nube organizados por los más recientes
-        const pedidos = await Pedido.find({});
-        res.json(pedidos);
+        const { id } = req.params;
+        
+        // Buscamos y eliminamos el producto en MongoDB por su ID de _id
+        const productoEliminado = await Producto.findByIdAndDelete(id);
+
+        if (!productoEliminado) {
+            return res.status(404).json({ exito: false, mensaje: "El producto no existe en la base de datos." });
+        }
+
+        res.json({ exito: true, mensaje: "¡Producto eliminado con éxito de MongoDB!" });
     } catch (error) {
-        console.error('Error al traer pedidos de MongoDB:', error);
-        res.json([]); // Si falla, devuelve una lista vacía para que no se rompa el panel
+        console.error("Error al eliminar el producto:", error);
+        res.status(500).json({ exito: false, mensaje: "Error al intentar eliminar el producto." });
     }
 });
 
