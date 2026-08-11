@@ -140,12 +140,10 @@ app.post('/api/productos', upload.any(), async (req, res) => {
     try {
         console.log("=== INSPECCIONANDO PETICIÓN POST ===");
         console.log("req.body:", req.body);
-        console.log("req.files:", req.files); // <--- AQUÍ ESTÁ EL SECRETO
+        console.log("req.files:", req.files); 
 
-        const { nombre, categoria, precio, costo, stock, descripcion, descuento } = req.body;
-        
+        // 1. Procesar la subida a Cloudinary si hay archivo
         let urlImagen = "";
-        
         if (req.files && req.files.length > 0) {
             console.log("¡Sí llegó un archivo! Procesándolo...");
             const archivoSubido = req.files[0];
@@ -166,31 +164,32 @@ app.post('/api/productos', upload.any(), async (req, res) => {
             const resultadoCloudinary = await subirACloudinary(archivoSubido.buffer);
             urlImagen = resultadoCloudinary.secure_url;
             console.log("URL generada por Cloudinary:", urlImagen);
-        } else {
-            console.log("¡ALERTA! req.files llegó vacío o no se leyó ningún archivo.");
         }
 
+        // 2. Crear el objeto usando los datos de req.body
+        // Usamos una lógica de respaldo por si el campo viene con nombre diferente
         const nuevoProducto = new Producto({
-            nombre: nombre,
-            categoria: categoria,
-            precioVenta: parseInt(precio || 0),
-            costoCompra: parseFloat(costo || 0),
-            cantidadStock: parseInt(stock || 0),
-            descuento: parseInt(descuento || 0),
+            nombre: req.body.nombre,
+            categoria: req.body.categoria,
+            precioVenta: parseInt(req.body.precio || req.body.precioVenta || 0),
+            costoCompra: parseFloat(req.body.costo || req.body.costoCompra || 0),
+            cantidadStock: parseInt(req.body.stock || req.body.cantidadStock || 0),
+            descuento: parseInt(req.body.descuento || req.body.descIndividual || 0),
             imagen: urlImagen,
             foto: urlImagen
         });
 
-        await nuevoProducto.save();
+        const guardado = await nuevoProducto.save();
+        console.log("Producto guardado correctamente:", guardado);
 
         res.json({ 
             exito: true, 
-            mensaje: "¡Proceso terminado!" 
+            mensaje: "¡Accesorio guardado con éxito!" 
         });
 
     } catch (error) {
         console.error("Error en servidor:", error);
-        res.status(500).json({ exito: false, mensaje: "Error interno" });
+        res.status(500).json({ exito: false, mensaje: "Error al guardar en base de datos" });
     }
 });
 
