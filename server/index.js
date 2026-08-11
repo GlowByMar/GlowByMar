@@ -22,7 +22,7 @@ const pedidoSchema = new mongoose.Schema({
 const Pedido = mongoose.model('Pedido', pedidoSchema, 'pedidos');
 
 // 👉 MODELO DE BASE DE DATOS PARA PRODUCTOS (FALTABA ESTE)
-const productosSchema = new mongoose.Schema({
+const productoSchema = new mongoose.Schema({
     nombre: String,
     categoria: String,
     precioVenta: Number,
