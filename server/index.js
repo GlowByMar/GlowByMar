@@ -87,7 +87,6 @@ let productos = await Producto.find({}).sort({ _id: -1 });
             imagenFinal = ''; 
             }
             
-
             const descIndividual = parseInt(prod.descuento || prod.descIndividual || 0);
             const descGlobal = ofertasTemporales && ofertasTemporales.global ? parseInt(ofertasTemporales.global) : 0;
 
@@ -139,15 +138,18 @@ let productos = await Producto.find({}).sort({ _id: -1 });
 // ==========================================
 app.post('/api/productos', upload.any(), async (req, res) => {
     try {
-        console.log("--- ARCHIVOS RECIBIDOS EN BACKEND ---", req.files);
-        console.log("--- DATOS RECIBIDOS EN BACKEND ---", req.body);
+        console.log("=== INSPECCIONANDO PETICIÓN POST ===");
+        console.log("req.body:", req.body);
+        console.log("req.files:", req.files); // <--- AQUÍ ESTÁ EL SECRETO
 
         const { nombre, categoria, precio, costo, stock, descripcion, descuento } = req.body;
         
         let urlImagen = "";
-        const archivoSubido = req.files && req.files.length > 0 ? req.files[0] : null;
-
-        if (archivoSubido && archivoSubido.buffer) {
+        
+        if (req.files && req.files.length > 0) {
+            console.log("¡Sí llegó un archivo! Procesándolo...");
+            const archivoSubido = req.files[0];
+            
             const subirACloudinary = (buffer) => {
                 return new Promise((resolve, reject) => {
                     const stream = cloudinary.uploader.upload_stream(
@@ -163,6 +165,9 @@ app.post('/api/productos', upload.any(), async (req, res) => {
 
             const resultadoCloudinary = await subirACloudinary(archivoSubido.buffer);
             urlImagen = resultadoCloudinary.secure_url;
+            console.log("URL generada por Cloudinary:", urlImagen);
+        } else {
+            console.log("¡ALERTA! req.files llegó vacío o no se leyó ningún archivo.");
         }
 
         const nuevoProducto = new Producto({
@@ -180,15 +185,12 @@ app.post('/api/productos', upload.any(), async (req, res) => {
 
         res.json({ 
             exito: true, 
-            mensaje: "¡Accesorio guardado con éxito en MongoDB y Cloudinary!" 
+            mensaje: "¡Proceso terminado!" 
         });
 
     } catch (error) {
-        console.error("Error detallado al registrar el accesorio:", error);
-        res.status(500).json({ 
-            exito: false, 
-            mensaje: "Hubo un error interno en el servidor al subir la mercancía." 
-        });
+        console.error("Error en servidor:", error);
+        res.status(500).json({ exito: false, mensaje: "Error interno" });
     }
 });
 
