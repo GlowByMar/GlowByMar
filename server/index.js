@@ -778,6 +778,20 @@ app.post('/api/registrar-venta', (req, res) => {
         return res.status(500).json({ exito: false, mensaje: 'Error interno en el servidor.' });
     }
 });
+
+// ==========================================
+// RUTA: Traer todos los pedidos de MongoDB
+// ==========================================
+app.get('/api/pedidos', async (req, res) => {
+    try {
+        const pedidos = await Pedido.find({});
+        res.json(pedidos);
+    } catch (error) {
+        console.error('Error al traer pedidos de MongoDB:', error);
+        res.status(500).json([]);
+    }
+});
+
 // Intento de despliegue final
 // ==========================================
 // 🔥 ARRANCAR MOTOR DEL SERVIDOR
