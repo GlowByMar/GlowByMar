@@ -138,14 +138,10 @@ let productos = await Producto.find({}).sort({ _id: -1 });
 // ==========================================
 app.post('/api/productos', upload.any(), async (req, res) => {
     try {
-        console.log("=== INSPECCIONANDO PETICIÓN POST ===");
-        console.log("req.body:", req.body);
-        console.log("req.files:", req.files); 
-
-        // 1. Procesar la subida a Cloudinary si hay archivo
         let urlImagen = "";
+        
+        // 1. PRIMERO subimos a Cloudinary y esperamos a que termine
         if (req.files && req.files.length > 0) {
-            console.log("¡Sí llegó un archivo! Procesándolo...");
             const archivoSubido = req.files[0];
             
             const subirACloudinary = (buffer) => {
@@ -163,11 +159,10 @@ app.post('/api/productos', upload.any(), async (req, res) => {
 
             const resultadoCloudinary = await subirACloudinary(archivoSubido.buffer);
             urlImagen = resultadoCloudinary.secure_url;
-            console.log("URL generada por Cloudinary:", urlImagen);
+            console.log("URL de Cloudinary lista:", urlImagen);
         }
 
-        // 2. Crear el objeto usando los datos de req.body
-        // Usamos una lógica de respaldo por si el campo viene con nombre diferente
+        // 2. DESPUÉS creamos el producto con la URL ya lista
         const nuevoProducto = new Producto({
             nombre: req.body.nombre,
             categoria: req.body.categoria,
@@ -175,21 +170,18 @@ app.post('/api/productos', upload.any(), async (req, res) => {
             costoCompra: parseFloat(req.body.costo || req.body.costoCompra || 0),
             cantidadStock: parseInt(req.body.stock || req.body.cantidadStock || 0),
             descuento: parseInt(req.body.descuento || req.body.descIndividual || 0),
-            imagen: urlImagen,
-            foto: urlImagen
+            imagen: urlImagen, // <--- Aquí ya viaja con el link listo
+            foto: urlImagen    // <--- Aquí también
         });
 
         const guardado = await nuevoProducto.save();
-        console.log("Producto guardado correctamente:", guardado);
+        console.log("Producto guardado CON imagen en MongoDB:", guardado);
 
-        res.json({ 
-            exito: true, 
-            mensaje: "¡Accesorio guardado con éxito!" 
-        });
+        res.json({ exito: true, mensaje: "¡Guardado con éxito!" });
 
     } catch (error) {
         console.error("Error en servidor:", error);
-        res.status(500).json({ exito: false, mensaje: "Error al guardar en base de datos" });
+        res.status(500).json({ exito: false, mensaje: "Error interno" });
     }
 });
 
