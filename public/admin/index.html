@@ -172,7 +172,10 @@ td {
                 <small style="color: #7f8c8d; display:block; margin-top:2px;">*Si estás editando, no necesitas volver a subir la foto a menos que quieras cambiarla.</small>
             </div>
 
-            <button type="submit" id="btn-guardar" class="btn-verde">Guardar Producto</button>
+            <input type="hidden" id="edit-product-id">
+
+    <button type="submit" id="btn-guardar" class="btn-verde">Guardar Producto</button>
+
         </form>
     </div>
 
@@ -636,7 +639,7 @@ async function obtenerEstadoOfertas() {
     }
 }
 
-async function editarProducto(id) {
+/*async function editarProducto(id) {
     try {
         const respuesta = await fetch('/api/productos');
         const productos = await respuesta.json();
@@ -680,6 +683,49 @@ async function editarProducto(id) {
             console.log("¡Scroll al tope realizado!");
         }
      catch (error) {
+        console.error("Error al editar:", error);
+    }
+} */
+
+// ====== FUNCIÓN ÚNICA Y CORREGIDA PARA EDITAR ======
+async function editarProducto(id) {
+    try {
+        const respuesta = await fetch('/api/productos');
+        const productos = await respuesta.json();
+        
+        // ¡OJO AQUÍ! Buscamos usando String(_id) porque MongoDB usa _id
+        const producto = productos.find(p => String(p._id) === String(id));
+
+        if (producto) {
+            // Mapeo seguro: ID del elemento en HTML -> Valor del objeto en MongoDB
+            const campos = {
+                'edit-product-id': producto._id, // Usamos _id
+                'nombre': producto.nombre,
+                'precio': producto.precioVenta, // Nombre real en DB
+                'costo': producto.costoCompra,  // Nombre real en DB
+                'stock': producto.cantidadStock,// Nombre real en DB
+                'categoria': producto.categoria,
+                'descripcion': producto.descripcion
+            };
+
+            // Llenar campos
+            for (const [idElemento, valor] of Object.entries(campos)) {
+                const elemento = document.getElementById(idElemento);
+                if (elemento) {
+                    elemento.value = valor || '';
+                }
+            }
+
+            // Cambiar el botón a modo "Actualizar"
+            const btn = document.getElementById('btn-guardar');
+            if (btn) {
+                btn.innerText = '🔄 Actualizar Producto';
+                btn.style.backgroundColor = '#3498db'; // Azul
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    } catch (error) {
         console.error("Error al editar:", error);
     }
 }
