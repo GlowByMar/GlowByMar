@@ -773,25 +773,17 @@ function prepararEdicion(productoRecibido) {
 
 // Limpia el formulario y lo restaura a su modo original de creación
 function limpiarFormularioAdmin() {
-    // 1. Limpiar campos
-    const form = document.getElementById('formulario-admin');
-    if (form) form.reset();
+    document.getElementById('formulario-admin').reset();
     
-    // 2. Limpiar ID oculto
+    // ESTA LÍNEA ES LA CLAVE DE ORO PARA QUE NO SE DUPLIQUE:
     const idOculto = document.getElementById('edit-product-id');
     if (idOculto) idOculto.value = ''; 
 
-    // 3. RESTAURAR BOTÓN A ESTADO "GUARDAR" (VERDE)
+    // Y regresamos el botón a su estado normal (Verde / Guardar)
     const btn = document.getElementById('btn-guardar');
     if (btn) {
-        btn.innerText = 'Guardar Producto';
-        
-        // Quitamos la clase azul y ponemos la verde
-        btn.classList.remove('btn-azul');
-        btn.classList.add('btn-verde');
-        
-        // Fuerza el estilo por si acaso
-        btn.style.backgroundColor = '#27ae60'; 
+        btn.innerText = '💾 Guardar Producto';
+        btn.style.backgroundColor = ''; // Regresa al color original de tu CSS
     }
 }
 
@@ -828,7 +820,7 @@ async function registrarVentaExterna() {
     }
 }
 
-// ====== MANEJADOR DEL FORMULARIO DE PRODUCTOS (CREAR / EDITAR) ======
+/*// ====== MANEJADOR DEL FORMULARIO DE PRODUCTOS (CREAR / EDITAR) ======
 document.getElementById('formulario-admin').addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -869,7 +861,7 @@ document.getElementById('formulario-admin').addEventListener('submit', async (e)
         console.error('Error en la petición:', error);
         alert('Hubo un error de conexión con el servidor.');
     }
-});
+});*/
 
 // Asegurar que el formulario inicie completamente limpio
 document.addEventListener('DOMContentLoaded', () => {
