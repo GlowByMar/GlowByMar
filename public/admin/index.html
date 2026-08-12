@@ -518,11 +518,14 @@ document.getElementById('formulario-admin').addEventListener('submit', async (e)
     const idEdicion = document.getElementById('edit-product-id').value.trim();
     const datosFormulario = new FormData(e.target);
     
-    let url = '/api/productos'; // Por defecto para crear
+    // URL y método por defecto para CREAR
+    let url = '/api/productos';
+    let method = 'POST'; 
     
+    // Si hay un ID, cambiamos a la ruta de EDICIÓN por POST
     if (idEdicion) {
-        url = '/api/productos/editar'; // Tu ruta fija del servidor
-        datosFormulario.append('id', idEdicion); // Tu backend busca 'id'
+        url = '/api/productos/editar'; // Esta ruta ya la probamos y funciona con POST
+        datosFormulario.append('id', idEdicion); // Aseguramos que se envíe el ID
     }
     
     try {
@@ -533,7 +536,7 @@ document.getElementById('formulario-admin').addEventListener('submit', async (e)
         });
         
         const respuesta = await fetch(url, {
-            method: 'POST', // Ambas usan POST en tu backend
+            method: method, // Ahora usamos la variable que acabamos de definir
             body: datosFormulario
         });
         
@@ -545,8 +548,8 @@ document.getElementById('formulario-admin').addEventListener('submit', async (e)
                 title: idEdicion ? '¡Actualizado con éxito!' : '¡Guardado con éxito!', 
                 icon: 'success' 
             });
-            limpiarFormularioAdmin(); // Limpia campos y resetea el botón a verde
-            obtenerInventario();      // Refresca la tabla
+            limpiarFormularioAdmin(); // Vacía el formulario y el ID oculto
+            obtenerInventario();      // Recarga la tabla
         } else {
             Swal.fire({ 
                 title: resultado.mensaje || 'Error al procesar la solicitud', 
@@ -867,6 +870,11 @@ document.getElementById('formulario-admin').addEventListener('submit', async (e)
         console.error('Error en la petición:', error);
         alert('Hubo un error de conexión con el servidor.');
     }
+});
+
+// Asegurar que el formulario inicie completamente limpio
+document.addEventListener('DOMContentLoaded', () => {
+    limpiarFormularioAdmin();
 });
 
 </script>
