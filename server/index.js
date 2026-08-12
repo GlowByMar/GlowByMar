@@ -71,59 +71,37 @@ let ofertasTemporales = {
 };
 
 // ==========================================
-// RUTA 1: Traer todos los productos (VERSIÓN UNIFICADA Y BLINDADA)
+// RUTA 1: Traer todos los productos desde MongoDB
 // ==========================================
 app.get('/api/productos', async (req, res) => {
     try {
-        // Cambia esto en tu Ruta 1:
-let productos = await Producto.find({}).sort({ _id: -1 });
+        let productos = await Producto.find({}).sort({ _id: -1 });
 
         let productosProcesados = productos.map(doc => {
             const prod = doc.toObject();
 
-            // Unificamos nombres para que el frontend nunca reciba "undefined"
             const precioFinal = prod.precioVenta || prod.precio || 0;
             const stockFinal = prod.cantidadStock !== undefined ? prod.cantidadStock : (prod.stock !== undefined ? prod.stock : 0);
             const costoFinal = prod.costoCompra || prod.costo || 0;
             
-            // Aseguramos que la imagen coja la de Cloudinary o una por defecto si no tiene
             let imagenFinal = prod.imagen || prod.foto || '';
             if (!imagenFinal || imagenFinal.includes('default.jpg')) {
-            imagenFinal = ''; 
+                imagenFinal = ''; 
             }
             
-            const descIndividual = parseInt(prod.descuento || prod.descIndividual || prod.descuentoIndividual || 0);
-            const descGlobal = ofertasTemporales && ofertasTemporales.global ? parseInt(ofertasTemporales.global) : 0;
-
-            let descCategoria = 0;
-            if (ofertasTemporales && ofertasTemporales.categoria && prod.categoria) {
-                const catOferta = ofertasTemporales.categoria.toUpperCase().trim();
-                const catProducto = prod.categoria.toUpperCase().trim();
-
-                const coincidenExacto = (catOferta === catProducto);
-                const ofertaEsPlural = (catOferta === catProducto + 'S' || catOferta === catProducto + 'ES');
-                const productoEsPlural = (catProducto === catOferta + 'S' || catProducto === catOferta + 'ES');
-
-                if (coincidenExacto || ofertaEsPlural || productoEsPlural) {
-                    descCategoria = parseInt(ofertasTemporales.porcentajeCategoria || 0);
-                }
-            }
-
-            let descuentoApplied = 0;
-            if (descIndividual > 0) descuentoApplied = descIndividual;
-            else if (descCategoria > 0) descuentoApplied = descCategoria;
-            else if (descGlobal > 0) descuentoApplied = descGlobal;
+            // El descuento sale unificadamente del campo que ya tenga guardado el producto en Mongo
+            const descuentoApplied = parseInt(prod.descuento || prod.descIndividual || prod.descuentoIndividual || 0);
 
             return {
                 ...prod,
-                _id: prod._id, // Aseguramos que viaje el ID de MongoDB
+                _id: prod._id,
                 precio: precioFinal,
                 precioVenta: precioFinal,
                 stock: stockFinal,
                 cantidadStock: stockFinal,
                 costo: costoFinal,
                 costoCompra: costoFinal,
-                imagen: imagenFinal, // <--- Aquí va el link eterno de Cloudinary
+                imagen: imagenFinal,
                 foto: imagenFinal,
                 descuentoEfectivo: descuentoApplied, 
                 precioConDescuento: precioFinal - (precioFinal * (descuentoApplied / 100))
@@ -137,6 +115,51 @@ let productos = await Producto.find({}).sort({ _id: -1 });
         res.status(500).json({ mensaje: 'Error al procesar los productos desde MongoDB.' });
     }
 });
+
+// ====================================================
+// ✅ RUTA DE OFERTAS MASIVAS DIRECTO A MONGODB
+// ====================================================
+app.post('/api/ofertas/activar', async (req, res) => {
+    const { tipo, porcentaje, categoria } = req.body;
+    const nuevoDescuento = parseInt(porcentaje || 0);
+
+    try {
+        if (tipo === 'global') {
+            // Actualiza TODOS los productos de la base de datos
+            await Producto.updateMany({}, { $set: { descuento: nuevoDescuento, descIndividual: nuevoDescuento } });
+            return res.json({ exito: true, mensaje: "¡Oferta global aplicada a toda la tienda!" });
+        } 
+        
+        if (tipo === 'categoria' && categoria) {
+            // Actualiza solo los productos que coincidan con la categoría
+            await Producto.updateMany(
+                { categoria: { $regex: new RegExp('^' + categoria + '$', 'i') } }, 
+                { $set: { descuento: nuevoDescuento, descIndividual: nuevoDescuento } }
+            );
+            return res.json({ exito: true, mensaje: `¡Oferta aplicada a la categoría ${categoria}!` });
+        }
+
+        res.status(400).json({ exito: false, mensaje: "Tipo de oferta inválido." });
+    } catch (error) {
+        console.error('Error al activar ofertas masivas:', error);
+        res.status(500).json({ exito: false, mensaje: 'Error en el servidor al aplicar la oferta.' });
+    }
+});
+
+// ====================================================
+// ✅ RUTA PARA DESACTIVAR OFERTAS MASIVAS EN MONGODB
+// ====================================================
+app.post('/api/ofertas/desactivar', async (req, res) => {
+    try {
+        // Pone el descuento en 0 a absolutamente todos los productos en MongoDB
+        await Producto.updateMany({}, { $set: { descuento: 0, descIndividual: 0 } });
+        res.json({ exito: true, mensaje: "Ofertas desactivadas correctamente en el sistema." });
+    } catch (error) {
+        console.error('Error al desactivar ofertas:', error);
+        res.status(500).json({ exito: false, mensaje: 'Error al desactivar ofertas.' });
+    }
+});
+
 
 // ==========================================
 // RUTA 2: Recibir el accesorio nuevo y guardarlo en la nube (BLINDADA)
@@ -599,35 +622,6 @@ const sums = lista.reduce((acc, art) => ({
 });
 
 // ====================================================
-// ✅ NUEVA RUTA: OFERTAS MASIVAS PERSISTENTES
-// ====================================================
-app.post('/api/ofertas/activar', (req, res) => {
-    const { tipo, porcentaje, categoria } = req.body;
-    const rutaArchivo = path.join(__dirname, 'productos.json');
-
-    fs.readFile(rutaArchivo, 'utf8', (err, data) => {
-        if (err) return res.status(500).json({ exito: false, mensaje: 'Error al leer productos.' });
-        
-        let productos = JSON.parse(data || '[]');
-        const nuevoDescuento = parseInt(porcentaje || 0);
-
-        productos = productos.map(prod => {
-            if (tipo === 'global' || (tipo === 'categoria' && prod.categoria === categoria)) {
-                return { ...prod, descuento: nuevoDescuento };
-            }
-            return prod;
-        });
-
-        fs.writeFile(rutaArchivo, JSON.stringify(productos, null, 2), (errWrite) => {
-            if (errWrite) {
-                return res.status(500).json({ exito: false, mensaje: 'Error al guardar.' });
-            }
-            return res.json({ exito: true, mensaje: "¡Oferta aplicada permanentemente!" });
-        });
-    });
-});
-
-// ====================================================
 // 🔥 RUTA CORREGIDA: Editar un producto existente (MongoDB + Cloudinary)
 // ====================================================
 app.post('/api/productos/editar', upload.any(), async (req, res) => {
@@ -684,23 +678,6 @@ app.post('/api/productos/editar', upload.any(), async (req, res) => {
     }
 });
 
-app.post('/api/ofertas/desactivar', (req, res) => {
-    const rutaArchivo = path.join(__dirname, 'productos.json');
-
-    fs.readFile(rutaArchivo, 'utf8', (err, data) => {
-        if (err) return res.status(500).json({ exito: false });
-        
-        let productos = JSON.parse(data || '[]');
-        
-        // Ponemos el descuento en 0 a TODOS los productos
-        productos = productos.map(prod => ({ ...prod, descuento: 0 }));
-
-        fs.writeFile(rutaArchivo, JSON.stringify(productos, null, 2), (errWrite) => {
-            if (errWrite) return res.status(500).json({ exito: false });
-            res.json({ exito: true, mensaje: "Ofertas desactivadas correctamente." });
-        });
-    });
-});
 
 // ==========================================
 // RUTA: Registrar Venta Externa por Nombre
