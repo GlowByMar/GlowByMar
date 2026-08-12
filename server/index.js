@@ -92,7 +92,7 @@ let productos = await Producto.find({}).sort({ _id: -1 });
             imagenFinal = ''; 
             }
             
-            const descIndividual = parseInt(prod.descuento || prod.descIndividual || 0);
+            const descIndividual = parseInt(prod.descuento || prod.descIndividual || prod.descuentoIndividual || 0);
             const descGlobal = ofertasTemporales && ofertasTemporales.global ? parseInt(ofertasTemporales.global) : 0;
 
             let descCategoria = 0;
