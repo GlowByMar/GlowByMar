@@ -480,7 +480,7 @@ async function obtenerInventario() {
     } catch (error) { console.error("Error al obtener inventario:", error); }
 }
 
-// ====== FUNCIÓN PARA CARGAR LOS DATOS EN EL FORMULARIO AL EDITAR ======
+/*// ====== FUNCIÓN PARA CARGAR LOS DATOS EN EL FORMULARIO AL EDITAR ======
 async function editarProducto(id) {
     try {
         const respuesta = await fetch('/api/productos');
@@ -509,7 +509,7 @@ async function editarProducto(id) {
     } catch (error) {
         console.error("Error al cargar producto para editar:", error);
     }
-}
+}*/
 
 // ====== LÓGICA UNIFICADA PARA MANEJAR "CREACIÓN" O "EDICIÓN" CON FormData ======
 document.getElementById('formulario-admin').addEventListener('submit', async (e) => {
@@ -731,7 +731,7 @@ async function editarProducto(id) {
     }
 }
 
-// Mapea los datos del producto seleccionado de vuelta al formulario
+/*// Mapea los datos del producto seleccionado de vuelta al formulario
 function prepararEdicion(productoRecibido) {
     const producto = typeof productoRecibido === 'string' ? JSON.parse(productoRecibido) : productoRecibido;
     console.log("Datos del producto cargados:", producto);
@@ -768,7 +768,7 @@ function prepararEdicion(productoRecibido) {
             console.warn("No se encontró el formulario para hacer scroll.");
         }
     }, 100); // 100 milisegundos son suficientes para que el navegador reaccione
-}
+}*/
 
 
 // Limpia el formulario y lo restaura a su modo original de creación
@@ -834,31 +834,30 @@ document.getElementById('formulario-admin').addEventListener('submit', async (e)
     
     const formData = new FormData(e.target);
     
-    // --- LÍNEA DE PRUEBA: Vamos a ver en la consola del navegador qué lleva el FormData ---
-    console.log("--- CONTENIDO DEL FORMDATA ---");
-    for (let pair of formData.entries()) {
-        console.log(pair[0] + ': ', pair[1]);
-    }
-    // ---------------------------------------------------------------------------------
-
-    const idEdicion = document.getElementById('edit-product-id') ? document.getElementById('edit-product-id').value : '';
+    // Verificamos si hay un ID de edición cargado
+    const idEdicion = document.getElementById('edit-product-id') ? document.getElementById('edit-product-id').value.trim() : '';
+    
+    // Por defecto asumimos que es CREAR (POST a /api/productos)
     let url = '/api/productos';
     let method = 'POST';
 
+    // Si hay un ID, es EDITAR: cambiamos la ruta y le inyectamos el ID al FormData
     if (idEdicion) {
-        url = `/api/productos/${idEdicion}`;
-        method = 'PUT';
+        url = '/api/productos/editar'; // La ruta por POST que ya usa tu servidor
+        formData.append('id', idEdicion);     // Aseguramos que el ID viaje dentro de los datos
+    } else {
+        formData.delete('id'); // Si es nuevo, nos aseguramos que no viaje ningún ID viejo
     }
 
     try {
         const respuesta = await fetch(url, {
-            method: method,
+            method: method, // Siempre será 'POST', seguro y sin errores 404
             body: formData
         });
 
         const resultado = await respuesta.json();
 
-        if (respuesta.ok) {
+        if (respuesta.ok && (resultado.exito !== false)) {
             alert('¡Producto guardado con éxito!');
             document.getElementById('formulario-admin').reset();
             if (typeof limpiarFormularioAdmin === 'function') limpiarFormularioAdmin();
@@ -874,7 +873,9 @@ document.getElementById('formulario-admin').addEventListener('submit', async (e)
 
 // Asegurar que el formulario inicie completamente limpio
 document.addEventListener('DOMContentLoaded', () => {
-    limpiarFormularioAdmin();
+    if (typeof limpiarFormularioAdmin === 'function') {
+        limpiarFormularioAdmin();
+    }
 });
 
 </script>
