@@ -705,7 +705,7 @@ async function editarProducto(id) {
                 'precio': producto.precioVenta, // Nombre real en DB
                 'costoProducto': producto.costoCompra,  // Nombre real en DB
                 'stock': producto.cantidadStock,// Nombre real en DB
-                'descuentoIndividual': producto.descuento || producto.descIndividual || 0, // O el ID exacto que tenga tu input en el HTML de admin
+                'edit-descIndividual': producto.descuento || producto.descIndividual || 0, // O el ID exacto que tenga tu input en el HTML de admin
                 'categoria': producto.categoria,
                 'descripcion': producto.descripcion
             };

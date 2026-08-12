@@ -626,8 +626,9 @@ const sums = lista.reduce((acc, art) => ({
 // ====================================================
 app.post('/api/productos/editar', upload.any(), async (req, res) => {
     try {
-        const { id, nombre, precio, costo, stock, categoria, descripcion, descuento } = req.body;
-
+        const { id, nombre, precio, costo, stock, categoria, descripcion, descuento, descIndividual } = req.body;
+        const descuentoFinal = descuento || descIndividual || 0;
+        
         if (!id) {
             return res.status(400).json({ exito: false, mensaje: "Falta el ID del producto a editar." });
         }
@@ -659,7 +660,8 @@ app.post('/api/productos/editar', upload.any(), async (req, res) => {
             costoCompra: parseFloat(costo || 0),
             cantidadStock: parseInt(stock || 0),
             descripcion: descripcion,
-            descuento: parseInt(descuento || 0),
+            descuento: parseInt(req.body.descuento || req.body.descIndividual || 0),
+            descIndividual: parseInt(req.body.descuento || req.body.descIndividual || 0),
             imagen: nuevaImagenUrl,
             foto: nuevaImagenUrl
         });
