@@ -515,8 +515,15 @@ async function editarProducto(id) {
 document.getElementById('formulario-admin').addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const idEdicion = document.getElementById('edit-product-id').value;
+    const idEdicion = document.getElementById('edit-product-id').value.trim();
     const datosFormulario = new FormData(e.target);
+    
+    let url = '/api/productos'; // Por defecto para crear
+    
+    if (idEdicion) {
+        url = '/api/productos/editar'; // Tu ruta fija del servidor
+        datosFormulario.append('id', idEdicion); // Tu backend busca 'id'
+    }
     
     try {
         Swal.fire({ 
@@ -525,30 +532,21 @@ document.getElementById('formulario-admin').addEventListener('submit', async (e)
             didOpen: () => Swal.showLoading() 
         });
         
-        let url = '/api/productos';
-        
-        if (idEdicion) {
-            url = '/api/productos/editar'; // O tu ruta PUT correspondiente
-            datosFormulario.append('_id', idEdicion);
-            datosFormulario.append('id', idEdicion);
-        }
-        
-        // ¡Importante! No agregues 'Content-Type': 'application/json' 
-        // cuando usas FormData con archivos. El navegador lo calcula solo.
         const respuesta = await fetch(url, {
-            method: 'POST',
+            method: 'POST', // Ambas usan POST en tu backend
             body: datosFormulario
         });
         
         const resultado = await respuesta.json().catch(() => ({}));
 
-        if (respuesta.ok) {
+        // Validamos tanto el ok del http como la propiedad 'exito' que devuelve tu backend
+        if (respuesta.ok && resultado.exito) {
             Swal.fire({ 
-                title: idEdicion ? '¡Producto Actualizado!' : '¡Guardado!', 
+                title: idEdicion ? '¡Actualizado con éxito!' : '¡Guardado con éxito!', 
                 icon: 'success' 
             });
-            limpiarFormularioAdmin();
-            obtenerInventario();
+            limpiarFormularioAdmin(); // Limpia campos y resetea el botón a verde
+            obtenerInventario();      // Refresca la tabla
         } else {
             Swal.fire({ 
                 title: resultado.mensaje || 'Error al procesar la solicitud', 
