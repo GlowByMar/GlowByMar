@@ -262,7 +262,10 @@ app.post('/api/comprar', upload.single('comprobante'), async (req, res) => {
             contacto: telefono,
             direccion: direccion,
             productos: productosComprados,
-            total: productosComprados.reduce((sum, p) => sum + (p.precioConDescuento || p.precio || 0) * (p.cantidad || 1), 0),
+            total: productosComprados.reduce((sum, p) => {
+    const precioUnitario = parseFloat(p.precioConDescuento || p.precio || 0);
+    return sum + (precioUnitario * (p.cantidad || 1));
+}, 0),
             estado: 'PENDIENTE',
             comprobante: resultadoCloud.secure_url // Link eterno de la foto del pago
         });
