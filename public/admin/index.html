@@ -422,8 +422,20 @@ async function notificarEnvioYFinalizarConDatos(id, cliente, telefono, totalNeto
     const guia = prompt("Número de guía de envío:");
     if (!guia) return;
 
+    // 1. Formatear teléfono y abrir WhatsApp INMEDIATAMENTE (sin esperar al servidor)
+    let telFormateado = telefono.replace(/\D/g, '');
+    if (!telFormateado.startsWith('57') && telFormateado.length === 10) {
+        telFormateado = '57' + telFormateado;
+    }
+
+    const textoWA = `Hola ${cliente}! Te habla Glow By Mar. Tu pedido ya fue despachado con éxito. 🚀\n\n--- RESUMEN DE COMPRA ---\n${detalleProductos}\n\nTotal Neto: $${Number(totalNeto).toLocaleString('es-CO')} COP\n\n--- DATOS DE ENVÍO ---\nEmpresa transportadora: ${empresa}\nNúmero de guía: ${guia}\n\n¡Gracias por tu compra! ✨`;
+    const urlWA = `https://wa.me/${telFormateado}?text=${encodeURIComponent(textoWA)}`;
+
+    // Se abre la pestaña al instante para que el navegador no la bloquee
+    window.open(urlWA, '_blank');
+
     try {
-        // 1. Guardar primero en el servidor y finalizar la venta
+        // 2. Enviar los datos al servidor en segundo plano para actualizar el estado
         const resEnvio = await fetch(`/api/pedidos/${id}/despachar`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -432,19 +444,7 @@ async function notificarEnvioYFinalizarConDatos(id, cliente, telefono, totalNeto
 
         if (resEnvio.ok) {
             await fetch(`/api/pedidos/${id}/entregar`, { method: 'PUT' });
-
-            // 2. Formatear teléfono y armar el mensaje con la guía real
-            let telFormateado = telefono.replace(/\D/g, '');
-            if (!telFormateado.startsWith('57') && telFormateado.length === 10) {
-                telFormateado = '57' + telFormateado;
-            }
-
-            const textoWA = `Hola ${cliente}! Te habla Glow By Mar. Tu pedido ya fue despachado con éxito. 🚀\n\n--- RESUMEN DE COMPRA ---\n${detalleProductos}\n\nTotal Neto: $${Number(totalNeto).toLocaleString('es-CO')} COP\n\n--- DATOS DE ENVÍO ---\nEmpresa transportadora: ${empresa}\nNúmero de guía: ${guia}\n\n¡Gracias por tu compra! ✨`;
-            const urlWA = `https://wa.me/${telFormateado}?text=${encodeURIComponent(textoWA)}`;
-
-            // 3. Abrir WhatsApp con seguridad y recargar la tabla
-            window.open(urlWA, '_blank');
-            setTimeout(() => cargarPedidosAdmin(), 500);
+            setTimeout(() => cargarPedidosAdmin(), 800);
         }
     } catch (error) { 
         console.error("Error al procesar el envío:", error); 
