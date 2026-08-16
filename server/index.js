@@ -216,60 +216,21 @@ app.post('/api/productos', upload.any(), async (req, res) => {
 // ==========================================
 // RUTA 3: Procesar la compra, validar stock en MongoDB y subir comprobante a Cloudinary
 // ==========================================
-app.post('/api/comprar', upload.single('comprobante'), async (req, res) => {
+app.post('/api/comprar', async (req, res) => {
     try {
-        const { nombre, telefono, direccion } = req.body;
+        const { nombre, telefono, direccion, carrito } = req.body;
+        const productosComprados = JSON.parse(carrito);
 
-        // 1. Validaciones iniciales del formulario
-        if (!req.body.carrito) {
-            return res.status(400).json({ exito: false, mensaje: 'El carrito está vacío.' });
-        }
-        if (!req.file) {
-            return res.status(400).json({ exito: false, mensaje: 'Falta el comprobante de pago.' });
-        }
-
-        const productosComprados = JSON.parse(req.body.carrito);
-
-        // 2. REVISIÓN Y DESCUENTO DE STOCK EN MONGODB ATLAS (Lógica de inventario)
+        // Opcional: Descontar stock (si ya lo tenías funcionando)
         for (const item of productosComprados) {
             const productoEnBD = await Producto.findById(item._id || item.id);
-            
-            if (!productoEnBD) {
-                return res.status(404).json({ exito: false, mensaje: `El producto ${item.nombre} no existe en el inventario.` });
+            if (productoEnBD) {
+                productoEnBD.cantidadStock = Math.max(0, productoEnBD.cantidadStock - item.cantidad);
+                await productoEnBD.save();
             }
-
-            // Usamos estrictamente cantidadStock como está definido en tu Schema
-            const stockActual = productoEnBD.cantidadStock !== undefined ? productoEnBD.cantidadStock : 0;
-            
-            if (stockActual < item.cantidad) {
-                return res.status(400).json({ exito: false, mensaje: `Stock insuficiente para ${item.nombre}. Disponibles: ${stockActual}` });
-            }
-
-            // Restamos la cantidad comprada y actualizamos el campo correcto
-            productoEnBD.cantidadStock = stockActual - item.cantidad;
-            await productoEnBD.save();
         }
 
-        // 3. SUBIDA DEL COMPROBANTE FÍSICO A CLOUDINARY (Segura con control de errores)
-        let urlComprobante = "";
-        try {
-            const resultadoCloud = await new Promise((resolve, reject) => {
-                const stream = cloudinary.uploader.upload_stream(
-                    { folder: "glowbymar_comprobantes" },
-                    (error, result) => {
-                        if (result) resolve(result);
-                        else reject(error);
-                    }
-                );
-                stream.end(req.file.buffer);
-            });
-            urlComprobante = resultadoCloud.secure_url;
-        } catch (uploadError) {
-            console.error("Error al subir a Cloudinary:", uploadError);
-            return res.status(500).json({ exito: false, mensaje: "Error al subir la imagen del comprobante a la nube." });
-        }
-
-        // 4. REGISTRO DEL PEDIDO EN MONGODB ATLAS
+        // Registrar pedido en MongoDB sin complicarnos con fotos
         const nuevoPedido = new Pedido({
             idPedido: "PED-" + Date.now(),
             fecha: new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota' }),
@@ -277,27 +238,17 @@ app.post('/api/comprar', upload.single('comprobante'), async (req, res) => {
             contacto: telefono,
             direccion: direccion,
             productos: productosComprados,
-            total: productosComprados.reduce((sum, p) => {
-                const precioUnitario = parseFloat(p.precioConDescuento || p.precio || 0);
-                return sum + (precioUnitario * (p.cantidad || 1));
-            }, 0),
+            total: productosComprados.reduce((sum, p) => sum + (parseFloat(p.precioConDescuento || p.precio || 0) * (p.cantidad || 1)), 0),
             estado: 'PENDIENTE',
-            comprobante: urlComprobante // URL lista y asegurada
+            comprobante: "PENDIENTE_POR_WHATSAPP" // Indicador para tu panel
         });
 
         await nuevoPedido.save();
 
-        res.json({ 
-            exito: true, 
-            mensaje: "¡Tu compra fue registrada con éxito! El administrador verificará tu pago e inventario." 
-        });
-
+        res.json({ exito: true, mensaje: "¡Pedido registrado con éxito!" });
     } catch (error) {
-        console.error("Error al procesar la compra en la nube:", error);
-        res.status(500).json({ 
-            exito: false, 
-            mensaje: "Hubo un problema interno en el servidor al procesar la transacción." 
-        });
+        console.error("Error:", error);
+        res.status(500).json({ exito: false, mensaje: "Error interno al procesar el pedido." });
     }
 });
 
