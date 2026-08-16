@@ -367,9 +367,8 @@ async function cargarPedidosAdmin() {
                         <span style="background: ${colorEstado}; color: white; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; text-transform: uppercase;">${estadoActual}</span>
                     </td>
                     <td style="padding: 10px; text-align: center;">
-                        <div style="display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                        <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
                             ${botonComprobante}
-                            <button onclick="descargarFactura('${pedido.idPedido}')" style="background: #7f8c8d; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; cursor: pointer;">📄 Factura</button>
                             ${botonAccionDinamico}
                         </div>
                     </td>
