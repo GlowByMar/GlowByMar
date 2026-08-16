@@ -767,27 +767,33 @@ const rutaImagen = urlImagen && urlImagen.startsWith('http')
 }
 
     function agregarAlCarrito(id) {
-    // 1. Buscamos el producto soportando tanto 'id' como '_id' de MongoDB
-    const productoBase = todosLosProductos.find(p => p._id === id || p.id === id);
+    // 1. Buscamos el producto garantizando que soporte tanto _id de MongoDB como id plano
+    const productoBase = todosLosProductos.find(p => String(p._id) === String(id) || String(p.id) === String(id));
     
     if (!productoBase) {
         console.error("No se encontró el producto con ID:", id);
+        Swal.fire({
+            title: 'Error',
+            text: 'No se pudo cargar la información de este accesorio.',
+            icon: 'error',
+            confirmButtonColor: '#e74c3c'
+        });
         return;
     }
     
-    // Extraemos las variables asegurando el ID real de MongoDB
+    // Extraemos los datos de forma segura
     const idReal = productoBase._id || productoBase.id;
     const nombre = productoBase.nombre;
     const stockMaximo = productoBase.stock !== undefined ? productoBase.stock : (productoBase.cantidadStock || 0);
 
-    // Calculamos el descuento real
+    // 2. Cálculo del precio con descuento si aplica
     const descuento = parseInt(productoBase.descIndividual || productoBase.descuento || 0);
     const precioOriginal = parseFloat(productoBase.precio || productoBase.precioVenta || 0);
     const precio = descuento > 0 
         ? (precioOriginal * (1 - descuento / 100)) 
         : precioOriginal;
 
-    // 2. ALERTA: Producto Agotado
+    // 3. Validación de Stock Agotado
     if (stockMaximo <= 0) {
         Swal.fire({
             title: 'Producto Agotado',
@@ -798,11 +804,10 @@ const rutaImagen = urlImagen && urlImagen.startsWith('http')
         return;
     }
     
-    // Buscamos en el carrito usando el ID unificado
+    // 4. Buscar si ya existe en el carrito
     const productoEnCarrito = carrito.find(item => String(item.id) === String(idReal) || String(item._id) === String(idReal));
 
     if (productoEnCarrito) {
-        // 3. ALERTA: Inventario Máximo
         if (productoEnCarrito.cantidad >= stockMaximo) {
             Swal.fire({
                 title: '¡Estás a punto de agotarlo! 💎',
@@ -814,7 +819,6 @@ const rutaImagen = urlImagen && urlImagen.startsWith('http')
         }
         productoEnCarrito.cantidad++;
     } else {
-        // Guardamos asegurando tanto _id como id para que la ruta de compra no falle
         carrito.push({ _id: idReal, id: idReal, nombre, precio, cantidad: 1 });
     }
 
