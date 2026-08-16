@@ -238,17 +238,18 @@ app.post('/api/comprar', upload.single('comprobante'), async (req, res) => {
                 return res.status(404).json({ exito: false, mensaje: `El producto ${item.nombre} no existe en el inventario.` });
             }
 
-            // Validamos si hay existencias suficientes
-            const stockActual = productoEnBD.cantidadStock || productoEnBD.stock || 0;
+            // Usamos estrictamente cantidadStock como está definido en tu Schema
+            const stockActual = productoEnBD.cantidadStock !== undefined ? productoEnBD.cantidadStock : 0;
+            
             if (stockActual < item.cantidad) {
                 return res.status(400).json({ exito: false, mensaje: `Stock insuficiente para ${item.nombre}. Disponibles: ${stockActual}` });
             }
 
-            // Restamos la cantidad comprada directamente en la base de datos
+            // Restamos la cantidad comprada y actualizamos el campo correcto
             productoEnBD.cantidadStock = stockActual - item.cantidad;
             await productoEnBD.save();
         }
-
+        
         // 3. SUBIDA DEL COMPROBANTE FÍSICO A CLOUDINARY
         const resultadoCloud = await cloudinary.uploader.upload(req.file.path, {
             folder: "glowbymar_comprobantes"
