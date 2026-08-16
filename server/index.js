@@ -249,10 +249,17 @@ app.post('/api/comprar', upload.single('comprobante'), async (req, res) => {
             productoEnBD.cantidadStock = stockActual - item.cantidad;
             await productoEnBD.save();
         }
-        
+
         // 3. SUBIDA DEL COMPROBANTE FÍSICO A CLOUDINARY
-        const resultadoCloud = await cloudinary.uploader.upload(req.file.path, {
-            folder: "glowbymar_comprobantes"
+        const resultadoCloud = await new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+                { folder: "glowbymar_comprobantes" },
+                (error, result) => {
+                    if (result) resolve(result);
+                    else reject(error);
+                }
+            );
+            stream.end(req.file.buffer);
         });
 
         // 4. REGISTRO DEL PEDIDO EN MONGODB ATLAS
