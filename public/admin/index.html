@@ -329,7 +329,7 @@ async function cargarPedidosAdmin() {
             let botonAccionDinamico = '';
 
             if (estadoActual.toLowerCase() === 'pendiente') {
-                const textoWA = `Hola ${pedido.cliente}! Te habla Glow By Mar. Confirmamos que tu pago de $${totalNetoPedido.toLocaleString('es-CO')} COP fue recibido con éxito y ya estamos alistando tus accesorios con mucho amor. 🌸`;
+                const textoWA = `Hola ${pedido.cliente}! Te habla Glow By Mar. Confirmamos que tu pago de $${totalNetoPedido.toLocaleString('es-CO')} COP fue recibido con éxito y ya estamos alistando tus accesorios con mucho amor.`;
                 const urlWA = `https://wa.me/${telefonoFormateado}?text=${encodeURIComponent(textoWA)}`;
                 
                 botonAccionDinamico = `<a href="${urlWA}" target="_blank" onclick="confirmarPagoYPreparar('${pedido.idPedido}')" style="background: #e67e22; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase; display: inline-block;">💬 Confirmar Pago</a>`;
@@ -422,20 +422,19 @@ async function notificarEnvioYFinalizarConDatos(id, cliente, telefono, totalNeto
     const guia = prompt("Número de guía de envío:");
     if (!guia) return;
 
-    // 1. Formatear teléfono y abrir WhatsApp INMEDIATAMENTE (sin esperar al servidor)
-    let telFormateado = telefono.replace(/\D/g, '');
+    let telFormateado = String(telefono).replace(/\D/g, '');
     if (!telFormateado.startsWith('57') && telFormateado.length === 10) {
         telFormateado = '57' + telFormateado;
     }
 
-    const textoWA = `Hola ${cliente}! Te habla Glow By Mar. Tu pedido ya fue despachado con éxito. 🚀\n\n--- RESUMEN DE COMPRA ---\n${detalleProductos}\n\nTotal Neto: $${Number(totalNeto).toLocaleString('es-CO')} COP\n\n--- DATOS DE ENVÍO ---\nEmpresa transportadora: ${empresa}\nNúmero de guía: ${guia}\n\n¡Gracias por tu compra! ✨`;
+    const textoWA = `Hola ${cliente}! Te habla Glow By Mar. Tu pedido ya fue despachado con éxito. 🚀\n\n--- RESUMEN DE COMPRA ---\n${detalleProductos}\n\nTotal Neto: $${Number(totalNeto).toLocaleString('es-CO')} COP\n\n--- DATOS DE ENVÍO ---\nEmpresa transportadora: ${empresa}\nNúmero de guía: ${guia}\n\n¡Gracias por tu compra!`;
     const urlWA = `https://wa.me/${telFormateado}?text=${encodeURIComponent(textoWA)}`;
 
-    // Se abre la pestaña al instante para que el navegador no la bloquee
-    window.open(urlWA, '_blank');
+    // 1. Intentamos abrir WhatsApp de inmediato
+    let ventanaWhatsApp = window.open(urlWA, '_blank');
 
     try {
-        // 2. Enviar los datos al servidor en segundo plano para actualizar el estado
+        // 2. Guardamos en la base de datos sin importar qué pase con WhatsApp
         const resEnvio = await fetch(`/api/pedidos/${id}/despachar`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -444,7 +443,16 @@ async function notificarEnvioYFinalizarConDatos(id, cliente, telefono, totalNeto
 
         if (resEnvio.ok) {
             await fetch(`/api/pedidos/${id}/entregar`, { method: 'PUT' });
-            setTimeout(() => cargarPedidosAdmin(), 800);
+
+            // 3. Verificamos si el navegador BLOQUEÓ la pestaña de WhatsApp
+            if (!ventanaWhatsApp || ventanaWhatsApp.closed || typeof ventanaWhatsApp.closed == 'undefined') {
+                // Si la bloqueó (porque tardaste escribiendo), usamos este plan B seguro:
+                alert("✅ Venta finalizada correctamente en el sistema.\n\n⚠️ Tu navegador bloqueó la pestaña de WhatsApp por seguridad. Haz clic en 'Aceptar' para ir al chat ahora mismo.");
+                window.location.href = urlWA; // Esto nunca lo bloquea el navegador
+            } else {
+                // Si todo funcionó perfecto a la primera, recargamos la tabla
+                setTimeout(() => cargarPedidosAdmin(), 800);
+            }
         }
     } catch (error) { 
         console.error("Error al procesar el envío:", error); 
