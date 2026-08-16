@@ -329,7 +329,7 @@ async function cargarPedidosAdmin() {
             let botonAccionDinamico = '';
 
             if (estadoActual.toLowerCase() === 'pendiente') {
-                const textoWA = `Hola ${pedido.cliente}! Te habla Glow By Mar. Confirmamos que tu pago de $${totalNetoPedido.toLocaleString('es-CO')} COP fue recibido con éxito. Ya estamos preparando tus accesorios con mucho amor. 🌸`;
+                const textoWA = `Hola ${pedido.cliente}! Te habla Glow By Mar. Confirmamos que tu pago de $${totalNetoPedido.toLocaleString('es-CO')} COP fue recibido con éxito y ya estamos alistando tus accesorios con mucho amor. 🌸`;
                 const urlWA = `https://wa.me/${telefonoFormateado}?text=${encodeURIComponent(textoWA)}`;
                 
                 botonAccionDinamico = `<a href="${urlWA}" target="_blank" onclick="avanzarADespachado('${pedido.idPedido}')" style="background: #e67e22; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase; display: inline-block;">💬 Confirmar Pago</a>`;
@@ -342,14 +342,6 @@ async function cargarPedidosAdmin() {
 
             } else {
                 botonAccionDinamico = `<span style="background: #27ae60; color: white; padding: 6px 10px; border-radius: 6px; font-weight: bold; font-size: 10px; text-transform: uppercase; display: inline-block;">🏁 VENTA FINALIZADA</span>`;
-            }
-
-            // Validar comprobante
-            let botonComprobante = `<span style="color: #999; font-size: 10px;">Sin pago</span>`;
-            if (pedido.comprobante && pedido.comprobante.trim() !== "") {
-                botonComprobante = `<button onclick="abrirModalPago('${pedido.comprobante}')" style="background: #700070; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase;">👁️ Pago</button>`;
-            } else {
-                botonComprobante = `<button onclick="abrirModalPago('')" style="background: #95a5a6; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase;">⚠️ Sin Foto</button>`;
             }
 
             tabla.innerHTML += `
