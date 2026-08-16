@@ -401,7 +401,7 @@ async function notificarEnvioYFinalizarConDatos(id, cliente, telefono, totalNeto
 
     const detalleProductos = decodeURIComponent(encodedProductos);
 
-    const textoWA = `Hola ${cliente}! Te habla Glow By Mar. Tu pedido ya fue despachado con éxito. \n\n--- RESUMEN DE COMPRA ---\n${detalleProductos}\n\nTotal Neto: $${Number(totalNeto).toLocaleString('es-CO')} COP\n\n--- DATOS DE ENVÍO ---\nEmpresa transportadora: ${empresa}\nNúmero de guía: ${guia}\n\n¡Gracias por tu compra! ✨`;
+    const textoWA = `Hola ${cliente}! Te habla Glow By Mar. Tu pedido ya fue despachado con éxito. 🚀\n\n--- RESUMEN DE COMPRA ---\n${detalleProductos}\n\nTotal Neto: $${Number(totalNeto).toLocaleString('es-CO')} COP\n\n--- DATOS DE ENVÍO ---\nEmpresa transportadora: ${empresa}\nNúmero de guía: ${guia}\n\n¡Gracias por tu compra! ✨`;
     const urlWA = `https://wa.me/${telFormateado}?text=${encodeURIComponent(textoWA)}`;
 
     try {
@@ -414,15 +414,15 @@ async function notificarEnvioYFinalizarConDatos(id, cliente, telefono, totalNeto
         if (resEnvio.ok) {
             await fetch(`/api/pedidos/${id}/entregar`, { method: 'PUT' });
 
-            // Simulación de clic seguro para evitar bloqueos del navegador
-            const enlaceTemp = document.createElement('a');
-            enlaceTemp.href = urlWA;
-            enlaceTemp.target = '_blank';
-            document.body.appendChild(enlaceTemp);
-            enlaceTemp.click();
-            document.body.removeChild(enlaceTemp);
+            // Actualizamos la tabla visualmente de inmediato
+            setTimeout(() => cargarPedidosAdmin(), 500);
 
-            setTimeout(() => cargarPedidosAdmin(), 1000);
+            // Solución infalible contra el bloqueador: Abrir directamente en la misma pestaña 
+            // o forzar redirección para que Google Chrome no lo bloquee como pop-up.
+            const abrirChat = confirm("✅ ¡Pedido finalizado y guardado con éxito!\n\n¿Deseas abrir el chat de WhatsApp con el cliente ahora mismo para enviarle el reporte?");
+            if (abrirChat) {
+                window.location.href = urlWA;
+            }
         }
     } catch (error) { 
         console.error("Error al procesar el envío:", error); 
