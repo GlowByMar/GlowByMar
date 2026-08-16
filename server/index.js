@@ -213,86 +213,110 @@ app.post('/api/productos', upload.any(), async (req, res) => {
     }
 });
 
-// ==========================================
-// RUTA 3: Procesar la compra, validar stock en MongoDB y subir comprobante a Cloudinary
-// ==========================================
-app.post('/api/comprar', upload.single('comprobante'), async (req, res) => {
+async function cargarPedidosAdmin() {
     try {
-        const { nombre, telefono, direccion } = req.body;
+        const respuesta = await fetch('/api/pedidos');
+        const pedidos = await respuesta.json();
+        const tabla = document.getElementById('tabla-pedidos-admin');
+        
+        if (!tabla) return;
+        tabla.innerHTML = '';
 
-        // 1. Validaciones iniciales del formulario
-        if (!req.body.carrito) {
-            return res.status(400).json({ exito: false, mensaje: 'El carrito está vacío.' });
+        if (pedidos.length === 0) {
+            tabla.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:#888;">No se han registrado pedidos aún.</td></tr>`;
+            const reporteElemento = document.getElementById('total-ventas-banner');
+            if (reporteElemento) reporteElemento.innerText = `$0 COP`;
+            return;
         }
-        if (!req.file) {
-            return res.status(400).json({ exito: false, mensaje: 'Falta el comprobante de pago.' });
-        }
 
-        const productosComprados = JSON.parse(req.body.carrito);
+        let totalCaja = 0; 
 
-        // 2. REVISIÓN Y DESCUENTO DE STOCK EN MONGODB ATLAS (Lógica de inventario)
-        for (const item of productosComprados) {
-            const productoEnBD = await Producto.findById(item._id || item.id);
-            
-            if (!productoEnBD) {
-                return res.status(404).json({ exito: false, mensaje: `El producto ${item.nombre} no existe en el inventario.` });
+        pedidos.reverse().forEach(pedido => { 
+            const estadoActual = pedido.estado || 'Pendiente';
+            const totalNetoPedido = parseInt(pedido.total || 0);
+            totalCaja += totalNetoPedido;
+
+            let colorEstado = '#e67e22'; 
+            if (estadoActual.toLowerCase() === 'despachado') colorEstado = '#3498db'; 
+            if (estadoActual.toLowerCase() === 'entregado') colorEstado = '#27ae60'; 
+
+            let botonAccionDinamico = '';
+            if (estadoActual.toLowerCase() === 'pendiente') {
+                botonAccionDinamico = `<button onclick="marcarDespachado('${pedido.idPedido}')" style="background: #e67e22; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase;">📦 Despachar</button>`;
+            } else if (estadoActual.toLowerCase() === 'despachado') {
+                botonAccionDinamico = `<button onclick="marcarEntregado('${pedido.idPedido}')" style="background: #27ae60; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase;">✅ Entregar</button>`;
+            } else {
+                botonAccionDinamico = `<span style="color: #27ae60; font-weight: bold; font-size: 11px;">🏁 VENTA FINALIZADA</span>`;
             }
 
-            // Usamos estrictamente cantidadStock como está definido en tu Schema
-            const stockActual = productoEnBD.cantidadStock !== undefined ? productoEnBD.cantidadStock : 0;
-            
-            if (stockActual < item.cantidad) {
-                return res.status(400).json({ exito: false, mensaje: `Stock insuficiente para ${item.nombre}. Disponibles: ${stockActual}` });
+            // Unificamos lectura de teléfono por si viene como .telefono o .contacto
+            const telCliente = pedido.telefono || pedido.contacto || '';
+            const clienteNombre = pedido.cliente || 'Cliente';
+
+            let textoMensaje = "";
+            let colorBotonWA = "#25d366";
+            let etiquetaWA = "💬 WhatsApp";
+
+            if (estadoActual.toLowerCase() === 'pendiente') {
+                textoMensaje = `Hola ${clienteNombre}. Te habla Glow By Mar. Confirmamos que tu pago de $${totalNetoPedido.toLocaleString('es-CO')} COP fue recibido con éxito.`;
+            } else {
+                textoMensaje = `Hola ${clienteNombre}. Te habla Glow By Mar. Tu pedido ya fue despachado por: ${pedido.transportadora || 'Transportadora'} con la guía: ${pedido.numeroGuia || 'Pendiente'}, gracias por tu compra.`;
+                colorBotonWA = "#3498db";
+                etiquetaWA = "🚀 Notificar Envío";
             }
 
-            // Restamos la cantidad comprada y actualizamos el campo correcto
-            productoEnBD.cantidadStock = stockActual - item.cantidad;
-            await productoEnBD.save();
+            const mensajeWhatsApp = encodeURIComponent(textoMensaje);
+            let telefonoFormateado = telCliente.toString().trim().replace(/\s+/g, '');
+            if (!telefonoFormateado.startsWith('57')) telefonoFormateado = '57' + telefonoFormateado;
+            const urlWhatsApp = `https://wa.me/${telefonoFormateado}?text=${mensajeWhatsApp}`;
+
+            // Leer productos de forma segura
+            let listaArticulosText = "Productos varios";
+            if (pedido.productos && Array.isArray(pedido.productos)) {
+                listaArticulosText = pedido.productos.map(prod => `${prod.nombre || 'Accesorio'} (x${prod.cantidad || 1})`).join(', ');
+            }
+
+            // Validar comprobante de manera robusta
+            let botonComprobante = `<span style="color: #999; font-size: 10px;">Sin pago</span>`;
+            if (pedido.comprobante && pedido.comprobante.trim() !== "") {
+                botonComprobante = `<a href="${pedido.comprobante}" target="_blank" style="background: #700070; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase;">👁️ Pago</a>`;
+            }
+
+            tabla.innerHTML += `
+                <tr style="border-bottom: 1px solid #eee; height: 55px;">
+                    <td style="padding: 10px; font-weight: bold;">#${pedido.idPedido}</td>
+                    <td style="color: #666; font-size: 12px;">${pedido.fecha}</td>
+                    <td><strong>${clienteNombre}</strong><br><small style="color:#777;">📱 ${telCliente}</small></td>
+                    <td>
+                        ${pedido.direccion || 'Sin dirección'}
+                        <button onclick="verGuiaEnvio('${clienteNombre}', '${telCliente}', '${pedido.direccion || ''}', '${totalNetoPedido}')" style="background: none; border: none; color: #3498db; cursor: pointer; font-size: 11px; text-decoration: underline; padding: 0; display: block; margin-top:3px;">📋 Copiar Datos</button>
+                    </td>
+                    <td style="font-size: 12px;">${listaArticulosText}</td>
+                    <td style="font-weight: bold; color: #27ae60;">$${totalNetoPedido.toLocaleString('es-CO')} COP</td>
+                    <td>
+                        <span style="background: ${colorEstado}; color: white; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; text-transform: uppercase;">${estadoActual}</span>
+                    </td>
+                    <td style="padding: 10px; text-align: center;">
+                        <div style="display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                            ${botonComprobante}
+                            <a href="${urlWhatsApp}" target="_blank" style="background: ${colorBotonWA}; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase;">${etiquetaWA}</a>
+                            <button onclick="descargarFactura('${pedido.idPedido}')" style="background: #7f8c8d; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; cursor: pointer;">📄 Factura</button>
+                            ${botonAccionDinamico}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+
+        const reporteElemento = document.getElementById('total-ventas-banner');
+        if (reporteElemento) {
+            reporteElemento.innerText = `$${totalCaja.toLocaleString('es-CO')} COP`;
         }
-
-        // 3. SUBIDA DEL COMPROBANTE FÍSICO A CLOUDINARY
-        const resultadoCloud = await new Promise((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream(
-                { folder: "glowbymar_comprobantes" },
-                (error, result) => {
-                    if (result) resolve(result);
-                    else reject(error);
-                }
-            );
-            stream.end(req.file.buffer);
-        });
-
-        // 4. REGISTRO DEL PEDIDO EN MONGODB ATLAS
-        const nuevoPedido = new Pedido({
-            idPedido: "PED-" + Date.now(),
-            fecha: new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota' }),
-            cliente: nombre,
-            contacto: telefono,
-            direccion: direccion,
-            productos: productosComprados,
-            total: productosComprados.reduce((sum, p) => {
-    const precioUnitario = parseFloat(p.precioConDescuento || p.precio || 0);
-    return sum + (precioUnitario * (p.cantidad || 1));
-}, 0),
-            estado: 'PENDIENTE',
-            comprobante: resultadoCloud.secure_url // Link eterno de la foto del pago
-        });
-
-        await nuevoPedido.save();
-
-        res.json({ 
-            exito: true, 
-            mensaje: "¡Tu compra fue registrada con éxito! El administrador verificará tu pago e inventario." 
-        });
 
     } catch (error) {
-        console.error("Error al procesar la compra en la nube:", error);
-        res.status(500).json({ 
-            exito: false, 
-            mensaje: "Hubo un problema interno en el servidor al procesar la transacción." 
-        });
+        console.error("Error al cargar los pedidos:", error);
     }
-});
+}
 
 // ==========================================
 // RUTA 4: Eliminar un producto de MongoDB
