@@ -250,17 +250,24 @@ app.post('/api/comprar', upload.single('comprobante'), async (req, res) => {
             await productoEnBD.save();
         }
 
-        // 3. SUBIDA DEL COMPROBANTE FÍSICO A CLOUDINARY
-        const resultadoCloud = await new Promise((resolve, reject) => {
-            const stream = cloudinary.uploader.upload_stream(
-                { folder: "glowbymar_comprobantes" },
-                (error, result) => {
-                    if (result) resolve(result);
-                    else reject(error);
-                }
-            );
-            stream.end(req.file.buffer);
-        });
+        // 3. SUBIDA DEL COMPROBANTE FÍSICO A CLOUDINARY (Segura con control de errores)
+        let urlComprobante = "";
+        try {
+            const resultadoCloud = await new Promise((resolve, reject) => {
+                const stream = cloudinary.uploader.upload_stream(
+                    { folder: "glowbymar_comprobantes" },
+                    (error, result) => {
+                        if (result) resolve(result);
+                        else reject(error);
+                    }
+                );
+                stream.end(req.file.buffer);
+            });
+            urlComprobante = resultadoCloud.secure_url;
+        } catch (uploadError) {
+            console.error("Error al subir a Cloudinary:", uploadError);
+            return res.status(500).json({ exito: false, mensaje: "Error al subir la imagen del comprobante a la nube." });
+        }
 
         // 4. REGISTRO DEL PEDIDO EN MONGODB ATLAS
         const nuevoPedido = new Pedido({
@@ -271,11 +278,11 @@ app.post('/api/comprar', upload.single('comprobante'), async (req, res) => {
             direccion: direccion,
             productos: productosComprados,
             total: productosComprados.reduce((sum, p) => {
-    const precioUnitario = parseFloat(p.precioConDescuento || p.precio || 0);
-    return sum + (precioUnitario * (p.cantidad || 1));
-}, 0),
+                const precioUnitario = parseFloat(p.precioConDescuento || p.precio || 0);
+                return sum + (precioUnitario * (p.cantidad || 1));
+            }, 0),
             estado: 'PENDIENTE',
-            comprobante: resultadoCloud ? resultadoCloud.secure_url : "" // Link eterno de la foto del pago
+            comprobante: urlComprobante // URL lista y asegurada
         });
 
         await nuevoPedido.save();
