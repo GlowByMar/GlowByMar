@@ -351,14 +351,13 @@ async function cargarPedidosAdmin() {
                 listaArticulosText = pedido.productos.map(prod => `${prod.nombre || 'Accesorio'} (x${prod.cantidad || 1})`).join(', ');
             }
 
-            // Validar comprobante de manera flexible para que siempre aparezca si el pedido es reciente o tiene link
-let botonComprobante = `<span style="color: #999; font-size: 10px;">Sin pago</span>`;
-if (pedido.comprobante && pedido.comprobante.trim() !== "") {
-    botonComprobante = `<a href="${pedido.comprobante}" target="_blank" style="background: #700070; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase;">👁️ Pago</a>`;
-} else {
-    // Si hiciste una prueba y el campo se guardó con otro nombre o quieres verlo directo:
-    botonComprobante = `<a href="#" onclick="alert('Pedido #${pedido.idPedido} - Revisa el comprobante en Cloudinary o haz una nueva prueba')" style="background: #700070; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase;">👁️ Pago</a>`;
-}
+            // Validar comprobante con ventana modal integrada
+            let botonComprobante = `<span style="color: #999; font-size: 10px;">Sin pago</span>`;
+            if (pedido.comprobante && pedido.comprobante.trim() !== "") {
+            botonComprobante = `<button onclick="abrirModalPago('${pedido.comprobante}')" style="background: #700070; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase;">👁️ Pago</button>`;
+            } else {
+            botonComprobante = `<button onclick="abrirModalPago('')" style="background: #95a5a6; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase;">⚠️ Sin Foto</button>`;
+            }
 
             tabla.innerHTML += `
                 <tr style="border-bottom: 1px solid #eee; height: 55px;">
@@ -884,6 +883,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+
 </script>
+
+<!-- MODAL PARA VER EL COMPROBANTE SIN SALIR DEL PANEL -->
+<div id="modalComprobante" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.8); justify-content:center; align-items:center;">
+    <div style="background:#fff; padding:20px; border-radius:10px; max-width:500px; text-align:center; position:relative;">
+        <span onclick="cerrarModalPago()" style="position:absolute; top:10px; right:15px; font-size:24px; font-weight:bold; cursor:pointer; color:#333;">&times;</span>
+        <h3 style="margin-top:0; color:#2c3e50;">Comprobante de Pago</h3>
+        <div id="contenedorImagenPago" style="margin:15px 0; max-height:400px; overflow:auto;">
+            <!-- Aquí se cargará la foto -->
+        </div>
+        <button onclick="cerrarModalPago()" style="background:#e74c3c; color:white; border:none; padding:8px 20px; border-radius:5px; font-weight:bold; cursor:pointer;">Cerrar</button>
+    </div>
+</div>
+
+<script>
+function abrirModalPago(urlImagen) {
+    const modal = document.getElementById('modalComprobante');
+    const contenedor = document.getElementById('contenedorImagenPago');
+    if(urlImagen && urlImagen !== "undefined" && urlImagen.trim() !== "") {
+        contenedor.innerHTML = `<img src="${urlImagen}" style="max-width:100%; border-radius:6px; border:1px solid #ddd;">`;
+    } else {
+        contenedor.innerHTML = `<p style="color:#e74c3c; font-weight:bold;">Este pedido antiguo no tiene comprobante guardado (fue creado antes de activar la subida).</p>`;
+    }
+    modal.style.display = 'flex';
+}
+function cerrarModalPago() {
+    document.getElementById('modalComprobante').style.display = 'none';
+}
+</script>
+
 </body>
 </html>
