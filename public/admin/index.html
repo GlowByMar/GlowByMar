@@ -319,45 +319,47 @@ async function cargarPedidosAdmin() {
             if (estadoActual.toLowerCase() === 'despachado') colorEstado = '#3498db'; 
             if (estadoActual.toLowerCase() === 'entregado') colorEstado = '#27ae60'; 
 
-            let botonAccionDinamico = '';
-            if (estadoActual.toLowerCase() === 'pendiente') {
-                botonAccionDinamico = `<button onclick="marcarDespachado('${pedido.idPedido}')" style="background: #e67e22; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase;">📦 Despachar</button>`;
-            } else if (estadoActual.toLowerCase() === 'despachado') {
-                botonAccionDinamico = `<button onclick="marcarEntregado('${pedido.idPedido}')" style="background: #27ae60; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase;">✅ Entregar</button>`;
-            } else {
-                botonAccionDinamico = `<span style="color: #27ae60; font-weight: bold; font-size: 11px;">🏁 VENTA FINALIZADA</span>`;
-            }
-
-            let textoMensaje = "";
-            let colorBotonWA = "#25d366";
-            let etiquetaWA = "💬 WhatsApp";
-
-            if (estadoActual.toLowerCase() === 'pendiente') {
-                textoMensaje = `Hola ${pedido.cliente}. Te habla Glow By Mar. Confirmamos que tu pago de $${totalNetoPedido.toLocaleString('es-CO')} COP fue recibido con éxito.`;
-            } else {
-                textoMensaje = `Hola ${pedido.cliente}. Te habla Glow By Mar. Tu pedido ya fue despachado por: ${pedido.transportadora || 'Transportadora'} con la guía: ${pedido.numeroGuia || 'Pendiente'}, gracias por tu compra.`;
-                colorBotonWA = "#3498db";
-                etiquetaWA = "🚀 Notificar Envío";
-            }
-
-            const mensajeWhatsApp = encodeURIComponent(textoMensaje);
+            // Formatear teléfono de forma segura para WhatsApp
             let telefonoFormateado = (pedido.telefono || "").toString().trim().replace(/\s+/g, '');
             if (!telefonoFormateado.startsWith('57')) telefonoFormateado = '57' + telefonoFormateado;
-            const urlWhatsApp = `https://wa.me/${telefonoFormateado}?text=${mensajeWhatsApp}`;
 
-            // Corrección para leer los productos de forma segura
+            // Leer productos de forma limpia para el mensaje
             let listaArticulosText = "Productos varios";
+            let detalleProductosMensaje = "";
             if (pedido.productos && Array.isArray(pedido.productos)) {
                 listaArticulosText = pedido.productos.map(prod => `${prod.nombre || 'Accesorio'} (x${prod.cantidad || 1})`).join(', ');
+                detalleProductosMensaje = pedido.productos.map(prod => `• Artículo: ${prod.nombre || 'Accesorio'}\nValor: $${parseInt(prod.precioConDescuento || prod.precioVenta || prod.precio || 0).toLocaleString('es-CO')}\nCantidad: ${prod.cantidad || 1}`).join('\n\n');
             }
 
-            // Validar comprobante con ventana modal integrada
+            // Lógica del Botón Único Inteligente según el estado
+            let botonAccionDinamico = '';
+
+            if (estadoActual.toLowerCase() === 'pendiente') {
+                // ESTADO 1: Confirmar pago y pasar a despachado
+                const textoWA = `Hola ${pedido.cliente}! Te habla Glow By Mar. Confirmamos que tu pago de $${totalNetoPedido.toLocaleString('es-CO')} COP fue recibido con éxito. Ya estamos preparando tus accesorios con mucho amor. 🌸`;
+                const urlWA = `https://wa.me/${telefonoFormateado}?text=${encodeURIComponent(textoWA)}`;
+                
+                botonAccionDinamico = `<a href="${urlWA}" target="_blank" onclick="avanzarADespachado('${pedido.idPedido}')" style="background: #e67e22; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase; display: inline-block;">💬 Confirmar Pago</a>`;
+
+            } else if (estadoActual.toLowerCase() === 'despachado') {
+                // ESTADO 2: Enviar guía de despacho y pasar a entregado
+                const textoWA = `Hola ${pedido.cliente}! Te habla Glow By Mar. Tu pedido ya fue despachado con éxito. 🚀\n\n--- RESUMEN DE COMPRA ---\n${detalleProductosMensaje}\n\nTotal Neto: $${totalNetoPedido.toLocaleString('es-CO')} COP\n\n--- DATOS DE ENVÍO ---\nEmpresa transportadora: ${pedido.transportadora || 'N/A'}\nNúmero de guía: ${pedido.numeroGuia || 'N/A'}\n\n¡Gracias por tu compra! ✨`;
+                const urlWA = `https://wa.me/${telefonoFormateado}?text=${encodeURIComponent(textoWA)}`;
+
+                botonAccionDinamico = `<a href="${urlWA}" target="_blank" onclick="marcarEntregadoDirecto('${pedido.idPedido}')" style="background: #3498db; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase; display: inline-block;">🚀 Notificar Envío</a>`;
+
+            } else {
+                // ESTADO 3: Venta Finalizada
+                botonAccionDinamico = `<span style="background: #27ae60; color: white; padding: 6px 10px; border-radius: 6px; font-weight: bold; font-size: 10px; text-transform: uppercase; display: inline-block;">🏁 VENTA FINALIZADA</span>`;
+            }
+
+            // Validar comprobante
             let botonComprobante = `<span style="color: #999; font-size: 10px;">Sin pago</span>`;
-if (pedido.comprobante && pedido.comprobante.trim() !== "") {
-    botonComprobante = `<button onclick="abrirModalPago('${pedido.comprobante}')" style="background: #700070; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase;">👁️ Pago</button>`;
-} else {
-    botonComprobante = `<button onclick="abrirModalPago('')" style="background: #95a5a6; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase;">⚠️ Sin Foto</button>`;
-}
+            if (pedido.comprobante && pedido.comprobante.trim() !== "") {
+                botonComprobante = `<button onclick="abrirModalPago('${pedido.comprobante}')" style="background: #700070; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase;">👁️ Pago</button>`;
+            } else {
+                botonComprobante = `<button onclick="abrirModalPago('')" style="background: #95a5a6; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase;">⚠️ Sin Foto</button>`;
+            }
 
             tabla.innerHTML += `
                 <tr style="border-bottom: 1px solid #eee; height: 55px;">
@@ -376,7 +378,6 @@ if (pedido.comprobante && pedido.comprobante.trim() !== "") {
                     <td style="padding: 10px; text-align: center;">
                         <div style="display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap;">
                             ${botonComprobante}
-                            <a href="${urlWhatsApp}" target="_blank" style="background: ${colorBotonWA}; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase;">${etiquetaWA}</a>
                             <button onclick="descargarFactura('${pedido.idPedido}')" style="background: #7f8c8d; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; cursor: pointer;">📄 Factura</button>
                             ${botonAccionDinamico}
                         </div>
@@ -395,11 +396,11 @@ if (pedido.comprobante && pedido.comprobante.trim() !== "") {
     }
 }
 
-async function marcarDespachado(id) {
-    if (!confirm("¿Seguro que ya despachó este pedido?")) return;
-    const empresa = prompt("Empresa de transporte:");
+// Función auxiliar cuando el admin da clic en Confirmar Pago (pide transportadora y guía para avanzar a despachado)
+async function avanzarADespachado(id) {
+    const empresa = prompt("Empresa de transporte (Ej: Inter Rapidísimo, Servientrega):");
     if (!empresa) return;
-    const guia = prompt("Número de guía:");
+    const guia = prompt("Número de guía de envío:");
     if (!guia) return;
 
     try {
@@ -408,15 +409,19 @@ async function marcarDespachado(id) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ transportadora: empresa, numeroGuia: guia })
         });
-        if (res.ok) cargarPedidosAdmin();
+        if (res.ok) {
+            setTimeout(() => cargarPedidosAdmin(), 1000);
+        }
     } catch (error) { console.error(error); }
 }
 
-async function marcarEntregado(id) {
-    if (!confirm("¿Confirma que el paquete fue entregado?")) return;
+// Función auxiliar cuando el admin da clic en Notificar Envío (pasa a entregado/finalizado)
+async function marcarEntregadoDirecto(id) {
     try {
         const res = await fetch(`/api/pedidos/${id}/entregar`, { method: 'PUT' });
-        if (res.ok) cargarPedidosAdmin();
+        if (res.ok) {
+            setTimeout(() => cargarPedidosAdmin(), 1000);
+        }
     } catch (error) { console.error(error); }
 }
 
