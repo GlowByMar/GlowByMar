@@ -695,7 +695,8 @@ const rutaImagen = urlImagen && urlImagen.startsWith('http')
     ? urlImagen 
     : ''; // O una imagen placeholder online si prefieres
 
-        const stockActual = prod.stock !== undefined ? prod.stock : (prod.cantidadStock || 0);
+        // Cambia la línea 698 por esta:
+        const stockActual = prod.cantidadStock !== undefined ? prod.cantidadStock : (prod.stock || 0);
         const estaAgotado = stockActual <= 0;
         
         // 2. Descuento
