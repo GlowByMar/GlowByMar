@@ -414,7 +414,8 @@
 </head>
 <body>
 
-        <div id="barra-ofertas" style="
+    <!-- BARRA DE OFERTAS SUPERIOR -->
+    <div id="barra-ofertas" style="
         background: linear-gradient(90deg, #d4af37 0%, #f9f0e2 50%, #d4af37 100%);
         color: #111111;
         text-align: center;
@@ -424,7 +425,7 @@
         font-weight: 700;
         letter-spacing: 2px;
         text-transform: uppercase;
-        position: fixed; /* Cambiado a fixed para que acompañe el scroll */
+        position: fixed;
         top: 0;
         left: 0;
         width: 100%;
@@ -433,65 +434,53 @@
         box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         overflow: hidden;
         display: flex;
-        align-items: center;      /* Centra los elementos verticalmente (de arriba a abajo) */
-        justify-content: center;  /* Centra los elementos horizontalmente (de izquierda a derecha) */
+        align-items: center; 
+        justify-content: center;
     ">
         <div id="texto-oferta" style="transition: opacity 0.5s ease-in-out; display: inline-block;">
             ✨ Brilla con luz propia, te mereces todo lo lindo.
         </div>
     </div>
         
-  
-<!-- 
-    /*El contenedor flotante*/
-    <div id="anuncio-flotante" style="position: fixed; top: 2px; left: 10px; z-index: 10000; background-color: #f2d9d9; padding: 10px 10px 10px 10px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); width: 100px;">
-        /* Botón de X */
-    <button onclick="document.getElementById('anuncio-flotante').style.display='none'" 
-            style="position: absolute; top: 10px; right: 5px; background: none; border: none; font: size 5px; cursor: pointer; color: #555; line-height: 1;">
-        &times;
-    </button>
-    <p id="texto-anuncio" style="margin: 0; font-size: 14px; color: #333; text-align: center;">Cargando ofertas...</p>
-</div>
--->
-
-
-    <nav class="navbar" style="width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12.5px 0; background: linear-gradient(to bottom, #ffffff, #f2d9d9);">
+    <!-- NAVBAR Y LOGO -->
+    <nav class="navbar" style="width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12.5px 0; background: linear-gradient(to bottom, #ffffff, #f2d9d9); margin-top: 25px;">
         <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
             <img src="imagenes/mi-logo.png" alt="Logo" style="height: 60px; width: auto; display: block;">
             <div style="font-family: 'Playfair Display', serif; font-weight: 500; font-size: 23px; letter-spacing: 4px; color: #333; margin-top: 5px;">
-    GLOW BY MAR
-    <br>
-    <small style="font-size: 10px; letter-spacing: 4px; color: #4b4a4a; font-weight: 300; display: block; margin-top: 2px;">ACCESORIOS</small>
-</div>
+                GLOW BY MAR
+                <br>
+                <small style="font-size: 10px; letter-spacing: 4px; color: #4b4a4a; font-weight: 300; display: block; margin-top: 2px;">ACCESORIOS</small>
+            </div>
         </div>
     </nav>
     
+    <!-- CONTENEDOR PRINCIPAL DE PRODUCTOS -->
     <div class="contenedor">
         <h2 class="seccion-titulo"> Nuestra Colección de Accesorios </h2>
         
-        <!-- Botón Lupa -->
-<div id="contenedor-busqueda" style="text-align: center; margin-bottom: 35px;">
-    <button id="btn-lupa" onclick="toggleBuscador()" style="background: none; border: none; font-size: 24px; cursor: pointer;">🔍</button>
+        <!-- Botón Lupa y Buscador -->
+        <div id="contenedor-busqueda" style="text-align: center; margin-bottom: 35px;">
+            <button id="btn-lupa" onclick="toggleBuscador()" style="background: none; border: none; font-size: 24px; cursor: pointer;">🔍</button>
 
-    <!-- Buscador oculto -->
-    <div id="buscador-desplegable" style="display: none; margin-top: 15px;">
-        <select id="filtro-categoria" onchange="filtrarProductos(); toggleBuscador();" style="padding: 8px 20px; border-radius: 20px; border: 1px solid #ddd; outline: none;">
-            <option value="Todos">✨ Mostrar Todo</option>
-            <option value="Cadenas">Cadenas</option>
-            <option value="Pulseras">Pulseras</option>
-            <option value="Anillos">Anillos</option>
-            <option value="Relojes">Relojes</option>
-            <option value="Aretes">Aretes</option>
-            <option value="Juegos">Juegos</option>
-        </select>
-    </div>
-</div>
+            <div id="buscador-desplegable" style="display: none; margin-top: 15px;">
+                <select id="filtro-categoria" onchange="filtrarProductos(); toggleBuscador();" style="padding: 8px 20px; border-radius: 20px; border: 1px solid #ddd; outline: none;">
+                    <option value="Todos">✨ Mostrar Todo</option>
+                    <option value="Cadenas">Cadenas</option>
+                    <option value="Pulseras">Pulseras</option>
+                    <option value="Anillos">Anillos</option>
+                    <option value="Relojes">Relojes</option>
+                    <option value="Aretes">Aretes</option>
+                    <option value="Juegos">Juegos</option>
+                </select>
+            </div>
+        </div>
 
         <div id="lista-productos"></div>
     </div>
 
-    <div id="seccion-carrito-completo" style="display: none; margin-top: 30px; padding: 20px; border: 1px solid #eee; border-radius: 8px; background: #fff;">
-        <h3 style="margin-top:0; font-weight:600; text-transform:uppercase; letter-spacing:1px; color: var(--color-oscuro); text-align: center;">🛒 Resumen de su Pedido</h3>
+    <!-- SECCIÓN CARRITO COMPLETO Y ENVÍO -->
+    <div id="seccion-carrito-completo" style="display: none; margin-top: 30px; padding: 20px; border: 1px solid #eee; border-radius: 8px; background: #fff; max-width: 800px; margin-left: auto; margin-right: auto;">
+        <h3 style="margin-top:0; font-weight:600; text-transform:uppercase; letter-spacing:1px; color: #111; text-align: center;">🛒 Resumen de su Pedido</h3>
         
         <table style="width: 100%; text-align: left; border-collapse: collapse; margin-bottom: 25px; font-size: 14px;">
             <thead>
@@ -505,78 +494,50 @@
             <tbody id="cuerpo-tabla-carrito"></tbody>
         </table>
 
-        <h3 style="font-family:Arial, Helvetica, sans-serif ;font-weight:600; text-transform:uppercase; letter-spacing:1px; color: var(--color-oscuro); text-align: center; margin-top: 30px;">📦 Datos de Envío</h3>
+        <h3 style="font-weight:600; text-transform:uppercase; letter-spacing:1px; color: #111; text-align: center; margin-top: 30px;">📦 Datos de Envío</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
             <div style="display: flex; flex-direction: column; gap: 5px;">
-                <label style="font-family:Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif 10px; font-weight: 600; text-transform: uppercase;">Nombre Completo *</label>
-                <input type="text" id="envio-nombre" placeholder="Ej. Juan Pérez" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Montserrat' 11px;">
+                <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; font-family: 'Montserrat', sans-serif;">Nombre Completo *</label>
+                <input type="text" id="envio-nombre" placeholder="Ej. Juan Pérez" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Montserrat', sans-serif; font-size: 11px;">
             </div>
             <div style="display: flex; flex-direction: column; gap: 5px;">
-                <label style="font-family:Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif 10px; font-weight: 600; text-transform: uppercase;">Teléfono / WhatsApp *</label>
-                <input type="tel" id="envio-telefono" placeholder="Ej. 3001234567" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Montserrat' 11px;">
+                <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; font-family: 'Montserrat', sans-serif;">Teléfono / WhatsApp *</label>
+                <input type="tel" id="envio-telefono" placeholder="Ej. 3001234567" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Montserrat', sans-serif; font-size: 11px;">
             </div>
-            <div style="display: grid; grid-column: 1 / -1; flex-direction: column; gap: 5px;">
-                <label style="font-family:Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif 10px; font-weight: 600; text-transform: uppercase;">Dirección de Entrega *</label>
-                <input type="text" id="envio-direccion" placeholder="Ej. Calle 10 # 45-20, Medellín" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Montserrat' 11px;">
+            <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 5px;">
+                <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; font-family: 'Montserrat', sans-serif;">Dirección de Entrega *</label>
+                <input type="text" id="envio-direccion" placeholder="Ej. Calle 10 # 45-20, Medellín" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Montserrat', sans-serif; font-size: 11px;">
             </div>
         </div>
 
-        <h3 style="font-weight:600; text-transform:uppercase; letter-spacing:1px; color: var(--color-oscuro); text-align: center; margin-top: 30px;">💵 Método de Pago</h3>
+        <h3 style="font-weight:600; text-transform:uppercase; letter-spacing:1px; color: #111; text-align: center; margin-top: 30px;">💵 Método de Pago</h3>
         <div style="background-color: #fdfaf4; border: 1px solid #d4af37; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: left;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                <span style="background-color: #700070; color: white; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; font-family: 'Montserrat';">NEQUI</span>
-                <!-- <strong style="color: #111; font-size: 14px;">Transferencia Directa</strong> -->
+                <span style="background-color: #700070; color: white; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; font-family: 'Montserrat', sans-serif;">NEQUI</span>
             </div>
-            <p style="font-family:Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif 10px; color: #555; margin: 0 0 5px 0; line-height: 1.5; font-family: 'Montserrat' 9px;">
+            <p style="color: #555; margin: 0 0 5px 0; line-height: 1.5; font-family: 'Montserrat', sans-serif; font-size: 11px;">
                 "¡Ya casi es tuyo! ✨ Para confirmar tu pedido, puedes hacer el pago o transferencia por Nequi a nuestra cuenta oficial:"
                 <br>
                 📱 <strong>Número Nequi: 3164457177 - Llave Nequi: @3164457177</strong> (Glow By Mar)
             </p>
-            
-               
-            
-        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; width: 100%;">
-    
-    <h4 style="color: var(--color-oscuro); font-size: 20px; margin: 0 0 10px 0; font-weight: 700; text-align: center;" id="total-precio-real">
-        Total a Pagar: $0 COP
-    </h4>
-
-    <button type="button" onclick="cerrarCompraCliente()" style="background: #439C69; color: white; border: none; padding: 10px; border-radius: 15px; cursor: pointer; font-weight: bold; font-size: 15px; text-transform: uppercase; letter-spacing: 1px; font-family: 'Montserrat'; width: 100%;">
-        Finalizar Compra 
-    </button>
-    
-    <button type="button" onclick="vaciarCarrito()" style="background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 15px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 14px; letter-spacing: 1px; font-family: 'Montserrat'; width: 100%;">
-        Vaciar Carrito
-    </button>
-
-    </div>
-    </div>
-
-    <footer style="text-align: center; padding: 20px 20px 15px 20px; background-color: rgba(255, 255, 255, 0.65); margin-top: 50px; border-top: 1px solid rgba(0,0,0,0.05); backdrop-filter: blur(5px);">
-        <p style="font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--color-oscuro); margin-bottom: 10px;">
-            ✨ Conéctate con Glow By Mar ✨
-        </p>
-        
-        <div style="display: flex; justify-content: center; gap: 25px;">
-            <a href="https://instagram.com/glowbymaraccesorios?utm_source=qr" target="_blank" style="color: #bc2a8d; font-size: 28px; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
-                <i class="fab fa-instagram"></i>
-            </a>
-            <a href="https://www.tiktok.com/@glowbymar11?_r=1&_t=ZS-98XJfT1c4KV" target="_blank" style="color: #000000; font-size: 28px; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
-                <i class="fab fa-tiktok"></i>
-            </a>
-            <a href="https://wa.me/573204315042?text=Hola!%20Vengo%20de%20la%20tienda%20Glow%20By%20Mar%20y%20me%20gustaría%20recibir%20asesoría%20sobre%20sus%20accesorios." target="_blank" style="color: #25d366; font-size: 28px; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
-                <i class="fab fa-whatsapp"></i>
-            </a>
-            <a href="https://www.facebook.com/share/1DDCcWAQhv/?mibextid=wwXIfr/" target="_blank" style="color: #1877f2; font-size: 28px; transition: transform 0.3s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
-                <i class="fab fa-facebook"></i>
-            </a>
         </div>
-        
-        <p style="font-size: 10px; color: #888; margin-top: 25px; letter-spacing: 1px;">
-            &copy; 2023 GLOW BY MAR - Todos los derechos reservados.
-        </p>
-    </footer>
 
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; width: 100%;">
+            <h4 style="color: #111; font-size: 20px; margin: 0 0 10px 0; font-weight: 700; text-align: center;" id="total-precio-real">
+                Total a Pagar: $0 COP
+            </h4>
+
+            <button type="button" onclick="cerrarCompraCliente()" style="background: #439C69; color: white; border: none; padding: 10px; border-radius: 15px; cursor: pointer; font-weight: bold; font-size: 15px; text-transform: uppercase; letter-spacing: 1px; font-family: 'Montserrat', sans-serif; width: 100%;">
+                Finalizar Pedido por WhatsApp 
+            </button>
+            
+            <button type="button" onclick="vaciarCarrito()" style="background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 15px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 14px; letter-spacing: 1px; font-family: 'Montserrat', sans-serif; width: 100%;">
+                Vaciar Carrito
+            </button>
+        </div>
+    </div>
+
+    <!-- MINI CARRITO DESPLEGABLE -->
     <div id="carrito-emergente" class="mini-carrito-dropdown">
         <p style="margin: 10px 0; font-size: 13px; color: #8d8d7f; text-align: center;" id="mensaje-mini-vacio">Tu carrito está vacío.</p>
         <div id="items-mini-contenedor"></div>
@@ -589,12 +550,13 @@
             </div>
             <button class="btn-ver-carrito-completo" onclick="irAlCarritoCompleto()">Ver mi carrito 💳</button>
             <p style="font-size: 10px; color: #2e2e2edc; text-align: center; margin-top: 8px; line-height: 1.2;">
-    * Sabaneta: Entrega gratis a domicilio.<br>
-    * Medellín/Área metro/Nacional: Envío pago contra entrega.
-</p>
+                * Sabaneta: Entrega gratis a domicilio.<br>
+                * Medellín/Área metro/Nacional: Envío pago contra entrega.
+            </p>
         </div>
     </div>
 
+    <!-- BOTÓN FLOTANTE DEL CARRITO -->
     <button id="btn-carrito-flotante" class="carrito-flotante" onclick="toggleCarritoEmergente()">
         <div class="carrito-contenido">
             <i class="fas fa-shopping-bag"></i>
@@ -602,21 +564,39 @@
         </div>
     </button>
 
+    <!-- CINTA DE CUIDADOS -->
     <div class="cinta-cuidados-container">
-    <div class="cinta-track">
-        <!-- Bloque 1 de mensajes -->
-        <span>✨ Evita el contacto con perfumes, cremas y alcohol para proteger el baño de rodio.</span>
-        <span>💎 Guarda tus accesorios por separado para evitar rayones y conservar su brillo.</span>
-        <span>🌸 Retira tus joyas antes de dormir, bañarte o hacer ejercicio.</span>
-        <span>💧 Limpia tus piezas suavemente con un paño seco y limpio después de usarlas.</span>
-        
-        <!-- Bloque 2 repetido (necesario para que el desplazamiento infinito sea fluido y sin saltos) -->
-        <span>✨ Evita el contacto con perfumes, cremas y alcohol para proteger el baño de rodio.</span>
-        <span>💎 Guarda tus accesorios por separado para evitar rayones y conservar su brillo.</span>
-        <span>🌸 Retira tus joyas antes de dormir, bañarte o hacer ejercicio.</span>
-        <span>💧 Limpia tus piezas suavemente con un paño seco y limpio después de usarlas.</span>
+        <div class="cinta-track">
+            <span>✨ Evita el contacto con perfumes, cremas y alcohol para proteger el baño de rodio.</span>
+            <span>💎 Guarda tus accesorios por separado para evitar rayones y conservar su brillo.</span>
+            <span>🌸 Retira tus joyas antes de dormir, bañarte o hacer ejercicio.</span>
+            <span>💧 Limpia tus piezas suavemente con un paño seco y limpio después de usarlas.</span>
+            
+            <span>✨ Evita el contacto con perfumes, cremas y alcohol para proteger el baño de rodio.</span>
+            <span>💎 Guarda tus accesorios por separado para evitar rayones y conservar su brillo.</span>
+            <span>🌸 Retira tus joyas antes de dormir, bañarte o hacer ejercicio.</span>
+            <span>💧 Limpia tus piezas suavemente con un paño seco y limpio después de usarlas.</span>
+        </div>
     </div>
-</div>
+
+    <!-- PIE DE PÁGINA (FOOTER INDEPENDIENTE Y AFUERA) -->
+    <footer style="text-align: center; padding: 20px 20px 15px 20px; background-color: rgba(255, 255, 255, 0.65); margin-top: 50px; border-top: 1px solid rgba(0,0,0,0.05); backdrop-filter: blur(5px);">
+        <p style="font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: #111; margin-bottom: 10px;">
+            ✨ Conéctate con Glow By Mar ✨
+        </p>
+        <div style="display: flex; justify-content: center; gap: 25px;">
+            <a href="https://instagram.com/glowbymaraccesorios?utm_source=qr" target="_blank" style="color: #bc2a8d; font-size: 28px;"><i class="fab fa-instagram"></i></a>
+            <a href="https://www.tiktok.com/@glowbymar11?_r=1&_t=ZS-98XJfT1c4KV" target="_blank" style="color: #000000; font-size: 28px;"><i class="fab fa-tiktok"></i></a>
+            <a href="https://wa.me/573204315042?text=Hola!%20Vengo%20de%20la%20tienda%20Glow%20By%20Mar%20y%20me%20gustaría%20recibir%20asesoría%20sobre%20sus%20accesorios." target="_blank" style="color: #25d366; font-size: 28px;"><i class="fab fa-whatsapp"></i></a>
+            <a href="https://www.facebook.com/share/1DDCcWAQhv/?mibextid=wwXIfr/" target="_blank" style="color: #1877f2; font-size: 28px;"><i class="fab fa-facebook"></i></a>
+        </div>
+        <p style="font-size: 10px; color: #888; margin-top: 25px; letter-spacing: 1px; font-family: 'Montserrat', sans-serif;">
+            &copy; 2023 GLOW BY MAR - Todos los derechos reservados.
+        </p>
+    </footer>
+
+</body>
+</html>
 
     <script>
     let carrito = JSON.parse(localStorage.getItem('carrito-joyas')) || [];
