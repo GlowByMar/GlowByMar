@@ -275,7 +275,7 @@ app.post('/api/comprar', upload.single('comprobante'), async (req, res) => {
     return sum + (precioUnitario * (p.cantidad || 1));
 }, 0),
             estado: 'PENDIENTE',
-            comprobante: resultadoCloud.secure_url // Link eterno de la foto del pago
+            comprobante: resultadoCloud ? resultadoCloud.secure_url : "" // Link eterno de la foto del pago
         });
 
         await nuevoPedido.save();

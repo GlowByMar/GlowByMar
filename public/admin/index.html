@@ -353,11 +353,11 @@ async function cargarPedidosAdmin() {
 
             // Validar comprobante con ventana modal integrada
             let botonComprobante = `<span style="color: #999; font-size: 10px;">Sin pago</span>`;
-            if (pedido.comprobante && pedido.comprobante.trim() !== "") {
-            botonComprobante = `<button onclick="abrirModalPago('${pedido.comprobante}')" style="background: #700070; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase;">👁️ Pago</button>`;
-            } else {
-            botonComprobante = `<button onclick="abrirModalPago('')" style="background: #95a5a6; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase;">⚠️ Sin Foto</button>`;
-            }
+if (pedido.comprobante && pedido.comprobante.trim() !== "") {
+    botonComprobante = `<button onclick="abrirModalPago('${pedido.comprobante}')" style="background: #700070; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase;">👁️ Pago</button>`;
+} else {
+    botonComprobante = `<button onclick="abrirModalPago('')" style="background: #95a5a6; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase;">⚠️ Sin Foto</button>`;
+}
 
             tabla.innerHTML += `
                 <tr style="border-bottom: 1px solid #eee; height: 55px;">
@@ -902,10 +902,12 @@ document.addEventListener('DOMContentLoaded', () => {
 function abrirModalPago(urlImagen) {
     const modal = document.getElementById('modalComprobante');
     const contenedor = document.getElementById('contenedorImagenPago');
-    if(urlImagen && urlImagen !== "undefined" && urlImagen.trim() !== "") {
-        contenedor.innerHTML = `<img src="${urlImagen}" style="max-width:100%; border-radius:6px; border:1px solid #ddd;">`;
+    
+    // Validamos que la URL venga limpia y con contenido real
+    if(urlImagen && urlImagen !== "undefined" && urlImagen.trim() !== "" && urlImagen !== "null") {
+        contenedor.innerHTML = `<img src="${urlImagen}" style="max-width:100%; max-height:350px; border-radius:6px; border:1px solid #ddd;">`;
     } else {
-        contenedor.innerHTML = `<p style="color:#e74c3c; font-weight:bold;">Este pedido antiguo no tiene comprobante guardado (fue creado antes de activar la subida).</p>`;
+        contenedor.innerHTML = `<p style="color:#e74c3c; font-weight:bold;">Este pedido no registró un archivo de comprobante válido.</p>`;
     }
     modal.style.display = 'flex';
 }
