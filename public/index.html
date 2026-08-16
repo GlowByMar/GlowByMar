@@ -1010,14 +1010,14 @@ function eliminarDelCarrito(idProducto) {
         if (respuesta.ok && resultado.exito) {
             if (respuesta.ok && resultado.exito) {
             // Armamos el texto limpio sin asteriscos feos y con el detalle necesario
-            const mensajewp = `Hola! Acabo de realizar un pedido en la tienda.\n\nNombre: ${nombre}\nDirección: ${direccion}\n\n¡Adjunto mi comprobante de pago por aquí para finalizar la orden! 🌸`;
+            const mensajewp = `Hola! Acabo de realizar un pedido en Glow By Mar.\n\nSoy: ${nombre}\n\n¡Adjunto mi comprobante de pago para finalizar la orden!`;
             const numeroTuyo = "573000000000"; // Reemplaza con tu número de WhatsApp real
 
             Swal.fire({
                 title: '¡Pedido Registrado con Éxito! 🌸',
-                text: 'Es obligatorio adjuntar tu comprobante de pago al WhatsApp que se abrirá a continuación para procesar el envío.',
+                text: 'Recuerda enviarnos tu comprobante de pago al WhatsApp y así procesar el envío.',
                 icon: 'warning', // Un icono de advertencia amigable para el comprobante
-                confirmButtonText: 'Entendido, ir a WhatsApp',
+                confirmButtonText: 'Aceptar',
                 confirmButtonColor: '#2ecc71'
             }).then(() => {
                 // Redirigir a WhatsApp con el texto bien codificado
