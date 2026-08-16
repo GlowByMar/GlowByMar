@@ -214,41 +214,61 @@ app.post('/api/productos', upload.any(), async (req, res) => {
 });
 
 // ==========================================
-// RUTA 3: Procesar la compra, validar stock en MongoDB y subir comprobante a Cloudinary
+// RUTA 3: Procesar la compra, validar stock y registrar en panel
 // ==========================================
 app.post('/api/comprar', async (req, res) => {
     try {
-        const { nombre, telefono, direccion, carrito } = req.body;
-        const productosComprados = JSON.parse(carrito);
+        console.log("📥 RECIBIENDO PEDIDO NUEVO...");
+        console.log("Datos recibidos (req.body):", req.body); // Para ver qué nos envía la web
 
-        // Opcional: Descontar stock (si ya lo tenías funcionando)
+        const { nombre, telefono, direccion, carrito } = req.body;
+
+        // 1. BLINDAJE DEL CARRITO: Evitar el error de JSON.parse
+        let productosComprados = [];
+        if (typeof carrito === 'string') {
+            productosComprados = JSON.parse(carrito); // Si viene como texto, lo convertimos
+        } else if (Array.isArray(carrito)) {
+            productosComprados = carrito; // Si ya viene como arreglo, lo dejamos igual
+        } else {
+            throw new Error("El formato del carrito no es reconocido.");
+        }
+
+        console.log("🛒 Productos detectados:", productosComprados.length);
+
+        // 2. BLINDAJE DEL STOCK: Validar IDs antes de buscar en la BD
         for (const item of productosComprados) {
-            const productoEnBD = await Producto.findById(item._id || item.id);
-            if (productoEnBD) {
-                productoEnBD.cantidadStock = Math.max(0, productoEnBD.cantidadStock - item.cantidad);
-                await productoEnBD.save();
+            const idBuscar = item._id || item.id;
+            // Solo buscamos si el ID existe y tiene 24 caracteres (formato válido de MongoDB)
+            if (idBuscar && String(idBuscar).length === 24) {
+                const productoEnBD = await Producto.findById(idBuscar);
+                if (productoEnBD) {
+                    productoEnBD.cantidadStock = Math.max(0, productoEnBD.cantidadStock - (item.cantidad || 1));
+                    await productoEnBD.save();
+                }
             }
         }
 
-        // Registrar pedido en MongoDB sin complicarnos con fotos
+        // 3. REGISTRAR EL PEDIDO EN MONGODB
         const nuevoPedido = new Pedido({
             idPedido: "PED-" + Date.now(),
             fecha: new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota' }),
-            cliente: nombre,
-            contacto: telefono,
-            direccion: direccion,
+            cliente: nombre || 'Sin nombre',
+            contacto: telefono || 'Sin teléfono',
+            direccion: direccion || 'Sin dirección',
             productos: productosComprados,
-            total: productosComprados.reduce((sum, p) => sum + (parseFloat(p.precioConDescuento || p.precio || 0) * (p.cantidad || 1)), 0),
-            estado: 'PENDIENTE',
-            comprobante: "PENDIENTE_POR_WHATSAPP" // Indicador para tu panel
+            total: productosComprados.reduce((sum, p) => sum + (parseFloat(p.precioConDescuento || p.precioVenta || p.precio || 0) * (p.cantidad || 1)), 0),
+            estado: 'PENDIENTE'
         });
 
-        await nuevoPedido.save();
+        const guardado = await nuevoPedido.save();
+        console.log("✅ Pedido guardado exitosamente con ID:", guardado.idPedido);
 
-        res.json({ exito: true, mensaje: "¡Pedido registrado con éxito!" });
+        res.json({ exito: true, mensaje: "¡Pedido registrado con éxito!", idPedido: guardado.idPedido });
     } catch (error) {
-        console.error("Error:", error);
-        res.status(500).json({ exito: false, mensaje: "Error interno al procesar el pedido." });
+        // AQUÍ ATRAPAMOS EL ERROR REAL Y LO IMPRIMIMOS
+        console.error("❌ ERROR CRÍTICO AL PROCESAR PEDIDO:", error.message);
+        console.error(error);
+        res.status(500).json({ exito: false, mensaje: "Error interno al procesar el pedido.", detalle: error.message });
     }
 });
 
@@ -274,7 +294,7 @@ app.delete('/api/productos/:id', async (req, res) => {
 });
 
 // ==========================================
-// // RUTA 6: Despachar un pedido asignando transportadora y guía en MongoDB Atlas
+// // RUTA 5: Despachar un pedido asignando transportadora y guía en MongoDB Atlas
 app.put('/api/pedidos/:id/despachar', async (req, res) => {
     try {
         const idPedido = req.params.id;
@@ -300,7 +320,7 @@ app.put('/api/pedidos/:id/despachar', async (req, res) => {
     }
 });
 
-// // RUTA 7: Entregar un pedido cambiando su estado final en MongoDB Atlas
+// // RUTA 6: Entregar un pedido cambiando su estado final en MongoDB Atlas
 app.put('/api/pedidos/:id/entregar', async (req, res) => {
     try {
         const idPedido = req.params.id;
@@ -321,7 +341,7 @@ app.put('/api/pedidos/:id/entregar', async (req, res) => {
 });
 
 // ==========================================
-// RUTA ÚNICA: Ver Factura Web / Enviar por WhatsApp
+// RUTA 7: Ver Factura Web / Enviar por WhatsApp
 // ==========================================
 app.get('/api/pedidos/:id/factura', async (req, res) => {
     try {
@@ -438,7 +458,7 @@ app.get('/api/pedidos/:id/factura', async (req, res) => {
 });
 
 // ==========================================
-// RUTA 9: Reporte Mensual DETALLADO
+// RUTA 8: Reporte Mensual DETALLADO
 // ==========================================
 app.get('/api/reportes/mensual', (req, res) => {
     const rutaPedidos = path.join(__dirname, 'pedidos.json');
@@ -569,7 +589,7 @@ const sums = lista.reduce((acc, art) => ({
 });
 
 // ====================================================
-// 🔥 RUTA CORREGIDA: Editar un producto existente (MongoDB + Cloudinary)
+// 🔥 RUTA 9: Editar un producto existente (MongoDB + Cloudinary)
 // ====================================================
 app.post('/api/productos/editar', upload.any(), async (req, res) => {
     try {
@@ -629,7 +649,7 @@ app.post('/api/productos/editar', upload.any(), async (req, res) => {
 
 
 // ==========================================
-// RUTA: Registrar Venta Externa por Nombre
+// RUTA 10: Registrar Venta Externa por Nombre
 // ==========================================
 app.post('/api/registrar-venta', (req, res) => {
     try {
@@ -706,7 +726,7 @@ app.post('/api/registrar-venta', (req, res) => {
 });
 
 // ==========================================
-// RUTA: Traer todos los pedidos de MongoDB
+// RUTA 11: Traer todos los pedidos de MongoDB
 // ==========================================
 app.get('/api/pedidos', async (req, res) => {
     try {
