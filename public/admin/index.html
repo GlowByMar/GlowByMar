@@ -325,20 +325,20 @@ async function cargarPedidosAdmin() {
                 detalleProductosMensaje = pedido.productos.map(prod => `• Artículo: ${prod.nombre || 'Accesorio'}\nValor: $${parseInt(prod.precioConDescuento || prod.precioVenta || prod.precio || 0).toLocaleString('es-CO')}\nCantidad: ${prod.cantidad || 1}`).join('\n\n');
             }
 
-            // Lógica del Botón Único Inteligente según el estado
+            // Lógica del Botón Único Inteligente con los 3 pasos exactos
             let botonAccionDinamico = '';
 
             if (estadoActual.toLowerCase() === 'pendiente') {
                 const textoWA = `Hola ${pedido.cliente}! Te habla Glow By Mar. Confirmamos que tu pago de $${totalNetoPedido.toLocaleString('es-CO')} COP fue recibido con éxito y ya estamos alistando tus accesorios con mucho amor. 🌸`;
                 const urlWA = `https://wa.me/${telefonoFormateado}?text=${encodeURIComponent(textoWA)}`;
                 
-                botonAccionDinamico = `<a href="${urlWA}" target="_blank" onclick="avanzarADespachado('${pedido.idPedido}')" style="background: #e67e22; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase; display: inline-block;">💬 Confirmar Pago</a>`;
+                botonAccionDinamico = `<a href="${urlWA}" target="_blank" onclick="confirmarPagoYPreparar('${pedido.idPedido}')" style="background: #e67e22; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase; display: inline-block;">💬 Confirmar Pago</a>`;
 
             } else if (estadoActual.toLowerCase() === 'despachado') {
                 const textoWA = `Hola ${pedido.cliente}! Te habla Glow By Mar. Tu pedido ya fue despachado con éxito. 🚀\n\n--- RESUMEN DE COMPRA ---\n${detalleProductosMensaje}\n\nTotal Neto: $${totalNetoPedido.toLocaleString('es-CO')} COP\n\n--- DATOS DE ENVÍO ---\nEmpresa transportadora: ${pedido.transportadora || 'N/A'}\nNúmero de guía: ${pedido.numeroGuia || 'N/A'}\n\n¡Gracias por tu compra! ✨`;
                 const urlWA = `https://wa.me/${telefonoFormateado}?text=${encodeURIComponent(textoWA)}`;
 
-                botonAccionDinamico = `<a href="${urlWA}" target="_blank" onclick="marcarEntregadoDirecto('${pedido.idPedido}')" style="background: #3498db; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase; display: inline-block;">🚀 Notificar Envío</a>`;
+                botonAccionDinamico = `<a href="${urlWA}" target="_blank" onclick="notificarEnvioYFinalizar('${pedido.idPedido}')" style="background: #3498db; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase; display: inline-block;">🚀 Notificar Envío</a>`;
 
             } else {
                 botonAccionDinamico = `<span style="background: #27ae60; color: white; padding: 6px 10px; border-radius: 6px; font-weight: bold; font-size: 10px; text-transform: uppercase; display: inline-block;">🏁 VENTA FINALIZADA</span>`;
@@ -375,6 +375,43 @@ async function cargarPedidosAdmin() {
     } catch (error) {
         console.error("Error al cargar los pedidos:", error);
     }
+}
+
+// --- Aquí puedes pegarla perfectamente (por ejemplo, junto al resto de tus funciones) ---
+
+async function confirmarPagoYPreparar(id) {
+    try {
+        const res = await fetch(`/api/pedidos/${id}/despachar`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transportadora: 'En preparación', numeroGuia: 'Pendiente' })
+        });
+        if (res.ok) {
+            setTimeout(() => cargarPedidosAdmin(), 1000);
+        }
+    } catch (error) { console.error(error); }
+}
+
+async function notificarEnvioYFinalizar(id) {
+    const empresa = prompt("Empresa de transporte (Ej: Inter Rapidísimo, Servientrega):");
+    if (!empresa) return;
+    const guia = prompt("Número de guía de envío:");
+    if (!guia) return;
+
+    try {
+        const resEnvio = await fetch(`/api/pedidos/${id}/despachar`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transportadora: empresa, numeroGuia: guia })
+        });
+
+        if (resEnvio.ok) {
+            const resFinal = await fetch(`/api/pedidos/${id}/entregar`, { method: 'PUT' });
+            if (resFinal.ok) {
+                setTimeout(() => cargarPedidosAdmin(), 1000);
+            }
+        }
+    } catch (error) { console.error(error); }
 }
 
 // Función para registrar ventas fuera de la web y sumarlas al control y stock
