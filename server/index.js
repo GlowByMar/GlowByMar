@@ -11,7 +11,7 @@ require('dotenv').config();
 // MODELO DE BASE DE DATOS PARA PEDIDOS
 const pedidoSchema = new mongoose.Schema({
     idPedido: String,
-    fecha: { type: Date, default: Date.now },
+    fecha: String,
     cliente: String,
     contacto: String,
     direccion: String,
