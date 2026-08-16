@@ -160,12 +160,6 @@ td {
                 <input type="number" id="edit-descIndividual" name="descIndividual" placeholder="0" min="0" max="100">
             </div>
             
-            <!--<div class="grupo-campo">
-                <label>Descripción del Producto:</label>
-                <textarea name="descripcion" id="descripcion" spellcheck="true" required placeholder="Breve descripción del accesorio..."></textarea>
-            </div>
-        -->
-
             <div class="grupo-campo" id="campo-foto">
                 <label>Foto del Producto:</label>
                 <input type="file" name="foto" accept="image/*">
@@ -335,21 +329,18 @@ async function cargarPedidosAdmin() {
             let botonAccionDinamico = '';
 
             if (estadoActual.toLowerCase() === 'pendiente') {
-                // ESTADO 1: Confirmar pago y pasar a despachado
                 const textoWA = `Hola ${pedido.cliente}! Te habla Glow By Mar. Confirmamos que tu pago de $${totalNetoPedido.toLocaleString('es-CO')} COP fue recibido con éxito. Ya estamos preparando tus accesorios con mucho amor. 🌸`;
                 const urlWA = `https://wa.me/${telefonoFormateado}?text=${encodeURIComponent(textoWA)}`;
                 
                 botonAccionDinamico = `<a href="${urlWA}" target="_blank" onclick="avanzarADespachado('${pedido.idPedido}')" style="background: #e67e22; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase; display: inline-block;">💬 Confirmar Pago</a>`;
 
             } else if (estadoActual.toLowerCase() === 'despachado') {
-                // ESTADO 2: Enviar guía de despacho y pasar a entregado
                 const textoWA = `Hola ${pedido.cliente}! Te habla Glow By Mar. Tu pedido ya fue despachado con éxito. 🚀\n\n--- RESUMEN DE COMPRA ---\n${detalleProductosMensaje}\n\nTotal Neto: $${totalNetoPedido.toLocaleString('es-CO')} COP\n\n--- DATOS DE ENVÍO ---\nEmpresa transportadora: ${pedido.transportadora || 'N/A'}\nNúmero de guía: ${pedido.numeroGuia || 'N/A'}\n\n¡Gracias por tu compra! ✨`;
                 const urlWA = `https://wa.me/${telefonoFormateado}?text=${encodeURIComponent(textoWA)}`;
 
                 botonAccionDinamico = `<a href="${urlWA}" target="_blank" onclick="marcarEntregadoDirecto('${pedido.idPedido}')" style="background: #3498db; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase; display: inline-block;">🚀 Notificar Envío</a>`;
 
             } else {
-                // ESTADO 3: Venta Finalizada
                 botonAccionDinamico = `<span style="background: #27ae60; color: white; padding: 6px 10px; border-radius: 6px; font-weight: bold; font-size: 10px; text-transform: uppercase; display: inline-block;">🏁 VENTA FINALIZADA</span>`;
             }
 
@@ -396,7 +387,47 @@ async function cargarPedidosAdmin() {
     }
 }
 
-// Función auxiliar cuando el admin da clic en Confirmar Pago (pide transportadora y guía para avanzar a despachado)
+// Función para registrar ventas fuera de la web y sumarlas al control y stock
+async function registrarVentaExterna() {
+    const nombreCliente = prompt("Nombre del cliente (Venta Externa):");
+    if (!nombreCliente) return;
+    const telCliente = prompt("Teléfono del cliente:");
+    if (!telCliente) return;
+    const nombreProducto = prompt("Nombre del producto vendido:");
+    if (!nombreProducto) return;
+    const cantidadVendida = parseInt(prompt("Cantidad vendida:", "1"));
+    if (!cantidadVendida || cantidadVendida <= 0) return;
+    const valorTotalVenta = parseInt(prompt("Valor total cobrado (COP):", "0"));
+    if (isNaN(valorTotalVenta)) return;
+
+    const nuevaVentaExterna = {
+        cliente: nombreCliente,
+        telefono: telCliente,
+        direccion: "Venta Física / Externa",
+        productos: [{ nombre: nombreProducto, cantidad: cantidadVendida, precioVenta: valorTotalVenta / cantidadVendida }],
+        total: valorTotalVenta,
+        estado: "Entregado", // Las ventas externas se registran de una vez como finalizadas
+        comprobante: ""
+    };
+
+    try {
+        const res = await fetch('/api/pedidos/externo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(nuevaVentaExterna)
+        });
+        if (res.ok) {
+            alert("¡Venta externa registrada con éxito y sumada a la caja!");
+            cargarPedidosAdmin();
+            if (typeof obtenerInventario === 'function') obtenerInventario();
+        } else {
+            alert("Error al registrar la venta externa en el servidor.");
+        }
+    } catch (error) {
+        console.error("Error:", error);
+    }
+}
+
 async function avanzarADespachado(id) {
     const empresa = prompt("Empresa de transporte (Ej: Inter Rapidísimo, Servientrega):");
     if (!empresa) return;
@@ -415,7 +446,6 @@ async function avanzarADespachado(id) {
     } catch (error) { console.error(error); }
 }
 
-// Función auxiliar cuando el admin da clic en Notificar Envío (pasa a entregado/finalizado)
 async function marcarEntregadoDirecto(id) {
     try {
         const res = await fetch(`/api/pedidos/${id}/entregar`, { method: 'PUT' });
