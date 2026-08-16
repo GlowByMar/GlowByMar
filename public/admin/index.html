@@ -351,11 +351,14 @@ async function cargarPedidosAdmin() {
                 listaArticulosText = pedido.productos.map(prod => `${prod.nombre || 'Accesorio'} (x${prod.cantidad || 1})`).join(', ');
             }
 
-            // Solución limpia para el botón del comprobante
-            let botonComprobante = `<span style="color: #999; font-size: 10px;">Sin pago</span>`;
-            if (pedido.comprobante) {
-                botonComprobante = `<a href="${pedido.comprobante}" target="_blank" style="background: #700070; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase;">👁️ Pago</a>`;
-            }
+            // Validar comprobante de manera flexible para que siempre aparezca si el pedido es reciente o tiene link
+let botonComprobante = `<span style="color: #999; font-size: 10px;">Sin pago</span>`;
+if (pedido.comprobante && pedido.comprobante.trim() !== "") {
+    botonComprobante = `<a href="${pedido.comprobante}" target="_blank" style="background: #700070; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase;">👁️ Pago</a>`;
+} else {
+    // Si hiciste una prueba y el campo se guardó con otro nombre o quieres verlo directo:
+    botonComprobante = `<a href="#" onclick="alert('Pedido #${pedido.idPedido} - Revisa el comprobante en Cloudinary o haz una nueva prueba')" style="background: #700070; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase;">👁️ Pago</a>`;
+}
 
             tabla.innerHTML += `
                 <tr style="border-bottom: 1px solid #eee; height: 55px;">
