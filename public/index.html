@@ -1008,19 +1008,22 @@ function eliminarDelCarrito(idProducto) {
         const resultado = await respuesta.json();
 
         if (respuesta.ok && resultado.exito) {
-            // Armamos el texto para tu WhatsApp
-            const mensajeWp = `Hola! Acabo de realizar un pedido en la tienda. Mi nombre es *${nombre}* y mi dirección es *${direccion}*. Adjunto mi comprobante de pago por aquí. ✨`;
-            const numeroTuyo = "573000000000"; // <-- Reemplaza con tu número de WhatsApp real
+            if (respuesta.ok && resultado.exito) {
+            // Armamos el texto limpio sin asteriscos feos y con el detalle necesario
+            const mensajewp = `Hola! Acabo de realizar un pedido en la tienda.\n\nNombre: ${nombre}\nDirección: ${direccion}\n\n¡Adjunto mi comprobante de pago por aquí para finalizar la orden! 🌸`;
+            const numeroTuyo = "573000000000"; // Reemplaza con tu número de WhatsApp real
 
             Swal.fire({
-                title: '¡Pedido Registrado! 🌸',
-                text: 'Te estamos redirigiendo a WhatsApp para que envíes tu comprobante y finalize la orden.',
-                icon: 'success',
+                title: '¡Pedido Registrado con Éxito! 🌸',
+                text: 'Es obligatorio adjuntar tu comprobante de pago al WhatsApp que se abrirá a continuación para procesar el envío.',
+                icon: 'warning', // Un icono de advertencia amigable para el comprobante
+                confirmButtonText: 'Entendido, ir a WhatsApp',
                 confirmButtonColor: '#2ecc71'
             }).then(() => {
-                // Redirigir a WhatsApp
-                window.open(`https://wa.me/${numeroTuyo}?text=${encodeURIComponent(mensajeWp)}`, '_blank');
+                // Redirigir a WhatsApp con el texto bien codificado
+                window.open(`https://wa.me/${numeroTuyo}?text=${encodeURIComponent(mensajewp)}`, '_blank');
             });
+        }
 
             // Limpieza
             carrito = [];
