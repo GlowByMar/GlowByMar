@@ -767,20 +767,25 @@ const rutaImagen = urlImagen && urlImagen.startsWith('http')
 }
 
     function agregarAlCarrito(id) {
-    // 1. Buscamos el producto en tu base de datos maestra
-    const productoBase = todosLosProductos.find(p => p.id === id);
+    // 1. Buscamos el producto soportando tanto 'id' como '_id' de MongoDB
+    const productoBase = todosLosProductos.find(p => p._id === id || p.id === id);
     
-    // Extraemos las variables que tu código necesita
+    if (!productoBase) {
+        console.error("No se encontró el producto con ID:", id);
+        return;
+    }
+    
+    // Extraemos las variables asegurando el ID real de MongoDB
+    const idReal = productoBase._id || productoBase.id;
     const nombre = productoBase.nombre;
-    const stockMaximo = productoBase.stock;
+    const stockMaximo = productoBase.stock !== undefined ? productoBase.stock : (productoBase.cantidadStock || 0);
 
-    // --- AQUÍ ESTÁ EL CAMBIO PARA EL PRECIO REAL ---
-    // Calculamos el descuento ganador tal como lo hicimos en la tarjeta
+    // Calculamos el descuento real
     const descuento = parseInt(productoBase.descIndividual || productoBase.descuento || 0);
+    const precioOriginal = parseFloat(productoBase.precio || productoBase.precioVenta || 0);
     const precio = descuento > 0 
-        ? (productoBase.precio * (1 - descuento / 100)) 
-        : productoBase.precio;
-    // ------------------------------------------------
+        ? (precioOriginal * (1 - descuento / 100)) 
+        : precioOriginal;
 
     // 2. ALERTA: Producto Agotado
     if (stockMaximo <= 0) {
@@ -793,9 +798,8 @@ const rutaImagen = urlImagen && urlImagen.startsWith('http')
         return;
     }
     
-    // ... el resto de tu código de agregar al carrito sigue igual ...
-
-    const productoEnCarrito = carrito.find(item => item.id === id);
+    // Buscamos en el carrito usando el ID unificado
+    const productoEnCarrito = carrito.find(item => String(item.id) === String(idReal) || String(item._id) === String(idReal));
 
     if (productoEnCarrito) {
         // 3. ALERTA: Inventario Máximo
@@ -810,8 +814,8 @@ const rutaImagen = urlImagen && urlImagen.startsWith('http')
         }
         productoEnCarrito.cantidad++;
     } else {
-        // Guardamos usando los valores calculados
-        carrito.push({ id, nombre, precio, cantidad: 1 });
+        // Guardamos asegurando tanto _id como id para que la ruta de compra no falle
+        carrito.push({ _id: idReal, id: idReal, nombre, precio, cantidad: 1 });
     }
 
     localStorage.setItem('carrito-joyas', JSON.stringify(carrito));
@@ -1092,6 +1096,20 @@ const rutaImagen = urlImagen && urlImagen.startsWith('http')
     }
 }
 
+// Este código va al final de tu index.js (el de la carpeta public)
+document.addEventListener('click', function(event) {
+    const carritoEmergente = document.getElementById('carrito-emergente');
+    const botonCarrito = document.getElementById('btn-carrito-flotante');
+
+    // Si el carrito está activo, y el usuario hizo clic afuera del carrito Y afuera del botón, lo cerramos
+    if (carritoEmergente && botonCarrito) {
+        if (!carritoEmergente.contains(event.target) && !botonCarrito.contains(event.target)) {
+            carritoEmergente.classList.remove('activo');
+        }
+    }
+});
+
+
 function avisarAlDueñoPorWhatsApp(nombreCliente) {
     const numeroTienda = "573204315042"; 
     const mensaje = `¡Hola! Glow By Mar, un nuevo cliente llamado ${nombreCliente} acaba de realizar un pedido. Por favor verifica la cuenta bancaria.`;
@@ -1131,18 +1149,7 @@ function avisarAlDueñoPorWhatsApp(nombreCliente) {
 
 
 
-    // Este código va al final de tu index.js (el de la carpeta public)
-document.addEventListener('click', function(event) {
-    const carritoEmergente = document.getElementById('carrito-emergente');
-    const botonCarrito = document.getElementById('btn-carrito-flotante');
-
-    // Si el carrito está activo, y el usuario hizo clic afuera del carrito Y afuera del botón, lo cerramos
-    if (carritoEmergente && botonCarrito) {
-        if (!carritoEmergente.contains(event.target) && !botonCarrito.contains(event.target)) {
-            carritoEmergente.classList.remove('activo');
-        }
-    }
-});
+    
 
 
 
