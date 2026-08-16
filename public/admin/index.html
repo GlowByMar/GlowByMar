@@ -345,6 +345,12 @@ async function cargarPedidosAdmin() {
             if (!telefonoFormateado.startsWith('57')) telefonoFormateado = '57' + telefonoFormateado;
             const urlWhatsApp = `https://wa.me/${telefonoFormateado}?text=${mensajeWhatsApp}`;
 
+            // Corrección para leer los productos de forma segura
+            let listaArticulosText = "Productos varios";
+            if (pedido.productos && Array.isArray(pedido.productos)) {
+                listaArticulosText = pedido.productos.map(prod => `${prod.nombre || 'Accesorio'} (x${prod.cantidad || 1})`).join(', ');
+            }
+
             tabla.innerHTML += `
                 <tr style="border-bottom: 1px solid #eee; height: 55px;">
                     <td style="padding: 10px; font-weight: bold;">#${pedido.idPedido}</td>
@@ -354,14 +360,15 @@ async function cargarPedidosAdmin() {
                         ${pedido.direccion}
                         <button onclick="verGuiaEnvio('${pedido.cliente}', '${pedido.telefono}', '${pedido.direccion}', '${totalNetoPedido}')" style="background: none; border: none; color: #3498db; cursor: pointer; font-size: 11px; text-decoration: underline; padding: 0; display: block; margin-top:3px;">📋 Copiar Datos</button>
                     </td>
-                    <td style="font-size: 12px;">${pedido.articulos.join(', ')}</td>
+                    <td style="font-size: 12px;">${listaArticulosText}</td>
                     <td style="font-weight: bold; color: #27ae60;">$${totalNetoPedido.toLocaleString('es-CO')} COP</td>
                     <td>
                         <span style="background: ${colorEstado}; color: white; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; text-transform: uppercase;">${estadoActual}</span>
                     </td>
                     <td style="padding: 10px; text-align: center;">
                         <div style="display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap;">
-                            <a href="${pedido.comprobanteUrl}" target="_blank" style="background: #700070; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase;">👁️ Pago</a>
+                            <!-- Corregido para leer .comprobante en lugar de .comprobanteUrl -->
+                            <a href="${pedido.comprobante}" target="_blank" style="background: #700070; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase;">👁️ Pago</a>
                             <a href="${urlWhatsApp}" target="_blank" style="background: ${colorBotonWA}; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase;">${etiquetaWA}</a>
                             
                             <button onclick="descargarFactura(${pedido.idPedido})" style="background: #7f8c8d; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; cursor: pointer;">📄 Factura</button>
