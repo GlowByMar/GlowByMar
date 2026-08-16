@@ -399,6 +399,7 @@ async function notificarEnvioYFinalizar(id) {
     if (!guia) return;
 
     try {
+        // 1. Guardar la transportadora y la guía en el servidor
         const resEnvio = await fetch(`/api/pedidos/${id}/despachar`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -406,12 +407,16 @@ async function notificarEnvioYFinalizar(id) {
         });
 
         if (resEnvio.ok) {
+            // 2. Pasar el estado a Entregado/Finalizado de una vez
             const resFinal = await fetch(`/api/pedidos/${id}/entregar`, { method: 'PUT' });
             if (resFinal.ok) {
+                // 3. Recargar la tabla para reflejar el estado finalizado
                 setTimeout(() => cargarPedidosAdmin(), 1000);
             }
         }
-    } catch (error) { console.error(error); }
+    } catch (error) { 
+        console.error("Error al notificar envío:", error); 
+    }
 }
 
 // Función para registrar ventas fuera de la web y sumarlas al control y stock
