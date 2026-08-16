@@ -335,10 +335,7 @@ async function cargarPedidosAdmin() {
                 botonAccionDinamico = `<a href="${urlWA}" target="_blank" onclick="confirmarPagoYPreparar('${pedido.idPedido}')" style="background: #e67e22; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase; display: inline-block;">💬 Confirmar Pago</a>`;
 
             } else if (estadoActual.toLowerCase() === 'despachado') {
-                const textoWA = `Hola ${pedido.cliente}! Te habla Glow By Mar. Tu pedido ya fue despachado con éxito. 🚀\n\n--- RESUMEN DE COMPRA ---\n${detalleProductosMensaje}\n\nTotal Neto: $${totalNetoPedido.toLocaleString('es-CO')} COP\n\n--- DATOS DE ENVÍO ---\nEmpresa transportadora: ${pedido.transportadora || 'N/A'}\nNúmero de guía: ${pedido.numeroGuia || 'N/A'}\n\n¡Gracias por tu compra! ✨`;
-                const urlWA = `https://wa.me/${telefonoFormateado}?text=${encodeURIComponent(textoWA)}`;
-
-                botonAccionDinamico = `<a href="${urlWA}" target="_blank" onclick="notificarEnvioYFinalizar('${pedido.idPedido}')" style="background: #3498db; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase; display: inline-block;">🚀 Notificar Envío</a>`;
+                botonAccionDinamico = `<button onclick="notificarEnvioYFinalizarConDatos('${pedido.idPedido}', '${pedido.cliente}', '${pedido.telefono || ''}', '${totalNetoPedido}', \`${detalleProductosMensaje}\`)" style="background: #3498db; color: white; padding: 8px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 11px; font-weight: bold; text-transform: uppercase; display: inline-block;">🚀 Notificar Envío</button>`;
 
             } else {
                 botonAccionDinamico = `<span style="background: #27ae60; color: white; padding: 6px 10px; border-radius: 6px; font-weight: bold; font-size: 10px; text-transform: uppercase; display: inline-block;">🏁 VENTA FINALIZADA</span>`;
@@ -416,6 +413,42 @@ async function notificarEnvioYFinalizar(id) {
         }
     } catch (error) { 
         console.error("Error al notificar envío:", error); 
+    }
+}
+
+async function notificarEnvioYFinalizarConDatos(id, cliente, telefono, totalNeto, detalleProductos) {
+    const empresa = prompt("Empresa de transporte (Ej: Inter Rapidísimo, Servientrega):");
+    if (!empresa) return;
+    const guia = prompt("Número de guía de envío:");
+    if (!guia) return;
+
+    // Formatear teléfono de forma segura para WhatsApp
+    let telFormateado = telefono.replace(/\D/g, '');
+    if (!telFormateado.startsWith('57') && telFormateado.length === 10) {
+        telFormateado = '57' + telFormateado;
+    }
+
+    // Armar el mensaje con la transportadora y la guía REALES que acabas de escribir
+    const textoWA = `Hola ${cliente}! Te habla Glow By Mar. Tu pedido ya fue despachado con éxito. 🚀\n\n--- RESUMEN DE COMPRA ---\n${detalleProductos}\n\nTotal Neto: $${Number(totalNeto).toLocaleString('es-CO')} COP\n\n--- DATOS DE ENVÍO ---\nEmpresa transportadora: ${empresa}\nNúmero de guía: ${guia}\n\n¡Gracias por tu compra! ✨`;
+    const urlWA = `https://wa.me/${telFormateado}?text=${encodeURIComponent(textoWA)}`;
+
+    // Abrir WhatsApp con el mensaje completo
+    window.open(urlWA, '_blank');
+
+    try {
+        // Actualizar el servidor con la guía y finalizar el pedido
+        const resEnvio = await fetch(`/api/pedidos/${id}/despachar`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transportadora: empresa, numeroGuia: guia })
+        });
+
+        if (resEnvio.ok) {
+            await fetch(`/api/pedidos/${id}/entregar`, { method: 'PUT' });
+            setTimeout(() => cargarPedidosAdmin(), 1000);
+        }
+    } catch (error) { 
+        console.error("Error al procesar el envío:", error); 
     }
 }
 
