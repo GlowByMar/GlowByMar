@@ -341,7 +341,8 @@ async function cargarPedidosAdmin() {
             }
 
             const mensajeWhatsApp = encodeURIComponent(textoMensaje);
-            let telefonoFormateado = pedido.telefono.trim().replace(/\s+/g, '');
+            // CÓDIGO SEGURO:
+            let telefonoFormateado = (pedido.telefono || "").toString().trim().replace(/\s+/g, '');
             if (!telefonoFormateado.startsWith('57')) telefonoFormateado = '57' + telefonoFormateado;
             const urlWhatsApp = `https://wa.me/${telefonoFormateado}?text=${mensajeWhatsApp}`;
 
