@@ -213,110 +213,86 @@ app.post('/api/productos', upload.any(), async (req, res) => {
     }
 });
 
-async function cargarPedidosAdmin() {
+// ==========================================
+// RUTA 3: Procesar la compra, validar stock en MongoDB y subir comprobante a Cloudinary
+// ==========================================
+app.post('/api/comprar', upload.single('comprobante'), async (req, res) => {
     try {
-        const respuesta = await fetch('/api/pedidos');
-        const pedidos = await respuesta.json();
-        const tabla = document.getElementById('tabla-pedidos-admin');
-        
-        if (!tabla) return;
-        tabla.innerHTML = '';
+        const { nombre, telefono, direccion } = req.body;
 
-        if (pedidos.length === 0) {
-            tabla.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:20px; color:#888;">No se han registrado pedidos aún.</td></tr>`;
-            const reporteElemento = document.getElementById('total-ventas-banner');
-            if (reporteElemento) reporteElemento.innerText = `$0 COP`;
-            return;
+        // 1. Validaciones iniciales del formulario
+        if (!req.body.carrito) {
+            return res.status(400).json({ exito: false, mensaje: 'El carrito está vacío.' });
+        }
+        if (!req.file) {
+            return res.status(400).json({ exito: false, mensaje: 'Falta el comprobante de pago.' });
         }
 
-        let totalCaja = 0; 
+        const productosComprados = JSON.parse(req.body.carrito);
 
-        pedidos.reverse().forEach(pedido => { 
-            const estadoActual = pedido.estado || 'Pendiente';
-            const totalNetoPedido = parseInt(pedido.total || 0);
-            totalCaja += totalNetoPedido;
-
-            let colorEstado = '#e67e22'; 
-            if (estadoActual.toLowerCase() === 'despachado') colorEstado = '#3498db'; 
-            if (estadoActual.toLowerCase() === 'entregado') colorEstado = '#27ae60'; 
-
-            let botonAccionDinamico = '';
-            if (estadoActual.toLowerCase() === 'pendiente') {
-                botonAccionDinamico = `<button onclick="marcarDespachado('${pedido.idPedido}')" style="background: #e67e22; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase;">📦 Despachar</button>`;
-            } else if (estadoActual.toLowerCase() === 'despachado') {
-                botonAccionDinamico = `<button onclick="marcarEntregado('${pedido.idPedido}')" style="background: #27ae60; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; text-transform: uppercase;">✅ Entregar</button>`;
-            } else {
-                botonAccionDinamico = `<span style="color: #27ae60; font-weight: bold; font-size: 11px;">🏁 VENTA FINALIZADA</span>`;
+        // 2. REVISIÓN Y DESCUENTO DE STOCK EN MONGODB ATLAS (Lógica de inventario)
+        for (const item of productosComprados) {
+            const productoEnBD = await Producto.findById(item._id || item.id);
+            
+            if (!productoEnBD) {
+                return res.status(404).json({ exito: false, mensaje: `El producto ${item.nombre} no existe en el inventario.` });
             }
 
-            // Unificamos lectura de teléfono por si viene como .telefono o .contacto
-            const telCliente = pedido.telefono || pedido.contacto || '';
-            const clienteNombre = pedido.cliente || 'Cliente';
-
-            let textoMensaje = "";
-            let colorBotonWA = "#25d366";
-            let etiquetaWA = "💬 WhatsApp";
-
-            if (estadoActual.toLowerCase() === 'pendiente') {
-                textoMensaje = `Hola ${clienteNombre}. Te habla Glow By Mar. Confirmamos que tu pago de $${totalNetoPedido.toLocaleString('es-CO')} COP fue recibido con éxito.`;
-            } else {
-                textoMensaje = `Hola ${clienteNombre}. Te habla Glow By Mar. Tu pedido ya fue despachado por: ${pedido.transportadora || 'Transportadora'} con la guía: ${pedido.numeroGuia || 'Pendiente'}, gracias por tu compra.`;
-                colorBotonWA = "#3498db";
-                etiquetaWA = "🚀 Notificar Envío";
+            // Usamos estrictamente cantidadStock como está definido en tu Schema
+            const stockActual = productoEnBD.cantidadStock !== undefined ? productoEnBD.cantidadStock : 0;
+            
+            if (stockActual < item.cantidad) {
+                return res.status(400).json({ exito: false, mensaje: `Stock insuficiente para ${item.nombre}. Disponibles: ${stockActual}` });
             }
 
-            const mensajeWhatsApp = encodeURIComponent(textoMensaje);
-            let telefonoFormateado = telCliente.toString().trim().replace(/\s+/g, '');
-            if (!telefonoFormateado.startsWith('57')) telefonoFormateado = '57' + telefonoFormateado;
-            const urlWhatsApp = `https://wa.me/${telefonoFormateado}?text=${mensajeWhatsApp}`;
+            // Restamos la cantidad comprada y actualizamos el campo correcto
+            productoEnBD.cantidadStock = stockActual - item.cantidad;
+            await productoEnBD.save();
+        }
 
-            // Leer productos de forma segura
-            let listaArticulosText = "Productos varios";
-            if (pedido.productos && Array.isArray(pedido.productos)) {
-                listaArticulosText = pedido.productos.map(prod => `${prod.nombre || 'Accesorio'} (x${prod.cantidad || 1})`).join(', ');
-            }
-
-            // Validar comprobante de manera robusta
-            let botonComprobante = `<span style="color: #999; font-size: 10px;">Sin pago</span>`;
-            if (pedido.comprobante && pedido.comprobante.trim() !== "") {
-                botonComprobante = `<a href="${pedido.comprobante}" target="_blank" style="background: #700070; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase;">👁️ Pago</a>`;
-            }
-
-            tabla.innerHTML += `
-                <tr style="border-bottom: 1px solid #eee; height: 55px;">
-                    <td style="padding: 10px; font-weight: bold;">#${pedido.idPedido}</td>
-                    <td style="color: #666; font-size: 12px;">${pedido.fecha}</td>
-                    <td><strong>${clienteNombre}</strong><br><small style="color:#777;">📱 ${telCliente}</small></td>
-                    <td>
-                        ${pedido.direccion || 'Sin dirección'}
-                        <button onclick="verGuiaEnvio('${clienteNombre}', '${telCliente}', '${pedido.direccion || ''}', '${totalNetoPedido}')" style="background: none; border: none; color: #3498db; cursor: pointer; font-size: 11px; text-decoration: underline; padding: 0; display: block; margin-top:3px;">📋 Copiar Datos</button>
-                    </td>
-                    <td style="font-size: 12px;">${listaArticulosText}</td>
-                    <td style="font-weight: bold; color: #27ae60;">$${totalNetoPedido.toLocaleString('es-CO')} COP</td>
-                    <td>
-                        <span style="background: ${colorEstado}; color: white; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; text-transform: uppercase;">${estadoActual}</span>
-                    </td>
-                    <td style="padding: 10px; text-align: center;">
-                        <div style="display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap;">
-                            ${botonComprobante}
-                            <a href="${urlWhatsApp}" target="_blank" style="background: ${colorBotonWA}; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase;">${etiquetaWA}</a>
-                            <button onclick="descargarFactura('${pedido.idPedido}')" style="background: #7f8c8d; color: white; padding: 8px 12px; border: none; border-radius: 6px; font-size: 11px; font-weight: bold; text-transform: uppercase; cursor: pointer;">📄 Factura</button>
-                            ${botonAccionDinamico}
-                        </div>
-                    </td>
-                </tr>
-            `;
+        // 3. SUBIDA DEL COMPROBANTE FÍSICO A CLOUDINARY
+        const resultadoCloud = await new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+                { folder: "glowbymar_comprobantes" },
+                (error, result) => {
+                    if (result) resolve(result);
+                    else reject(error);
+                }
+            );
+            stream.end(req.file.buffer);
         });
 
-        const reporteElemento = document.getElementById('total-ventas-banner');
-        if (reporteElemento) {
-            reporteElemento.innerText = `$${totalCaja.toLocaleString('es-CO')} COP`;
-        }
+        // 4. REGISTRO DEL PEDIDO EN MONGODB ATLAS
+        const nuevoPedido = new Pedido({
+            idPedido: "PED-" + Date.now(),
+            fecha: new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota' }),
+            cliente: nombre,
+            contacto: telefono,
+            direccion: direccion,
+            productos: productosComprados,
+            total: productosComprados.reduce((sum, p) => {
+    const precioUnitario = parseFloat(p.precioConDescuento || p.precio || 0);
+    return sum + (precioUnitario * (p.cantidad || 1));
+}, 0),
+            estado: 'PENDIENTE',
+            comprobante: resultadoCloud.secure_url // Link eterno de la foto del pago
+        });
+
+        await nuevoPedido.save();
+
+        res.json({ 
+            exito: true, 
+            mensaje: "¡Tu compra fue registrada con éxito! El administrador verificará tu pago e inventario." 
+        });
 
     } catch (error) {
-        console.error("Error al cargar los pedidos:", error);
+        console.error("Error al procesar la compra en la nube:", error);
+        res.status(500).json({ 
+            exito: false, 
+            mensaje: "Hubo un problema interno en el servidor al procesar la transacción." 
+        });
     }
-}
+});
 
 // ==========================================
 // RUTA 4: Eliminar un producto de MongoDB
@@ -387,142 +363,120 @@ app.put('/api/pedidos/:id/entregar', async (req, res) => {
 });
 
 // ==========================================
-// RUTA 8: Factura HTML corregida con Descuentos
+// RUTA ÚNICA: Ver Factura Web / Enviar por WhatsApp
 // ==========================================
-app.get('/api/pedidos/:id/factura', (req, res) => {
-    const idBuscar = parseInt(req.params.id);
-    const rutaPedidos = path.join(__dirname, 'pedidos.json');
-    
-    // 1. Leemos y parseamos de forma segura
-    let pedidos = [];
+app.get('/api/pedidos/:id/factura', async (req, res) => {
     try {
-        const data = fs.readFileSync(rutaPedidos, 'utf8');
-        pedidos = JSON.parse(data || '[]');
-    } catch (e) {
-        return res.status(500).send("<h1>Error al leer la base de datos de pedidos</h1>");
-    }
+        const idBuscado = req.params.id; // Viene como string (ej. PED-1786...)
+        
+        // Buscamos directamente en MongoDB
+        const pedido = await Pedido.findOne({ idPedido: idBuscado });
 
-    // 2. Buscamos el pedido
-    const pedido = pedidos.find(p => p.idPedido === idBuscar);
+        if (!pedido) {
+            return res.status(404).send(`
+                <div style="font-family: Arial; text-align: center; margin-top: 50px;">
+                    <h2 style="color: #e74c3c;">El pedido no existe</h2>
+                    <p>Verifica que el enlace sea correcto.</p>
+                </div>
+            `);
+        }
 
-    // 3. Validamos la existencia antes de cualquier cosa
-    if (!pedido) {
-        return res.status(404).send("<h1>El pedido no existe</h1>");
-    }
+        // Blindamos las listas de productos por si vienen con otro nombre
+        const listaProductos = pedido.productos || pedido.articulosDetallados || [];
+        const telCliente = pedido.telefono || pedido.contacto || 'No registrado';
 
-    // 4. Si llegamos aquí, 'pedido' existe. 
-    // Asegúrate de que 'pedido.fecha' sea un string válido. 
-    // Si la fecha da error, prueba imprimiendo solo el objeto para depurar.
-    try {
         const htmlFactura = `
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <title>Factura de Venta #${pedido.idPedido}</title>
-        <style>
-            body { font-family: 'Segoe UI', sans-serif; color: #333; padding: 40px; background-color: #fafafa; }
-            .factura-box { max-width: 800px; margin: auto; padding: 30px; background: #fff; border: 1px solid #eee; border-radius: 8px; }
-            .header-container { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 20px; }
-            .columnas-datos { display: flex; justify-content: space-between; margin: 20px 0; gap: 20px; }
-            .columna { flex: 1; background: #f9f9f9; padding: 15px; border-radius: 6px; border-left: 4px solid #2c3e50; }
-            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-            th { background: #2c3e50; color: white; padding: 10px; font-size: 12px; }
-            td { padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; }
-            .total-box { background: #2c3e50; color: white; padding: 15px; border-radius: 6px; text-align: right; margin-top: 20px; width: 280px; margin-left: auto; }
-        </style>
-    </head>
-    <body>
-    <div class="factura-box">
-        <div class="header-container">
-            <div><h2>GLOW BY MAR</h2><p>Accesorios y Joyería Premium</p></div>
-            <img src="/imagenes/logo.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3081/3081559.png'" style="width:70px;">
-        </div>
-        <div class="columnas-datos">
-            <div class="columna">
-                <h3>Cliente</h3>
-                <p><strong>Nombre:</strong> ${pedido.cliente}</p>
-                <p><strong>Teléfono:</strong> ${pedido.telefono}</p>
-                <p><strong>Dirección:</strong> ${pedido.direccion}</p>
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Factura de Venta #${pedido.idPedido}</title>
+            <style>
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; padding: 20px; background-color: #f4f7f6; margin: 0; }
+                .factura-box { max-width: 750px; margin: auto; padding: 30px; background: #fff; border: 1px solid #ddd; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+                .header-container { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2c3e50; padding-bottom: 15px; }
+                .columnas-datos { display: flex; justify-content: space-between; margin: 20px 0; gap: 15px; flex-wrap: wrap; }
+                .columna { flex: 1; min-width: 250px; background: #f9f9f9; padding: 15px; border-radius: 6px; border-left: 4px solid #2c3e50; }
+                table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                th { background: #2c3e50; color: white; padding: 10px; font-size: 12px; text-align: left; }
+                td { padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; }
+                .total-box { background: #2c3e50; color: white; padding: 15px; border-radius: 6px; text-align: right; margin-top: 20px; width: 260px; margin-left: auto; }
+                .btn-imprimir { display: block; width: 100%; background: #27ae60; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 30px; text-align: center; text-decoration: none; }
+                .btn-imprimir:hover { background: #219653; }
+                @media print {
+                    .btn-imprimir { display: none; }
+                    body { background: white; padding: 0; }
+                    .factura-box { border: none; box-shadow: none; padding: 0; }
+                }
+            </style>
+        </head>
+        <body>
+        <div class="factura-box">
+            <div class="header-container">
+                <div>
+                    <h2 style="margin:0; color:#2c3e50;">GLOW BY MAR</h2>
+                    <p style="margin:5px 0 0 0; color:#7f8c8d; font-size:13px;">Accesorios y Joyería Premium</p>
+                </div>
+                <img src="https://cdn-icons-png.flaticon.com/512/3081/3081559.png" style="width:60px;">
             </div>
-            <div class="columna">
-                <h3>Venta</h3>
-                <p><strong>Factura:</strong> #00${pedido.idPedido}</p>
-                <p><strong>Fecha:</strong> ${pedido.fecha}</p>
+
+            <div class="columnas-datos">
+                <div class="columna">
+                    <h3 style="margin-top:0; color:#2c3e50; font-size:14px;">Datos del Cliente</h3>
+                    <p style="margin:5px 0;"><strong>Nombre:</strong> ${pedido.cliente}</p>
+                    <p style="margin:5px 0;"><strong>Teléfono:</strong> ${telCliente}</p>
+                    <p style="margin:5px 0;"><strong>Dirección:</strong> ${pedido.direccion}</p>
+                </div>
+                <div class="columna">
+                    <h3 style="margin-top:0; color:#2c3e50; font-size:14px;">Detalles de Venta</h3>
+                    <p style="margin:5px 0;"><strong>Factura:</strong> #${pedido.idPedido}</p>
+                    <p style="margin:5px 0;"><strong>Fecha:</strong> ${pedido.fecha}</p>
+                    <p style="margin:5px 0;"><strong>Estado:</strong> <span style="color: #e67e22; font-weight:bold;">${pedido.estado || 'PENDIENTE'}</span></p>
+                </div>
             </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Artículo</th>
+                        <th style="text-align:center;">Cant.</th>
+                        <th style="text-align:right;">Precio Unit.</th>
+                        <th style="text-align:right;">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${listaProductos.map(art => {
+                        const precioProd = parseFloat(art.precioConDescuento || art.precio || art.precioOriginal || 0);
+                        const cantidadProd = parseInt(art.cantidad || 1);
+                        const subtotalProd = precioProd * cantidadProd;
+                        return `
+                        <tr>
+                            <td><strong>${art.nombre || 'Accesorio'}</strong></td>
+                            <td style="text-align:center;">${cantidadProd}</td>
+                            <td style="text-align:right;">$${precioProd.toLocaleString('es-CO')}</td>
+                            <td style="text-align:right; font-weight:bold;">$${subtotalProd.toLocaleString('es-CO')}</td>
+                        </tr>`;
+                    }).join('')}
+                </tbody>
+            </table>
+
+            <div class="total-box">
+                <p style="margin:0; font-size:12px; text-transform:uppercase;">Total Neto Pagado</p>
+                <h2 style="margin:5px 0 0 0; color:#2ecc71;">$${parseInt(pedido.total || 0).toLocaleString('es-CO')} COP</h2>
+            </div>
+
+            <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir / Guardar como PDF</button>
         </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Artículo</th>
-                    <th style="text-align:center;">Cant.</th>
-                    <th style="text-align:right;">Precio</th>
-                    <th style="text-align:center;">Desc.</th>
-                    <th style="text-align:right;">Precio Oferta</th>
-                    <th style="text-align:right;">Subtotal</th>
-                </tr>
-            </thead>
-            <tbody>
-    ${(pedido.articulosDetallados || []).map(art => `
-        <tr>
-            <td><strong>${art.nombre || 'Producto'}</strong></td>
-            <td style="text-align:center;">${art.cantidad || 0}</td>
-            <td style="text-align:right;">$${(art.precioOriginal || 0).toLocaleString('es-CO')}</td>
-            <td style="text-align:center;">${art.descuentoAplicado || 0}%</td>
-            <td style="text-align:right;">$${(art.precioEfectivoUnidad || 0).toLocaleString('es-CO')}</td>
-            
-            <td style="text-align:right; font-weight:bold;">$${(art.subtotal || 0).toLocaleString('es-CO')}</td>
-        </tr>
-    `).join('')}
-</tbody>
-        </table>
-        <div class="total-box">
-            <p>Total Neto Pagado</p>
-            <h2 style="margin:5px 0 0 0; color:#2ecc71;">$${parseInt(pedido.total || 0).toLocaleString('es-CO')} COP</h2>
-        </div>
-    </div>
-    </body>
-    </html>`;
-    res.send(htmlFactura);
+        </body>
+        </html>`;
+
+        res.send(htmlFactura);
+
     } catch (error) {
-        res.status(500).send("<h1>Error al generar el HTML de la factura</h1>");
+        console.error("Error al generar la factura:", error);
+        res.status(500).send("<h1>Error al generar la factura en el servidor</h1>");
     }
-});
-
-// ==========================================
-// RUTA NUEVA/CORREGIDA: Generar Factura en PDF para WhatsApp
-// ==========================================
-app.get('/api/pedidos/:id/pdf', (req, res) => {
-    const idBuscar = parseInt(req.params.id);
-    const rutaPedidos = path.join(__dirname, 'pedidos.json'); 
-    const pedidos = JSON.parse(fs.readFileSync(rutaPedidos, 'utf-8') || '[]');
-    const pedido = pedidos.find(p => p.idPedido === idBuscar);
-
-    if (!pedido) return res.status(404).send("El pedido no existe.");
-
-    const doc = new PDFDocument({ margin: 50 });
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename=factura-${pedido.idPedido}.pdf`);
-    doc.pipe(res);
-
-    doc.fontSize(20).text('GLOW BY MAR', { align: 'center' });
-    doc.fontSize(10).text('Accesorios y Joyería Premium', { align: 'center' }).moveDown(2);
-
-    doc.fontSize(11).text(`Factura Nro: #00${pedido.idPedido}`);
-    doc.text(`Fecha: ${pedido.fecha}`).moveDown();
-    doc.text(`Cliente: ${pedido.cliente}`);
-    doc.text(`Teléfono: ${pedido.telefono}`);
-    doc.text(`Dirección: ${pedido.direccion}`).moveDown(2);
-
-    doc.text('DETALLE DE PRODUCTOS:', { underline: true }).moveDown(0.5);
-    
-    (pedido.articulosDetallados || []).forEach(art => {
-        doc.text(`- ${art.nombre} x${art.cantidad} | Base: $${art.precioOriginal.toLocaleString('es-CO')} (-${art.descuentoAplicado}%) -> Oferta: $${art.precioEfectivoUnidad.toLocaleString('es-CO')} COP c/u`);
-    });
-
-    doc.moveDown(2);
-    doc.fontSize(13).text(`TOTAL NETO PAGADO: $${parseInt(pedido.total || 0).toLocaleString('es-CO')} COP`, { align: 'right', bold: true });
-    doc.end();
 });
 
 // ==========================================
