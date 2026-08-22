@@ -648,7 +648,7 @@ app.post('/api/productos/editar', upload.any(), async (req, res) => {
 });
 
 // ====================================================
-// 🔥 RUTA 10: Registrar venta externa
+// 🔥 RUTA 10: Registrar venta externa (Actualizada)
 // ====================================================
 app.post('/api/registrar-venta', (req, res) => {
     try {
@@ -670,24 +670,38 @@ app.post('/api/registrar-venta', (req, res) => {
             return res.status(400).json({ exito: false, mensaje: 'El producto no existe en el inventario.' });
         }
 
-        const stockActual = prodBD.stock !== undefined ? prodBD.stock : (prodBD.disponibles || 0);
+        // Buscamos el stock en cualquier posible nombre de campo que tenga tu JSON
+        const stockActual = Number(
+            prodBD.stock !== undefined ? prodBD.stock :
+            prodBD.disponibles !== undefined ? prodBD.disponibles :
+            prodBD.cantidad !== undefined ? prodBD.cantidad :
+            prodBD.existencias !== undefined ? prodBD.existencias : 0
+        );
+
         if (stockActual < Number(cantidad)) {
             return res.status(400).json({ exito: false, mensaje: `Stock insuficiente. Solo quedan ${stockActual} unidades.` });
         }
 
         // Cálculos exactos para su reporte mensual
-        const precioOriginal = prodBD.precio || 0;
+        const precioOriginal = prodBD.precio || prodBD.precioVenta || 0;
         const costo = prodBD.costo || 0;
         const descuento = prodBD.descIndividual || prodBD.descuento || 0;
         const precioEfectivo = descuento > 0 ? precioOriginal - (precioOriginal * (descuento / 100)) : precioOriginal;
         const subtotal = precioEfectivo * Number(cantidad);
 
-        // Descontar stock
+        // Descontar stock actualizando el campo correcto que posea el objeto
         if (prodBD.stock !== undefined) {
             prodBD.stock -= Number(cantidad);
         } else if (prodBD.disponibles !== undefined) {
             prodBD.disponibles -= Number(cantidad);
+        } else if (prodBD.cantidad !== undefined) {
+            prodBD.cantidad -= Number(cantidad);
+        } else if (prodBD.existencias !== undefined) {
+            prodBD.existencias -= Number(cantidad);
+        } else {
+            prodBD.stock = stockActual - Number(cantidad);
         }
+        
         fs.writeFileSync(rutaProductos, JSON.stringify(productos, null, 2));
 
         // Registrar en pedidos.json con la estructura idéntica del reporte
@@ -723,6 +737,7 @@ app.post('/api/registrar-venta', (req, res) => {
         return res.status(500).json({ exito: false, mensaje: 'Error interno en el servidor.' });
     }
 });
+
 
 // ==========================================
 // RUTA 11: Traer todos los pedidos de MongoDB

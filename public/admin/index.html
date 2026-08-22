@@ -401,7 +401,7 @@ async function notificarEnvioYFinalizarConDatos(id, cliente, telefono, totalNeto
 
     const detalleProductos = decodeURIComponent(encodedProductos);
 
-    const textoWA = `Hola ${cliente}! Te habla Glow By Mar. Tu pedido ya fue despachado con éxito. 🚀\n\n--- RESUMEN DE COMPRA ---\n${detalleProductos}\n\nTotal Neto: $${Number(totalNeto).toLocaleString('es-CO')} COP\n\n--- DATOS DE ENVÍO ---\nEmpresa transportadora: ${empresa}\nNúmero de guía: ${guia}\n\n¡Gracias por tu compra! ✨`;
+    const textoWA = `Hola ${cliente}! Te habla Glow By Mar. Tu pedido ya fue despachado con éxito. \n\n--- RESUMEN DE COMPRA ---\n${detalleProductos}\n\nTotal Neto: $${Number(totalNeto).toLocaleString('es-CO')} COP\n\n--- DATOS DE ENVÍO ---\nEmpresa transportadora: ${empresa}\nNúmero de guía: ${guia}\n\n¡Gracias por tu compra! `;
     const urlWA = `https://wa.me/${telFormateado}?text=${encodeURIComponent(textoWA)}`;
 
     try {
