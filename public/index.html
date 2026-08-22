@@ -32,23 +32,26 @@
     }
 
     /* Navbar Premium */
-    .navbar {
-        background: linear-gradient(135deg, #c4709e 0%, #ffffff 45%, #d1c4be 100%);
-        border-bottom: 1px solid #eaeaea;
-        padding: 9px 25px;
-        position: fixed; /* ⬅️ Cambiado a fixed para que el menú acompañe el scroll */
-        top: 25px;       /* ⬅️ Corregido el 'px' que faltaba */
-        left: 0;
-        right: 0;
-        display: flex;
-        width: 100%;
-        transition: top 0.3s; /* Esto hace que el movimiento sea elegante */
-        justify-content: center;
-        align-items: center;
-        z-index: 2000;
-        backdrop-filter: blur(5px);
-        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-    }
+    /* 1. Ajuste al menú: quitamos el top y lo dejamos pegado arriba del todo */
+.navbar {
+    background: linear-gradient(135deg, #c4709e 0%, #ffffff 45%, #d1c4be 100%);
+    border-bottom: 1px solid #eaeaea;
+    padding: 15px 25px; /* Ajusté un poco el padding */
+    position: fixed;
+    top: 0; /* Cambiado a 0 para que no choque con la cinta */
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+/* 2. Añade este contenedor superior para que la cinta no se esconda detrás del menú */
+.espaciador-superior {
+    height: 80px; /* Ajusta este valor según la altura de tu navbar */
+}
 
     /* 🛒 MINI EMERGENTE FLOTANTE (Corregido y posicionado al lado del botón) */
     .mini-carrito-dropdown {
@@ -370,18 +373,18 @@
     }
 }
 
-/* Contenedor principal de la cinta */
+/* 3. Ajuste a la cinta de cuidados: ahora debe ir justo después del navbar */
 .cinta-cuidados-container {
     width: 100%;
-    background-color: #fcf6f0; /* Un tono nude/dorado muy sutil que combina con tu marca */
-    border-top: 2px solid #e8d5cc;
-    border-bottom: 2px solid #e8d5cc;
+    background-color: #fcf6f0;
+    border-top: 1px solid #e8d5cc;
+    border-bottom: 1px solid #e8d5cc;
     overflow: hidden;
     white-space: nowrap;
-    padding: 0; /* Asegúrate de que esté en 0 */
-    margin: 0;  /* Agrega esto para quitarle espacio por fuera */
+    padding: 10px 0; /* Damos un poco de aire vertical */
     box-sizing: border-box;
     position: relative;
+    /* Quitamos el margin: 0; innecesario */
 }
 
 /* Pista que contiene los textos y se mueve */
