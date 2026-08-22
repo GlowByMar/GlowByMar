@@ -259,7 +259,7 @@ td {
 
 
 
-<button onclick="registrarVentaExterna()" style="background: #ddc36e; color: #111; padding: 10px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">
+<button onclick="registrarVentaConLista()" style="background: #ddc36e; color: #111; padding: 10px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">
     Registrar Venta Externa
 </button>
 
@@ -432,11 +432,16 @@ async function notificarEnvioYFinalizarConDatos(id, cliente, telefono, totalNeto
     }
 }
 
-// Función para registrar ventas fuera de la web usando el menú numérico del inventario
-async function registrarVentaExterna() {
+// Función definitiva con menú numérico para ventas externas
+async function registrarVentaConLista() {
     try {
         // 1. Consultar el inventario actual de la tienda
         const resInv = await fetch('/api/productos'); 
+        if (!resInv.ok) {
+            alert("No se pudo cargar el inventario desde el servidor.");
+            return;
+        }
+        
         const productos = await resInv.json();
 
         if (!productos || productos.length === 0) {
@@ -478,7 +483,7 @@ async function registrarVentaExterna() {
             cliente: nombreCliente
         };
 
-        // 4. Enviar a la ruta correcta del servidor (/api/registrar-venta)
+        // 4. Enviar a la Ruta 10 del servidor (/api/registrar-venta)
         const res = await fetch('/api/registrar-venta', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -492,12 +497,12 @@ async function registrarVentaExterna() {
             cargarPedidosAdmin();
             if (typeof obtenerInventario === 'function') obtenerInventario();
         } else {
-            alert("Error: " + (resultado.mensaje || "No se pudo registrar la venta."));
+            alert("Error del servidor: " + (resultado.mensaje || "No se pudo registrar la venta."));
         }
 
     } catch (error) {
         console.error("Error al procesar la venta externa:", error);
-        alert("Ocurrió un error al conectar con el servidor.");
+        alert("Ocurrió un error de red al conectar con el servidor.");
     }
 }
 
