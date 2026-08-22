@@ -649,7 +649,7 @@ app.post('/api/productos/editar', upload.any(), async (req, res) => {
 
 
 // ==========================================
-// RUTA 10: Registrar Venta Externa por Nombre
+// RUTA 10: Registrar Venta Externa por Nombre (Actualizada y Flexible)
 // ==========================================
 app.post('/api/registrar-venta', (req, res) => {
     try {
@@ -664,8 +664,13 @@ app.post('/api/registrar-venta', (req, res) => {
 
         const productos = JSON.parse(fs.readFileSync(rutaProductos, 'utf-8') || '[]');
         
-        // Buscamos directamente por el nombre (ignorando mayúsculas/minúsculas para evitar errores)
-        const prodBD = productos.find(p => p.nombre && p.nombre.toLowerCase() === nombreProducto.trim().toLowerCase());
+        // Búsqueda ultra flexible que ignora espacios de más y mayúsculas
+        const prodBD = productos.find(p => {
+            if (!p.nombre) return false;
+            const dbName = p.nombre.toString().trim().toLowerCase();
+            const searchName = nombreProducto.toString().trim().toLowerCase();
+            return dbName === searchName || dbName.includes(searchName) || searchName.includes(dbName);
+        });
 
         if (!prodBD) {
             return res.status(400).json({ exito: false, mensaje: 'El producto no existe en el inventario.' });
