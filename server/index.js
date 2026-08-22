@@ -487,19 +487,19 @@ app.get('/api/reportes/mensual', async (req, res) => {
             resumenMeses[mesAnio].totalVentas += valorPedido;
             resumenMeses[mesAnio].cantidadPedidos += 1;
 
-            // Si el pedido viene de la web (Ruta 3) o externa (Ruta 10), normalizamos la lectura
+            // Unificamos la lectura por si viene de la web o de venta presencial
             const listaArticulos = p.articulosDetallados || p.productos || [];
 
             listaArticulos.forEach(art => {
                 const nombreArt = art.nombre || art.titulo || "Producto";
                 const cantArt = art.cantidad || 1;
-                const subArt = art.subtotal || (art.precio * cantArt) || 0;
+                const subArt = art.subtotal || (art.precioConDescuento * cantArt) || (art.precio * cantArt) || 0;
 
                 const prodEncontrado = productosBD.find(prod => prod.nombre.trim().toLowerCase() === nombreArt.trim().toLowerCase());
                 const costoReal = prodEncontrado ? (prodEncontrado.costoCompra || prodEncontrado.costo || 0) : (art.costo || 0);
 
                 const precioOrig = art.precioOriginal || art.precio || 0;
-                const precioPromo = (art.precioEfectivoUnidad && art.precioEfectivoUnidad !== precioOrig) ? art.precioEfectivoUnidad : (subArt / cantArt);
+                const precioPromo = art.precioConDescuento || art.precioEfectivoUnidad || (subArt / cantArt);
                 const gananciaReal = (precioPromo - costoReal) * cantArt;
 
                 resumenMeses[mesAnio].listaDetallada.push({
@@ -510,7 +510,7 @@ app.get('/api/reportes/mensual', async (req, res) => {
                     subtotal: subArt,
                     precioPromocion: precioPromo,
                     ganancia: gananciaReal,
-                    obs: p.obs || "Venta Web"
+                    obs: p.obs || "Venta Presencial"
                 });
             });
         });
@@ -569,7 +569,7 @@ app.get('/api/reportes/mensual', async (req, res) => {
                                                 <td>$${(art.precioPromocion || art.precioOriginal || 0).toLocaleString('es-CO')}</td>
                                                 <td>$${(art.ganancia || 0).toLocaleString('es-CO')}</td>
                                                 <td>$${(art.subtotal || 0).toLocaleString('es-CO')}</td>
-                                                <td><b>${art.obs || "Venta Web"}</b></td>
+                                                <td><b>${art.obs || "Venta"}</b></td>
                                             </tr>
                                         `).join('')}
                                         <tr style="font-weight: bold; background-color: #f8f9fa;">
@@ -599,6 +599,7 @@ app.get('/api/reportes/mensual', async (req, res) => {
         res.status(500).send("<h1>Error interno al generar el reporte desde MongoDB.</h1>");
     }
 });
+
 
 // ====================================================
 // 🔥 RUTA 9: Editar un producto existente (MongoDB + Cloudinary)
@@ -699,11 +700,19 @@ app.post('/api/registrar-venta', async (req, res) => {
         }
         await prodBD.save();
 
-        // Buscar el último idPedido numérico o generar uno
-        const ultimoPedido = await Pedido.findOne({ idPedido: { $type: "number" } }).sort({ idPedido: -1 });
-        const nuevoIdNum = ultimoPedido ? ultimoPedido.idPedido + 1 : 1;
+        const ultimoPedido = await Pedido.findOne().sort({ idPedido: -1 });
+        const nuevoIdNum = ultimoPedido && typeof ultimoPedido.idPedido === 'number' ? ultimoPedido.idPedido + 1 : 1;
 
-        // Guardar directamente en MongoDB usando el esquema unificado
+        // Estructura unificada para que el panel y el reporte la lean perfecta
+        const itemVenta = {
+            nombre: prodBD.nombre,
+            cantidad: Number(cantidad),
+            costo: costo,
+            precioOriginal: precioOriginal,
+            precioConDescuento: precioEfectivo,
+            subtotal: subtotal
+        };
+
         const nuevoPedido = new Pedido({
             idPedido: nuevoIdNum,
             fecha: new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota' }),
@@ -712,21 +721,15 @@ app.post('/api/registrar-venta', async (req, res) => {
             telefono: "N/A",
             direccion: "Tienda Física",
             total: subtotal,
-            articulosDetallados: [{
-                nombre: prodBD.nombre,
-                cantidad: Number(cantidad),
-                costo: costo,
-                precioOriginal: precioOriginal,
-                descuentoAplicado: descuento,
-                precioEfectivoUnidad: precioEfectivo,
-                subtotal: subtotal
-            }],
+            estado: 'ENTREGADO', // Nace finalizada para que aparezca lista en el panel
+            productos: [itemVenta],
+            articulosDetallados: [itemVenta],
             articulos: [`${prodBD.nombre} (x${cantidad})`]
         });
 
         await nuevoPedido.save();
 
-        return res.status(200).json({ exito: true, mensaje: '¡Venta registrada y guardada en MongoDB!' });
+        return res.status(200).json({ exito: true, mensaje: '¡Venta registrada y finalizada con éxito!' });
 
     } catch (error) {
         console.error('Error en Ruta 10:', error);
