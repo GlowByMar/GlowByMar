@@ -432,44 +432,83 @@ async function notificarEnvioYFinalizarConDatos(id, cliente, telefono, totalNeto
     }
 }
 
-// Función para registrar ventas fuera de la web y sumarlas al control y stock
+// Función para registrar ventas fuera de la web usando productos reales del inventario
 async function registrarVentaExterna() {
-    const nombreCliente = prompt("Nombre del cliente (Venta Externa):");
-    if (!nombreCliente) return;
-    const telCliente = prompt("Teléfono del cliente:");
-    if (!telCliente) return;
-    const nombreProducto = prompt("Nombre del producto vendido:");
-    if (!nombreProducto) return;
-    const cantidadVendida = parseInt(prompt("Cantidad vendida:", "1"));
-    if (!cantidadVendida || cantidadVendida <= 0) return;
-    const valorTotalVenta = parseInt(prompt("Valor total cobrado (COP):", "0"));
-    if (isNaN(valorTotalVenta)) return;
-
-    const nuevaVentaExterna = {
-        cliente: nombreCliente,
-        telefono: telCliente,
-        direccion: "Venta Física / Externa",
-        productos: [{ nombre: nombreProducto, cantidad: cantidadVendida, precioVenta: valorTotalVenta / cantidadVendida }],
-        total: valorTotalVenta,
-        estado: "Entregado", // Las ventas externas se registran de una vez como finalizadas
-        comprobante: ""
-    };
-
     try {
+        // 1. Consultar el inventario actual de la tienda
+        const resInv = await fetch('/api/productos'); // Asumiendo que esta es tu ruta de inventario (ajusta si es distinta)
+        const productos = await resInv.json();
+
+        if (!productos || productos.length === 0) {
+            alert("No hay productos registrados en el inventario.");
+            return;
+        }
+
+        // 2. Crear una lista clara con los productos disponibles
+        let listaTexto = "Elige el número del producto a vender:\n\n";
+        productos.forEach((p, index) => {
+            listaTexto += `${index + 1}. ${p.nombre} - Stock: ${p.stock} - Precio: $${p.precio || p.precioVenta || 0}\n`;
+        });
+
+        const seleccionIndex = prompt(listaTexto);
+        if (!seleccionIndex) return;
+
+        const indexElegido = parseInt(seleccionIndex) - 1;
+        if (isNaN(indexElegido) || indexElegido < 0 || indexElegido >= productos.length) {
+            alert("Selección inválida.");
+            return;
+        }
+
+        const productoSeleccionado = productos[indexElegido];
+
+        // 3. Pedir datos del cliente y cantidad
+        const nombreCliente = prompt("Nombre del cliente (Venta Externa):");
+        if (!nombreCliente) return;
+        const telCliente = prompt("Teléfono del cliente:");
+        if (!telCliente) return;
+
+        const cantidadVendida = parseInt(prompt(`Cantidad vendida de "${productoSeleccionado.nombre}" (Stock disponible: ${productoSeleccionado.stock}):`, "1"));
+        if (!cantidadVendida || cantidadVendida <= 0) return;
+
+        // Precio por defecto del producto (puedes ajustarlo si el cliente pagó otro valor)
+        const precioUnitario = productoSeleccionado.precio || productoSeleccionado.precioVenta || 0;
+        const valorSugerido = precioUnitario * cantidadVendida;
+
+        const valorTotalVenta = parseInt(prompt("Valor total cobrado (COP):", valorSugerido));
+        if (isNaN(valorTotalVenta)) return;
+
+        const nuevaVentaExterna = {
+            cliente: nombreCliente,
+            telefono: telCliente,
+            direccion: "Venta Física / Externa",
+            productos: [{ 
+                nombre: productoSeleccionado.nombre, 
+                cantidad: cantidadVendida, 
+                precioVenta: valorTotalVenta / cantidadVendida 
+            }],
+            total: valorTotalVenta,
+            estado: "Entregado",
+            comprobante: ""
+        };
+
+        // 4. Enviar al servidor
         const res = await fetch('/api/pedidos/externo', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(nuevaVentaExterna)
         });
+
         if (res.ok) {
-            alert("¡Venta externa registrada con éxito y sumada a la caja!");
+            alert("¡Venta externa registrada con éxito, stock descontado y sumada a la caja!");
             cargarPedidosAdmin();
             if (typeof obtenerInventario === 'function') obtenerInventario();
         } else {
             alert("Error al registrar la venta externa en el servidor.");
         }
+
     } catch (error) {
-        console.error("Error:", error);
+        console.error("Error al cargar inventario para venta externa:", error);
+        alert("Ocurrió un error al conectar con el inventario.");
     }
 }
 
