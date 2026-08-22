@@ -648,33 +648,30 @@ app.post('/api/productos/editar', upload.any(), async (req, res) => {
 });
 
 
-// ==========================================
-// RUTA 10: Registrar Venta Externa por Nombre (Actualizada y Flexible)
-// ==========================================
 app.post('/api/registrar-venta', (req, res) => {
     try {
         const { nombreProducto, cantidad, tipoVenta, cliente } = req.body; 
+        console.log("-> Datos recibidos del frontend:", req.body);
 
         if (!nombreProducto || !cantidad) {
             return res.status(400).json({ exito: false, mensaje: 'Faltan datos del producto.' });
         }
 
         const rutaProductos = path.join(__dirname, 'productos.json');
-        const rutaPedidos = path.join(__dirname, 'pedidos.json');
-
         const productos = JSON.parse(fs.readFileSync(rutaProductos, 'utf-8') || '[]');
-        
-        // Búsqueda ultra flexible que ignora espacios de más y mayúsculas
+        console.log("-> Productos leídos de la BD:", productos);
+
         const prodBD = productos.find(p => {
-            if (!p.nombre) return false;
-            const dbName = p.nombre.toString().trim().toLowerCase();
-            const searchName = nombreProducto.toString().trim().toLowerCase();
-            return dbName === searchName || dbName.includes(searchName) || searchName.includes(dbName);
+            const nombreEnBD = p.nombre || p.titulo || ""; // Por si acaso tiene otro nombre de campo
+            return nombreEnBD.toString().trim().toLowerCase() === nombreProducto.toString().trim().toLowerCase();
         });
 
         if (!prodBD) {
+            console.log("-> ¡ERROR! No se encontró el producto:", nombreProducto);
             return res.status(400).json({ exito: false, mensaje: 'El producto no existe en el inventario.' });
         }
+
+        // El resto de tu código sigue igual...
 
         const stockActual = prodBD.stock !== undefined ? prodBD.stock : (prodBD.disponibles || 0);
         if (stockActual < Number(cantidad)) {
