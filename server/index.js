@@ -462,18 +462,14 @@ app.get('/api/pedidos/:id/factura', async (req, res) => {
 // ==========================================
 app.get('/api/reportes/mensual', async (req, res) => {
     try {
-        const rutaPedidos = path.join(__dirname, 'pedidos.json');
-        if (!fs.existsSync(rutaPedidos)) return res.status(404).send("<h1>No hay datos aún</h1>");
+        const pedidos = await Pedido.find({});
+        if (!pedidos || pedidos.length === 0) return res.status(404).send("<h1>No hay datos de ventas aún en MongoDB</h1>");
 
-        const pedidos = JSON.parse(fs.readFileSync(rutaPedidos, 'utf-8') || '[]');
-        
-        // Traemos todos los productos directamente de MongoDB para consultar sus costos reales
         const productosBD = await Producto.find({});
         
         const resumenMeses = {};
         let granTotalCaja = 0;
 
-        // 1. PROCESAMIENTO
         pedidos.forEach(p => {
             let mesAnio = 'General';
             if (p.fecha) {
@@ -491,31 +487,34 @@ app.get('/api/reportes/mensual', async (req, res) => {
             resumenMeses[mesAnio].totalVentas += valorPedido;
             resumenMeses[mesAnio].cantidadPedidos += 1;
 
-            if (p.articulosDetallados) {
-                p.articulosDetallados.forEach(art => {
-                    // Buscamos el producto en los datos de MongoDB para sacar su costo real (costoCompra o costo)
-                    const prodEncontrado = productosBD.find(prod => prod.nombre.trim().toLowerCase() === art.nombre.trim().toLowerCase());
-                    const costoReal = prodEncontrado ? (prodEncontrado.costoCompra || prodEncontrado.costo || 0) : (art.costo || 0);
+            // Si el pedido viene de la web (Ruta 3) o externa (Ruta 10), normalizamos la lectura
+            const listaArticulos = p.articulosDetallados || p.productos || [];
 
-                    const precioOrig = art.precioOriginal || 0;
-                    const precioPromo = (art.precioEfectivoUnidad && art.precioEfectivoUnidad !== precioOrig) ? art.precioEfectivoUnidad : (art.subtotal / art.cantidad);
-                    const gananciaReal = (precioPromo - costoReal) * art.cantidad;
+            listaArticulos.forEach(art => {
+                const nombreArt = art.nombre || art.titulo || "Producto";
+                const cantArt = art.cantidad || 1;
+                const subArt = art.subtotal || (art.precio * cantArt) || 0;
 
-                    resumenMeses[mesAnio].listaDetallada.push({
-                        nombre: art.nombre,
-                        cantidad: art.cantidad,
-                        costo: costoReal,
-                        precioOriginal: precioOrig,
-                        subtotal: art.subtotal,
-                        precioPromocion: art.precioEfectivoUnidad || 0,
-                        ganancia: gananciaReal,
-                        obs: p.obs || "Venta Web"
-                    });
+                const prodEncontrado = productosBD.find(prod => prod.nombre.trim().toLowerCase() === nombreArt.trim().toLowerCase());
+                const costoReal = prodEncontrado ? (prodEncontrado.costoCompra || prodEncontrado.costo || 0) : (art.costo || 0);
+
+                const precioOrig = art.precioOriginal || art.precio || 0;
+                const precioPromo = (art.precioEfectivoUnidad && art.precioEfectivoUnidad !== precioOrig) ? art.precioEfectivoUnidad : (subArt / cantArt);
+                const gananciaReal = (precioPromo - costoReal) * cantArt;
+
+                resumenMeses[mesAnio].listaDetallada.push({
+                    nombre: nombreArt,
+                    cantidad: cantArt,
+                    costo: costoReal,
+                    precioOriginal: precioOrig,
+                    subtotal: subArt,
+                    precioPromocion: precioPromo,
+                    ganancia: gananciaReal,
+                    obs: p.obs || "Venta Web"
                 });
-            }
+            });
         });
 
-        // 2. GENERACIÓN HTML
         const htmlReporte = `
             <!DOCTYPE html>
             <html lang="es">
@@ -597,7 +596,7 @@ app.get('/api/reportes/mensual', async (req, res) => {
 
     } catch (error) {
         console.error('Error en Ruta 8:', error);
-        res.status(500).send("<h1>Error interno al generar el reporte.</h1>");
+        res.status(500).send("<h1>Error interno al generar el reporte desde MongoDB.</h1>");
     }
 });
 
@@ -661,7 +660,7 @@ app.post('/api/productos/editar', upload.any(), async (req, res) => {
 });
 
 // ==========================================
-// 🔥 RUTA 10: Registrar Venta Externa por MongoDB
+// 🔥 RUTA 10: Registrar Venta Externa (MongoDB)
 // ==========================================
 app.post('/api/registrar-venta', async (req, res) => {
     try {
@@ -671,7 +670,6 @@ app.post('/api/registrar-venta', async (req, res) => {
             return res.status(400).json({ exito: false, mensaje: 'Faltan datos del producto.' });
         }
 
-        // 1. Traer los productos igualito que en la Ruta 1
         const productos = await Producto.find({}).sort({ _id: -1 });
         const prodBD = productos[productoIndex];
 
@@ -679,7 +677,6 @@ app.post('/api/registrar-venta', async (req, res) => {
             return res.status(400).json({ exito: false, mensaje: 'El producto no existe en el inventario.' });
         }
 
-        // 2. Leer el stock real usando 'cantidadStock'
         const stockActual = Number(
             prodBD.cantidadStock !== undefined ? prodBD.cantidadStock : 
             (prodBD.stock !== undefined ? prodBD.stock : 0)
@@ -689,28 +686,28 @@ app.post('/api/registrar-venta', async (req, res) => {
             return res.status(400).json({ exito: false, mensaje: `Stock insuficiente. Solo quedan ${stockActual} unidades.` });
         }
 
-        // 3. Cálculos exactos con los campos de MongoDB
         const precioOriginal = prodBD.precioVenta || prodBD.precio || 0;
         const costo = prodBD.costoCompra || prodBD.costo || 0;
         const descuento = prodBD.descuento || prodBD.descIndividual || prodBD.descuentoIndividual || 0;
         const precioEfectivo = descuento > 0 ? precioOriginal - (precioOriginal * (descuento / 100)) : precioOriginal;
         const subtotal = precioEfectivo * Number(cantidad);
 
-        // 4. Descontar stock y actualizar directamente en MongoDB
+        // Descontar stock en MongoDB
         prodBD.cantidadStock = stockActual - Number(cantidad);
         if (prodBD.stock !== undefined) {
-            prodBD.stock = prodBD.cantidadStock; // Mantener ambos sincronizados por si acaso
+            prodBD.stock = prodBD.cantidadStock;
         }
         await prodBD.save();
 
-        // 5. Registrar el pedido en pedidos.json (o tu base de pedidos)
-        const rutaPedidos = path.join(__dirname, 'pedidos.json');
-        const pedidos = JSON.parse(fs.readFileSync(rutaPedidos, 'utf-8') || '[]');
-        
-        const nuevoPedido = {
-            idPedido: pedidos.length > 0 ? pedidos[pedidos.length - 1].idPedido + 1 : 1,
-            fecha: new Date().toLocaleString('es-CO'),
-            obs: tipoVenta || "Venta Web", 
+        // Buscar el último idPedido numérico o generar uno
+        const ultimoPedido = await Pedido.findOne({ idPedido: { $type: "number" } }).sort({ idPedido: -1 });
+        const nuevoIdNum = ultimoPedido ? ultimoPedido.idPedido + 1 : 1;
+
+        // Guardar directamente en MongoDB usando el esquema unificado
+        const nuevoPedido = new Pedido({
+            idPedido: nuevoIdNum,
+            fecha: new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota' }),
+            obs: tipoVenta || "Venta Presencial", 
             cliente: cliente || "Cliente Presencial",
             telefono: "N/A",
             direccion: "Tienda Física",
@@ -725,12 +722,11 @@ app.post('/api/registrar-venta', async (req, res) => {
                 subtotal: subtotal
             }],
             articulos: [`${prodBD.nombre} (x${cantidad})`]
-        };
+        });
 
-        pedidos.push(nuevoPedido);
-        fs.writeFileSync(rutaPedidos, JSON.stringify(pedidos, null, 2));
+        await nuevoPedido.save();
 
-        return res.status(200).json({ exito: true, mensaje: '¡Venta registrada con éxito y stock descontado en MongoDB!' });
+        return res.status(200).json({ exito: true, mensaje: '¡Venta registrada y guardada en MongoDB!' });
 
     } catch (error) {
         console.error('Error en Ruta 10:', error);
