@@ -458,134 +458,147 @@ app.get('/api/pedidos/:id/factura', async (req, res) => {
 });
 
 // ==========================================
-// RUTA 8: Reporte Mensual DETALLADO
+// RUTA 8: Reporte Mensual DETALLADO (MongoDB)
 // ==========================================
-app.get('/api/reportes/mensual', (req, res) => {
-    const rutaPedidos = path.join(__dirname, 'pedidos.json');
-    if (!fs.existsSync(rutaPedidos)) return res.status(404).send("<h1>No hay datos aún</h1>");
+app.get('/api/reportes/mensual', async (req, res) => {
+    try {
+        const rutaPedidos = path.join(__dirname, 'pedidos.json');
+        if (!fs.existsSync(rutaPedidos)) return res.status(404).send("<h1>No hay datos aún</h1>");
 
-    const pedidos = JSON.parse(fs.readFileSync(rutaPedidos, 'utf-8') || '[]');
-    const resumenMeses = {};
-    let granTotalCaja = 0;
-
-    // 1. PROCESAMIENTO: Aquí solo calculamos y guardamos en 'resumenMeses'
-    pedidos.forEach(p => {
-        let mesAnio = 'General';
-        if (p.fecha) {
-            const partes = p.fecha.replace(/\s+/g, '').split('/');
-            if (partes.length >= 3) mesAnio = `${partes[1]}/${partes[2].substring(0, 4)}`;
-        }
-
-        const valorPedido = parseInt(p.total || 0);
-        granTotalCaja += valorPedido;
-
-        if (!resumenMeses[mesAnio]) {
-            resumenMeses[mesAnio] = { totalVentas: 0, cantidadPedidos: 0, listaDetallada: [] };
-        }
+        const pedidos = JSON.parse(fs.readFileSync(rutaPedidos, 'utf-8') || '[]');
         
-        resumenMeses[mesAnio].totalVentas += valorPedido;
-        resumenMeses[mesAnio].cantidadPedidos += 1;
+        // Traemos todos los productos directamente de MongoDB para consultar sus costos reales
+        const productosBD = await Producto.find({});
+        
+        const resumenMeses = {};
+        let granTotalCaja = 0;
 
-        if (p.articulosDetallados) {
-            p.articulosDetallados.forEach(art => {
-                resumenMeses[mesAnio].listaDetallada.push({
-                    nombre: art.nombre,
-                    cantidad: art.cantidad,
-                    costo: (JSON.parse(fs.readFileSync(path.join(__dirname, 'productos.json'), 'utf8')).find(p => p.nombre === art.nombre) || {costo: 0}).costo,
-                    precioOriginal: art.precioOriginal || 0, // Asegúrate de que este nombre coincida con tu JSON
-                    subtotal: art.subtotal,
-                    precioPromocion: (art.precioEfectivoUnidad && art.precioEfectivoUnidad !== art.precioOriginal) ? art.precioEfectivoUnidad : 0,
-                    ganancia: ((art.precioPromocion || (art.subtotal / art.cantidad)) - (JSON.parse(fs.readFileSync(path.join(__dirname, 'productos.json'), 'utf8')).find(p => p.nombre === art.nombre) || {costo: 0}).costo) * art.cantidad,
-                    obs: p.obs || "Venta Web" // <--- Hereda la observación del pedido
-                });
-                });
+        // 1. PROCESAMIENTO
+        pedidos.forEach(p => {
+            let mesAnio = 'General';
+            if (p.fecha) {
+                const partes = p.fecha.replace(/\s+/g, '').split('/');
+                if (partes.length >= 3) mesAnio = `${partes[1]}/${partes[2].substring(0, 4)}`;
+            }
+
+            const valorPedido = parseInt(p.total || 0);
+            granTotalCaja += valorPedido;
+
+            if (!resumenMeses[mesAnio]) {
+                resumenMeses[mesAnio] = { totalVentas: 0, cantidadPedidos: 0, listaDetallada: [] };
+            }
             
-        }
-    
-    });
+            resumenMeses[mesAnio].totalVentas += valorPedido;
+            resumenMeses[mesAnio].cantidadPedidos += 1;
 
-    // 2. GENERACIÓN: Construimos el HTML una vez que los datos están listos
-    const htmlReporte = `
-        <!DOCTYPE html>
-        <html lang="es">
-        <head>
-            <meta charset="UTF-8">
-            <title>Reporte Detallado</title>
-            <style>
-                body { font-family: sans-serif; padding: 20px; }
-                .ciclo-bloque { margin-bottom: 20px; border: 1px solid #ccc; padding: 10px; }
-                table { width: 100%; border-collapse: collapse; }
-                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            </style>
-        </head>
-        <body>
-            <h1>GLOW BY MAR - Reporte Detallado</h1>
-            ${Object.keys(resumenMeses).map(mes => `
-                <div class="ciclo-bloque">
-                    <h3>Ciclo: ${mes}</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Producto</th>
-                                <th>Unidades</th>
-                                <th>Costo</th>
-                                <th>Precio Catálogo</th>
-                                <th>Precio Venta</th>
-                                <th>Ganancia</th>
-                                <th>Total Neto</th>
-                                <th>OBS</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-    ${(() => {
-        // 1. Calculamos las sumas aquí dentro
-        const lista = resumenMeses[mes].listaDetallada;
-        // Actualiza esta parte de tu código:
-const sums = lista.reduce((acc, art) => ({
-    costo: acc.costo + (art.costo || 0),
-    precioOrig: acc.precioOrig + (art.precioOriginal || 0),
-    // CAMBIO AQUÍ: usamos la misma lógica que en la celda de la tabla
-    precioProm: acc.precioProm + (art.precioPromocion || art.precioOriginal || 0),
-    ganancia: acc.ganancia + (art.ganancia || 0),
-    subtotal: acc.subtotal + (art.subtotal || 0)
-}), { costo: 0, precioOrig: 0, precioProm: 0, ganancia: 0, subtotal: 0 });
+            if (p.articulosDetallados) {
+                p.articulosDetallados.forEach(art => {
+                    // Buscamos el producto en los datos de MongoDB para sacar su costo real (costoCompra o costo)
+                    const prodEncontrado = productosBD.find(prod => prod.nombre.trim().toLowerCase() === art.nombre.trim().toLowerCase());
+                    const costoReal = prodEncontrado ? (prodEncontrado.costoCompra || prodEncontrado.costo || 0) : (art.costo || 0);
 
-        // 2. Pintamos las filas y el total al final
-        return `
-            ${lista.map(art => `
-                <tr>
-                    <td>${art.nombre}</td>
-                    <td>${art.cantidad}</td>
-                    <td>$${(art.costo || 0).toLocaleString('es-CO')}</td>
-                    <td>$${(art.precioOriginal || 0).toLocaleString('es-CO')}</td>
-                    <td>$${(art.precioPromocion || art.precioOriginal || 0).toLocaleString('es-CO')}</td>
-                    <td>$${(art.ganancia || 0).toLocaleString('es-CO')}</td>
-                    <td>$${(art.subtotal || 0).toLocaleString('es-CO')}</td>
-                    <td><b>${art.obs || "Venta Web"}</b></td> <!-- <--- Muestra si es Externa o Web -->
-                </tr>
-            `).join('')}
-            <tr style="font-weight: bold; background-color: #f8f8f8;">
-                <td colspan="2">TOTAL CICLO</td>
-                <td>$${sums.costo.toLocaleString('es-CO')}</td>
-                <td>$${sums.precioOrig.toLocaleString('es-CO')}</td>
-                <td>$${sums.precioProm.toLocaleString('es-CO')}</td>
-                <td>$${sums.ganancia.toLocaleString('es-CO')}</td>
-                <td>$${sums.subtotal.toLocaleString('es-CO')}</td>
-                <td>-</td> <!-- Espacio vacío para la columna OBS en la fila de totales -->
-            </tr>
+                    const precioOrig = art.precioOriginal || 0;
+                    const precioPromo = (art.precioEfectivoUnidad && art.precioEfectivoUnidad !== precioOrig) ? art.precioEfectivoUnidad : (art.subtotal / art.cantidad);
+                    const gananciaReal = (precioPromo - costoReal) * art.cantidad;
+
+                    resumenMeses[mesAnio].listaDetallada.push({
+                        nombre: art.nombre,
+                        cantidad: art.cantidad,
+                        costo: costoReal,
+                        precioOriginal: precioOrig,
+                        subtotal: art.subtotal,
+                        precioPromocion: art.precioEfectivoUnidad || 0,
+                        ganancia: gananciaReal,
+                        obs: p.obs || "Venta Web"
+                    });
+                });
+            }
+        });
+
+        // 2. GENERACIÓN HTML
+        const htmlReporte = `
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <title>Reporte Detallado</title>
+                <style>
+                    body { font-family: sans-serif; padding: 20px; background-color: #f4f6f9; color: #333; }
+                    h1 { color: #2c3e50; }
+                    .ciclo-bloque { margin-bottom: 30px; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 20px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    th, td { border: 1px solid #e0e0e0; padding: 10px; text-align: left; }
+                    th { background-color: #f8f9fa; color: #2c3e50; }
+                </style>
+            </head>
+            <body>
+                <h1>GLOW BY MAR - Reporte Detallado</h1>
+                ${Object.keys(resumenMeses).map(mes => `
+                    <div class="ciclo-bloque">
+                        <h3>Ciclo: ${mes}</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Unidades</th>
+                                    <th>Costo</th>
+                                    <th>Precio Catálogo</th>
+                                    <th>Precio Venta</th>
+                                    <th>Ganancia</th>
+                                    <th>Total Neto</th>
+                                    <th>OBS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${(() => {
+                                    const lista = resumenMeses[mes].listaDetallada;
+                                    const sums = lista.reduce((acc, art) => ({
+                                        costo: acc.costo + (art.costo * art.cantidad || 0),
+                                        precioOrig: acc.precioOrig + (art.precioOriginal * art.cantidad || 0),
+                                        precioProm: acc.precioProm + (art.precioPromocion || art.precioOriginal || 0),
+                                        ganancia: acc.ganancia + (art.ganancia || 0),
+                                        subtotal: acc.subtotal + (art.subtotal || 0)
+                                    }), { costo: 0, precioOrig: 0, precioProm: 0, ganancia: 0, subtotal: 0 });
+
+                                    return `
+                                        ${lista.map(art => `
+                                            <tr>
+                                                <td>${art.nombre}</td>
+                                                <td>${art.cantidad}</td>
+                                                <td>$${(art.costo || 0).toLocaleString('es-CO')}</td>
+                                                <td>$${(art.precioOriginal || 0).toLocaleString('es-CO')}</td>
+                                                <td>$${(art.precioPromocion || art.precioOriginal || 0).toLocaleString('es-CO')}</td>
+                                                <td>$${(art.ganancia || 0).toLocaleString('es-CO')}</td>
+                                                <td>$${(art.subtotal || 0).toLocaleString('es-CO')}</td>
+                                                <td><b>${art.obs || "Venta Web"}</b></td>
+                                            </tr>
+                                        `).join('')}
+                                        <tr style="font-weight: bold; background-color: #f8f9fa;">
+                                            <td colspan="2">TOTAL CICLO</td>
+                                            <td>$${sums.costo.toLocaleString('es-CO')}</td>
+                                            <td>$${sums.precioOrig.toLocaleString('es-CO')}</td>
+                                            <td>$${sums.precioProm.toLocaleString('es-CO')}</td>
+                                            <td>$${sums.ganancia.toLocaleString('es-CO')}</td>
+                                            <td>$${sums.subtotal.toLocaleString('es-CO')}</td>
+                                            <td>-</td>
+                                        </tr>
+                                    `;
+                                })()}
+                            </tbody>
+                        </table>
+                    </div>
+                `).join('')}
+                <h2>Total Histórico: $${granTotalCaja.toLocaleString('es-CO')}</h2>
+            </body>
+            </html>
         `;
-    })()}
-</tbody>
-                    </table>
-                </div>
-            `).join('')}
-            <h2>Total Histórico: $${granTotalCaja.toLocaleString('es-CO')}</h2>
-        </body>
-        </html>
-    `;
 
-    // 3. RESPUESTA: Enviamos todo junto al final
-    res.send(htmlReporte);
+        res.send(htmlReporte);
+
+    } catch (error) {
+        console.error('Error en Ruta 8:', error);
+        res.status(500).send("<h1>Error interno al generar el reporte.</h1>");
+    }
 });
 
 // ====================================================
