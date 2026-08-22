@@ -647,10 +647,10 @@ app.post('/api/productos/editar', upload.any(), async (req, res) => {
     }
 });
 
-// ====================================================
-// 🔥 RUTA 10: Registrar venta externa (Actualizada)
-// ====================================================
-app.post('/api/registrar-venta', (req, res) => {
+// ==========================================
+// 🔥 RUTA 10: Registrar Venta Externa por MongoDB
+// ==========================================
+app.post('/api/registrar-venta', async (req, res) => {
     try {
         const { productoIndex, cantidad, tipoVenta, cliente } = req.body; 
 
@@ -658,53 +658,40 @@ app.post('/api/registrar-venta', (req, res) => {
             return res.status(400).json({ exito: false, mensaje: 'Faltan datos del producto.' });
         }
 
-        const rutaProductos = path.join(__dirname, 'productos.json');
-        const rutaPedidos = path.join(__dirname, 'pedidos.json');
-
-        const productos = JSON.parse(fs.readFileSync(rutaProductos, 'utf-8') || '[]');
-        
-        // Buscamos directamente por la posición exacta que elegiste en la lista
+        // 1. Traer los productos igualito que en la Ruta 1
+        const productos = await Producto.find({}).sort({ _id: -1 });
         const prodBD = productos[productoIndex];
 
         if (!prodBD) {
             return res.status(400).json({ exito: false, mensaje: 'El producto no existe en el inventario.' });
         }
 
-        // Buscamos el stock en cualquier posible nombre de campo que tenga tu JSON
+        // 2. Leer el stock real usando 'cantidadStock'
         const stockActual = Number(
-            prodBD.stock !== undefined ? prodBD.stock :
-            prodBD.disponibles !== undefined ? prodBD.disponibles :
-            prodBD.cantidad !== undefined ? prodBD.cantidad :
-            prodBD.existencias !== undefined ? prodBD.existencias : 0
+            prodBD.cantidadStock !== undefined ? prodBD.cantidadStock : 
+            (prodBD.stock !== undefined ? prodBD.stock : 0)
         );
 
         if (stockActual < Number(cantidad)) {
             return res.status(400).json({ exito: false, mensaje: `Stock insuficiente. Solo quedan ${stockActual} unidades.` });
         }
 
-        // Cálculos exactos para su reporte mensual
-        const precioOriginal = prodBD.precio || prodBD.precioVenta || 0;
-        const costo = prodBD.costo || 0;
-        const descuento = prodBD.descIndividual || prodBD.descuento || 0;
+        // 3. Cálculos exactos con los campos de MongoDB
+        const precioOriginal = prodBD.precioVenta || prodBD.precio || 0;
+        const costo = prodBD.costoCompra || prodBD.costo || 0;
+        const descuento = prodBD.descuento || prodBD.descIndividual || prodBD.descuentoIndividual || 0;
         const precioEfectivo = descuento > 0 ? precioOriginal - (precioOriginal * (descuento / 100)) : precioOriginal;
         const subtotal = precioEfectivo * Number(cantidad);
 
-        // Descontar stock actualizando el campo correcto que posea el objeto
+        // 4. Descontar stock y actualizar directamente en MongoDB
+        prodBD.cantidadStock = stockActual - Number(cantidad);
         if (prodBD.stock !== undefined) {
-            prodBD.stock -= Number(cantidad);
-        } else if (prodBD.disponibles !== undefined) {
-            prodBD.disponibles -= Number(cantidad);
-        } else if (prodBD.cantidad !== undefined) {
-            prodBD.cantidad -= Number(cantidad);
-        } else if (prodBD.existencias !== undefined) {
-            prodBD.existencias -= Number(cantidad);
-        } else {
-            prodBD.stock = stockActual - Number(cantidad);
+            prodBD.stock = prodBD.cantidadStock; // Mantener ambos sincronizados por si acaso
         }
-        
-        fs.writeFileSync(rutaProductos, JSON.stringify(productos, null, 2));
+        await prodBD.save();
 
-        // Registrar en pedidos.json con la estructura idéntica del reporte
+        // 5. Registrar el pedido en pedidos.json (o tu base de pedidos)
+        const rutaPedidos = path.join(__dirname, 'pedidos.json');
         const pedidos = JSON.parse(fs.readFileSync(rutaPedidos, 'utf-8') || '[]');
         
         const nuevoPedido = {
@@ -730,10 +717,10 @@ app.post('/api/registrar-venta', (req, res) => {
         pedidos.push(nuevoPedido);
         fs.writeFileSync(rutaPedidos, JSON.stringify(pedidos, null, 2));
 
-        return res.status(200).json({ exito: true, mensaje: '¡Venta registrada con éxito en el reporte!' });
+        return res.status(200).json({ exito: true, mensaje: '¡Venta registrada con éxito y stock descontado en MongoDB!' });
 
     } catch (error) {
-        console.error(error);
+        console.error('Error en Ruta 10:', error);
         return res.status(500).json({ exito: false, mensaje: 'Error interno en el servidor.' });
     }
 });
