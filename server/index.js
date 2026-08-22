@@ -647,31 +647,28 @@ app.post('/api/productos/editar', upload.any(), async (req, res) => {
     }
 });
 
-
+// ====================================================
+// 🔥 RUTA 10: Registrar venta externa
+// ====================================================
 app.post('/api/registrar-venta', (req, res) => {
     try {
-        const { nombreProducto, cantidad, tipoVenta, cliente } = req.body; 
-        console.log("-> Datos recibidos del frontend:", req.body);
+        const { productoIndex, cantidad, tipoVenta, cliente } = req.body; 
 
-        if (!nombreProducto || !cantidad) {
+        if (productoIndex === undefined || !cantidad) {
             return res.status(400).json({ exito: false, mensaje: 'Faltan datos del producto.' });
         }
 
         const rutaProductos = path.join(__dirname, 'productos.json');
-        const productos = JSON.parse(fs.readFileSync(rutaProductos, 'utf-8') || '[]');
-        console.log("-> Productos leídos de la BD:", productos);
+        const rutaPedidos = path.join(__dirname, 'pedidos.json');
 
-        const prodBD = productos.find(p => {
-            const nombreEnBD = p.nombre || p.titulo || ""; // Por si acaso tiene otro nombre de campo
-            return nombreEnBD.toString().trim().toLowerCase() === nombreProducto.toString().trim().toLowerCase();
-        });
+        const productos = JSON.parse(fs.readFileSync(rutaProductos, 'utf-8') || '[]');
+        
+        // Buscamos directamente por la posición exacta que elegiste en la lista
+        const prodBD = productos[productoIndex];
 
         if (!prodBD) {
-            console.log("-> ¡ERROR! No se encontró el producto:", nombreProducto);
             return res.status(400).json({ exito: false, mensaje: 'El producto no existe en el inventario.' });
         }
-
-        // El resto de tu código sigue igual...
 
         const stockActual = prodBD.stock !== undefined ? prodBD.stock : (prodBD.disponibles || 0);
         if (stockActual < Number(cantidad)) {

@@ -435,21 +435,18 @@ async function notificarEnvioYFinalizarConDatos(id, cliente, telefono, totalNeto
 // Función definitiva con menú numérico para ventas externas
 async function registrarVentaConLista() {
     try {
-        // 1. Consultar el inventario actual de la tienda
         const resInv = await fetch('/api/productos'); 
         if (!resInv.ok) {
-            alert("No se pudo cargar el inventario desde el servidor.");
+            alert("No se pudo cargar el inventario.");
             return;
         }
         
         const productos = await resInv.json();
-
         if (!productos || productos.length === 0) {
             alert("No hay productos registrados en el inventario.");
             return;
         }
 
-        // 2. Construir la lista numerada de productos disponibles
         let listaTexto = "Elige el número del producto a vender:\n\n";
         productos.forEach((p, index) => {
             let stockActual = p.stock !== undefined ? p.stock : (p.disponibles || 0);
@@ -468,7 +465,6 @@ async function registrarVentaConLista() {
 
         const productoSeleccionado = productos[indexElegido];
 
-        // 3. Pedir datos necesarios para la Ruta 10
         const nombreCliente = prompt("Nombre del cliente (Venta Externa):", "Cliente Presencial");
         if (!nombreCliente) return;
 
@@ -477,13 +473,12 @@ async function registrarVentaConLista() {
         if (!cantidadVendida || cantidadVendida <= 0) return;
 
         const datosVenta = {
-            nombreProducto: productoSeleccionado.nombre,
+            productoIndex: indexElegido, // Mandamos la posición exacta
             cantidad: cantidadVendida,
             tipoVenta: "Venta Física / Externa",
             cliente: nombreCliente
         };
 
-        // 4. Enviar a la Ruta 10 del servidor (/api/registrar-venta)
         const res = await fetch('/api/registrar-venta', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
