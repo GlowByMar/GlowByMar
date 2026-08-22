@@ -510,7 +510,7 @@ app.get('/api/reportes/mensual', async (req, res) => {
                     subtotal: subArt,
                     precioPromocion: precioPromo,
                     ganancia: gananciaReal,
-                    obs: p.obs && p.obs.trim() !== "" ? p.obs : "Venta Web" // 🔥 Aquí diferenciamos si viene con obs o es de la web
+                    obs: p.obs && p.obs.trim() !== "" ? p.obs : (p.direccion === "Tienda Física" ? "Venta Presencial" : "Venta Web")
                 });
             });
         });
