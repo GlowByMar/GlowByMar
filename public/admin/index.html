@@ -160,11 +160,22 @@ td {
                 <input type="number" id="edit-descIndividual" name="descIndividual" placeholder="0" min="0" max="100">
             </div>
             
-            <div class="grupo-campo" id="campo-foto">
-                <label>Foto del Producto:</label>
-                <input type="file" name="foto" accept="image/*">
-                <small style="color: #7f8c8d; display:block; margin-top:2px;">*Si estás editando, no necesitas volver a subir la foto a menos que quieras cambiarla.</small>
-            </div>
+            <div class="grupo-campo" id="campo-foto" style="width: 100%; box-sizing: border-box;">
+    <label style="display: block; margin-bottom: 5px; font-weight: bold;">Foto del Producto:</label>
+    
+    <!-- Input real oculto para que siga funcionando con tu backend y multer -->
+    <input type="file" name="foto" id="inputFotoReal" accept="image/*" style="display: none;" onchange="document.getElementById('nombreArchivo').innerText = this.files[0] ? this.files[0].name : 'Ningún archivo seleccionado';">
+    
+    <!-- Botón personalizado adaptable -->
+    <div style="display: flex; flex-direction: column; gap: 6px; width: 100%;">
+        <button type="button" onclick="document.getElementById('inputFotoReal').click();" style="background: #f1f2f6; border: 1px solid #ced6e0; padding: 8px 12px; border-radius: 4px; cursor: pointer; text-align: left; font-size: 12px; width: 100%; box-sizing: border-box;">
+            📁 Seleccionar archivo
+        </button>
+        <span id="nombreArchivo" style="font-size: 11px; color: #57606f; word-break: break-all;">Ningún archivo seleccionado</span>
+    </div>
+
+    <small style="color: #7f8c8d; display: block; margin-top: 4px; font-size: 10px;">*Si estás editando, no necesitas volver a subir la foto a menos que quieras cambiarla.</small>
+</div>
 
             <input type="hidden" id="edit-product-id">
 

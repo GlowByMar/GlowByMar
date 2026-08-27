@@ -9,21 +9,36 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
     <style>
+
+        html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+body, p, span, h1, h2, h3, h4, h5, h6, a, label, button {
+    color: #6D3C1C !important;
+}
+
+button, .btn-agregar {
+    color: #ffffff !important;
+}
+
     /* Tipografía elegante y variables de color */
     @import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;600;700&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Playfair+Display:ital,wght@0,500;1,500&display=swap');
 
     :root {
-        --color-oscuro: #111111;
-        --color-dorado: #d4af37;
-        --color-gris-claro: #f9f9f9;
-        --color-texto: #333333;
-    }
-
+    --color-oscuro: #111111;
+    --color-dorado: #d4af37;
+    --color-gris-claro: #f9f9f9;
+    --color-texto: #6D3C1C; /* <- ¡Cámbialo aquí para que afecte a todo lo general! */
+}
+    
     body { 
         font-family: 'Lato', sans-serif; 
-        /* 🎨 DEGRADADO BICOLOR PREMIUM */
-        background: linear-gradient(135deg, #c4709e 0%, #e4d4cd 45%, #d1c4be 100%);
+        background: #ffffff;
         background-attachment: fixed;
         letter-spacing: 0.5px;
         margin: 0; 
@@ -34,11 +49,10 @@
     /* Navbar Premium */
     /* 1. Ajuste al menú: quitamos el top y lo dejamos pegado arriba del todo */
 .navbar {
-    background: linear-gradient(135deg, #c4709e 0%, #ffffff 45%, #d1c4be 100%);
+    background: color(white);
     border-bottom: 1px solid #eaeaea;
     padding: 15px 25px; /* Ajusté un poco el padding */
-    position: fixed;
-    top: 0; /* Cambiado a 0 para que no choque con la cinta */
+    position: relative;
     left: 0;
     right: 0;
     display: flex;
@@ -48,21 +62,16 @@
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
-/* 2. Añade este contenedor superior para que la cinta no se esconda detrás del menú */
-.espaciador-superior {
-    height: 80px; /* Ajusta este valor según la altura de tu navbar */
-}
-
     /* 🛒 MINI EMERGENTE FLOTANTE (Corregido y posicionado al lado del botón) */
     .mini-carrito-dropdown {
         display: none;             /* ⬅️ Empieza oculto para que el script funcione */
         position: fixed !important; 
         bottom: 100px;              /* Abre justo encima del botón flotante */
         right: 30px;               
-        background: white;
-        border: 1px solid #d4af37;
+        background: #f1d7be;
+        border: 1px solid #382417;
         border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        box-shadow: 0 10px 30px #CBAC85;
         z-index: 5000;             
         width: 290px;
         max-height: 400px;
@@ -85,7 +94,7 @@
     }
 
     .btn-ver-carrito-completo {
-        background-color: var(--color-oscuro);
+        background-color: #6A3005;
         color: white;
         border: none;
         width: 100%;
@@ -101,7 +110,7 @@
     }
 
     .btn-ver-carrito-completo:hover {
-        background-color: var(--color-dorado);
+        background-color: #CBAC85;
     }
 
     /* 💳 SECCIÓN COMPLETA DE REVISIÓN Y PAGO */
@@ -111,7 +120,7 @@
         background: white;
         padding: 30px;
         border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        box-shadow: 0 4px 20px rgba(9, 6, 199, 0.04);
         border: 1px solid #eaeaea;
         width: 100%;
         max-width: 900px;
@@ -120,20 +129,19 @@
 
     .contenedor { 
         max-width: 1200px; 
-        margin: 90px auto; 
+        margin: 5px auto; 
         padding: 0 20px;
     }
 
     h2.seccion-titulo {
-        font-family: 'Playfair Display', serif;
-        text-align: center;
-        font-weight: 550;
-        font-size: 30px;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        margin-bottom: 2px;
-        color: #c466ac;
-    }
+    font-family: 'Playfair Display', serif;
+    text-align: center;
+    font-weight: 400; /* Más delicado y elegante */
+    font-size: 24px; /* Un poco más estilizado */
+    letter-spacing: 3px; /* Un respiro más amplio */
+    text-transform: uppercase;
+    margin-bottom: 20px;
+}
 
     #lista-productos { 
         display: grid; 
@@ -142,16 +150,15 @@
     }
 
     .producto-card { 
-        background: transparent !important; /* Tarjeta transparente */ 
-        border: none !important;            /* Sin bordes duros */
-        border-radius: 12px; 
-        overflow: hidden; 
-        box-shadow: none !important;        /* Sin sombra */
-        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
-        display: flex;
-        flex-direction: column;
-        border: 1px solid #f0f0f0;
-   }
+    background: #ffffff !important; /* Fondo blanco para que resalte sobre la página */
+    border-radius: 12px; 
+    overflow: hidden; 
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03); /* Una sombrita muy sutil */
+    border: 1px solid rgba(109, 60, 28, 0.15); /* Un borde café muy elegante */
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+    display: flex;
+    flex-direction: column;
+}
 
     .producto-card:hover { 
         transform: translateY(-8px); 
@@ -237,7 +244,7 @@
     }
 
     .btn-agregar {
-    background-color: #e938bd;
+    background-color: #6A3005;
     color: white;
     padding: 12px 24px;
     border: none;
@@ -264,12 +271,12 @@
     }
 
 .btn-agregar:hover {
-    background-color: #b8962d; /* Dorado un poco más oscuro al pasar el mouse */
+    background-color: #C4923E; /* Dorado un poco más oscuro al pasar el mouse */
     transform: translateY(-1px); /* Un pequeño efecto de elevación */
 }
 
     .btn-agotado {
-    background-color: #6cacd6 !important;
+    background-color: #CBAC85 !important;
     color: #ffffff !important;
     border: 1px solid #e6e6e6 !important;
     cursor: not-allowed !important;
@@ -308,15 +315,15 @@
         position: fixed;
         bottom: 75px;      
         right: 5px;       
-        background-color: #111111; 
+        background-color: #6A3005; 
         color: #ffffff;
-        border: 1px solid #d4af37; 
+        border: 1px solid #3e1e04; 
         width: 60px;
         height: 60px;
         border-radius: 50px; 
         cursor: pointer;
         z-index: 4000;     
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 15px rgba(231, 4, 4, 0.2);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -325,8 +332,8 @@
 
     .carrito-flotante:hover {
         transform: scale(1.1) translateY(-3px); 
-        background-color: #f9f0e2; 
-        color: #111111;
+        background-color: #CBAC85; 
+        color: #3e1e04;
         box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4); 
     }
 
@@ -339,8 +346,8 @@
         position: absolute;
         top: -12px;
         right: -12px;
-        background-color: #d4af37; 
-        color: #111111;
+        background-color: #CBAC85; 
+        color: #1b3e04;
         font-family: 'Montserrat', sans-serif;
         font-size: 11px;
         font-weight: 700;
@@ -350,7 +357,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        border: 2px solid #111111;
+        border: 2px solid #3e1e04;
     }
     
     .ocultar-visualmente {
@@ -381,7 +388,7 @@
     border-bottom: 1px solid #e8d5cc;
     overflow: hidden;
     white-space: nowrap;
-    padding: 10px 0; /* Damos un poco de aire vertical */
+    padding: 4px 0; /* Damos un poco de aire vertical */
     box-sizing: border-box;
     position: relative;
     /* Quitamos el margin: 0; innecesario */
@@ -417,106 +424,109 @@
 </head>
 <body>
 
-    <!-- BARRA DE OFERTAS SUPERIOR -->
     <div id="barra-ofertas" style="
-        background: linear-gradient(90deg, #d4af37 0%, #f9f0e2 50%, #d4af37 100%);
-        color: #111111;
-        text-align: center;
-        padding: 0px 15px;
-        font-family: 'Montserrat', sans-serif;
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 25px;
-        z-index: 3000; 
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        overflow: hidden;
-        display: flex;
-        align-items: center; 
-        justify-content: center;
-    ">
-        <div id="texto-oferta" style="transition: opacity 0.5s ease-in-out; display: inline-block;">
-            ✨ Brilla con luz propia, te mereces todo lo lindo.
+    background: linear-gradient(to right, #F6E6D3, #E7C196, #B88654);
+    color: #111111;
+    text-align: center;
+    padding: 6px 15px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+">
+    <span id="texto-oferta" style="transition: opacity 0.5s ease;">✨ BRILLA CON LUZ PROPIA, TE MERECES TODO LO LINDO. ✨</span>
+</div>
+
+<!-- NAVBAR Y LOGO (Justo debajo, sin márgenes raros) -->
+<nav class="navbar" style="
+    width: 100%; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    padding: 20px 0; 
+    background: color(white);
+    border-bottom: 1px solid #eaeaea;
+    box-sizing: border-box;
+">
+    <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+        <img src="imagenes/mi-logo.png" alt="Logo" style="height: 60px; width: auto; display: block;">
+        <div style="font-family: 'Playfair Display', serif; font-weight: 500; font-size: 23px; letter-spacing: 4px; color: #6D3C1C; margin-top: 5px;">
+            GLOW BY MAR
+            <br>
+            <small style="font-size: 10px; letter-spacing: 4px; color: #6D3C1C; font-weight: 300; display: block; margin-top: 2px;">ACCESORIOS</small>
         </div>
     </div>
-        
-    <!-- NAVBAR Y LOGO -->
-    <nav class="navbar" style="width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12.5px 0; background: linear-gradient(to bottom, #ffffff, #f2d9d9); margin-top: 25px;">
-        <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
-            <img src="imagenes/mi-logo.png" alt="Logo" style="height: 60px; width: auto; display: block;">
-            <div style="font-family: 'Playfair Display', serif; font-weight: 500; font-size: 23px; letter-spacing: 4px; color: #333; margin-top: 5px;">
-                GLOW BY MAR
-                <br>
-                <small style="font-size: 10px; letter-spacing: 4px; color: #4b4a4a; font-weight: 300; display: block; margin-top: 2px;">ACCESORIOS</small>
-            </div>
-        </div>
-    </nav>
+</nav>
     
     <!-- CONTENEDOR PRINCIPAL DE PRODUCTOS -->
     <div class="contenedor">
         <h2 class="seccion-titulo"> Nuestra Colección de Accesorios </h2>
         
         <!-- Botón Lupa y Buscador -->
-        <div id="contenedor-busqueda" style="text-align: center; margin-bottom: 35px;">
-            <button id="btn-lupa" onclick="toggleBuscador()" style="background: none; border: none; font-size: 24px; cursor: pointer;">🔍</button>
+<div id="contenedor-busqueda" style="text-align: center; margin-bottom: 35px;">
+    <button id="btn-lupa" onclick="toggleBuscador()" style="background: #fff; border: 1px solid rgba(109, 60, 28, 0.3); width: 45px; height: 45px; border-radius: 50%; font-size: 18px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center;" title="Filtrar por categoría">🔍</button>
 
-            <div id="buscador-desplegable" style="display: none; margin-top: 15px;">
-                <select id="filtro-categoria" onchange="filtrarProductos(); toggleBuscador();" style="padding: 8px 20px; border-radius: 20px; border: 1px solid #ddd; outline: none;">
-                    <option value="Todos">✨ Mostrar Todo</option>
-                    <option value="Cadenas">Cadenas</option>
-                    <option value="Pulseras">Pulseras</option>
-                    <option value="Anillos">Anillos</option>
-                    <option value="Relojes">Relojes</option>
-                    <option value="Aretes">Aretes</option>
-                    <option value="Juegos">Juegos</option>
-                </select>
-            </div>
-        </div>
-
-        <div id="lista-productos"></div>
+    <div id="buscador-desplegable" style="display: none; margin-top: 15px;">
+        <select id="filtro-categoria" onchange="filtrarProductos(); toggleBuscador();" style="padding: 10px 20px; border-radius: 20px; border: 1px solid rgba(109, 60, 28, 0.3); outline: none; font-family: 'Montserrat', sans-serif; font-size: 12px; background: #fff; color: #111; cursor: pointer;">
+            <option value="Todos">✨ Mostrar Todo</option>
+            <option value="Cadenas">Cadenas</option>
+            <option value="Pulseras">Pulseras</option>
+            <option value="Anillos">Anillos</option>
+            <option value="Relojes">Relojes</option>
+            <option value="Aretes">Aretes</option>
+            <option value="Juegos">Juegos</option>
+        </select>
     </div>
+</div>
+
+<div id="lista-productos"></div>
 
     <!-- SECCIÓN CARRITO COMPLETO Y ENVÍO -->
-    <div id="seccion-carrito-completo" style="display: none; margin-top: 30px; padding: 20px; border: 1px solid #eee; border-radius: 8px; background: #fff; max-width: 800px; margin-left: auto; margin-right: auto;">
+    <div id="seccion-carrito-completo" style="display: none; margin-top: 30px; padding: 20px; border: 1px solid #6A3005; border-radius: 8px; background: #fff; max-width: 800px; margin-left: auto; margin-right: auto; box-sizing: border-box; width: 100%;">
         <h3 style="margin-top:0; font-weight:600; text-transform:uppercase; letter-spacing:1px; color: #111; text-align: center;">🛒 Resumen de su Pedido</h3>
         
-        <table style="width: 100%; text-align: left; border-collapse: collapse; margin-bottom: 25px; font-size: 14px;">
-            <thead>
-                <tr style="border-bottom: 2px solid #111; height: 35px; text-transform:uppercase; font-size:12px; letter-spacing:1px;">
-                    <th style="padding: 10px 0;">Producto</th>
-                    <th>Precio U.</th>
-                    <th>Cantidad</th>
-                    <th>Subtotal</th>
-                </tr>
-            </thead>
-            <tbody id="cuerpo-tabla-carrito"></tbody>
-        </table>
+        <!-- Contenedor con scroll horizontal para que la tabla no se salga en móviles -->
+        <div style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 25px;">
+            <table style="width: 100%; min-width: 320px; text-align: left; border-collapse: collapse; font-size: 14px;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #111; height: 35px; text-transform:uppercase; font-size:12px; letter-spacing:1px;">
+                        <th style="padding: 10px 5px;">Producto</th>
+                        <th style="padding: 10px 5px;">Precio U.</th>
+                        <th style="padding: 10px 5px;">Cantidad</th>
+                        <th style="padding: 10px 5px;">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpo-tabla-carrito"></tbody>
+            </table>
+        </div>
 
         <h3 style="font-weight:600; text-transform:uppercase; letter-spacing:1px; color: #111; text-align: center; margin-top: 30px;">📦 Datos de Envío</h3>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+        
+        <!-- Formulario adaptable: en celular se ponen en una sola columna, en PC en dos -->
+        <div style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px;">
             <div style="display: flex; flex-direction: column; gap: 5px;">
                 <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; font-family: 'Montserrat', sans-serif;">Nombre Completo *</label>
-                <input type="text" id="envio-nombre" placeholder="Ej. Juan Pérez" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Montserrat', sans-serif; font-size: 11px;">
+                <input type="text" id="envio-nombre" placeholder="Ej. Juan Pérez" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Montserrat', sans-serif; font-size: 12px; width: 100%; box-sizing: border-box;">
             </div>
             <div style="display: flex; flex-direction: column; gap: 5px;">
                 <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; font-family: 'Montserrat', sans-serif;">Teléfono / WhatsApp *</label>
-                <input type="tel" id="envio-telefono" placeholder="Ej. 3001234567" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Montserrat', sans-serif; font-size: 11px;">
+                <input type="tel" id="envio-telefono" placeholder="Ej. 3001234567" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Montserrat', sans-serif; font-size: 12px; width: 100%; box-sizing: border-box;">
             </div>
-            <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 5px;">
+            <div style="display: flex; flex-direction: column; gap: 5px;">
                 <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; font-family: 'Montserrat', sans-serif;">Dirección de Entrega *</label>
-                <input type="text" id="envio-direccion" placeholder="Ej. Calle 10 # 45-20, Medellín" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Montserrat', sans-serif; font-size: 11px;">
+                <input type="text" id="envio-direccion" placeholder="Ej. Calle 10 # 45-20, Medellín" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Montserrat', sans-serif; font-size: 12px; width: 100%; box-sizing: border-box;">
             </div>
         </div>
 
         <h3 style="font-weight:600; text-transform:uppercase; letter-spacing:1px; color: #111; text-align: center; margin-top: 30px;">💵 Método de Pago</h3>
         <div style="background-color: #fdfaf4; border: 1px solid #d4af37; padding: 20px; border-radius: 8px; margin-bottom: 25px; text-align: left;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                <span style="background-color: #700070; color: white; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; font-family: 'Montserrat', sans-serif;">NEQUI</span>
+                <span style="background-color: #C4923E; color: white; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; font-family: 'Montserrat', sans-serif;">NEQUI</span>
             </div>
             <p style="color: #555; margin: 0 0 5px 0; line-height: 1.5; font-family: 'Montserrat', sans-serif; font-size: 11px;">
                 "¡Ya casi es tuyo! ✨ Para confirmar tu pedido, puedes hacer el pago o transferencia por Nequi a nuestra cuenta oficial:"
@@ -530,11 +540,11 @@
                 Total a Pagar: $0 COP
             </h4>
 
-            <button type="button" onclick="cerrarCompraCliente()" style="background: #439C69; color: white; border: none; padding: 10px; border-radius: 15px; cursor: pointer; font-weight: bold; font-size: 15px; text-transform: uppercase; letter-spacing: 1px; font-family: 'Montserrat', sans-serif; width: 100%;">
-                Finalizar Pedido por WhatsApp 
+            <button type="button" onclick="cerrarCompraCliente()" style="background: #6A3005; color: white; border: none; padding: 12px; border-radius: 15px; cursor: pointer; font-weight: bold; font-size: 15px; text-transform: uppercase; letter-spacing: 1px; font-family: 'Montserrat', sans-serif; width: 100%;">
+                Finalizar Pedido 
             </button>
             
-            <button type="button" onclick="vaciarCarrito()" style="background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 15px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 14px; letter-spacing: 1px; font-family: 'Montserrat', sans-serif; width: 100%;">
+            <button type="button" onclick="vaciarCarrito()" style="background: #965015; color: white; border: none; padding: 12px; border-radius: 15px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 14px; letter-spacing: 1px; font-family: 'Montserrat', sans-serif; width: 100%;">
                 Vaciar Carrito
             </button>
         </div>
@@ -546,7 +556,7 @@
         <div id="items-mini-contenedor"></div>
         
         <div id="info-mini-total" style="display: none; margin-top: 10px;">
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 10px 0;">
+            <hr style="border: 0; border-top: 1px solid #6A3005; margin: 10px 0;">
             <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 13px; color: #111111;">
                 <span>Total:</span>
                 <span id="precio-mini-total">$0 COP</span>
@@ -583,7 +593,7 @@
     </div>
 
     <!-- PIE DE PÁGINA (FOOTER INDEPENDIENTE Y AFUERA) -->
-    <footer style="text-align: center; padding: 20px 20px 15px 20px; background-color: rgba(255, 255, 255, 0.65); margin-top: 50px; border-top: 1px solid rgba(0,0,0,0.05); backdrop-filter: blur(5px);">
+    <footer style="text-align: center; padding: 20px 20px 15px 20px; background-color: rgba(255, 255, 255, 0.65); margin-top: 5px; border-top: 1px solid rgba(0,0,0,0.05); backdrop-filter: blur(5px);">
         <p style="font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: #111; margin-bottom: 10px;">
             ✨ Conéctate con Glow By Mar ✨
         </p>
@@ -859,7 +869,7 @@ const rutaImagen = urlImagen && urlImagen.startsWith('http')
         // Render del mini-carrito flotante sin amontonarse
         if (itemsMiniContenedor) {
             itemsMiniContenedor.innerHTML += `
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 12px 0; border-bottom: 1px solid #f2f2f2; font-family: 'Montserrat', sans-serif;">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 12px 0; border-bottom: 1px solid #6A3005; font-family: 'Montserrat', sans-serif;">
                     <div style="display: flex; flex-direction: column; gap: 6px; width: 60%; text-align: left;">
                         <span style="font-weight: 600; color: #111111; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${item.nombre}">
                             ${item.nombre}
@@ -882,26 +892,26 @@ const rutaImagen = urlImagen && urlImagen.startsWith('http')
             `;
         }
 
-        // Render de la tabla del Resumen del Pedido
+       // Render de la tabla del Resumen del Pedido
         if (cuerpoTablaReal) {
             cuerpoTablaReal.innerHTML += `
                 <tr style="border-bottom: 1px solid #eee; height: 50px;">
-                    <td style="font-weight:600;">${item.nombre}</td>
-                    <td>$${item.precio.toLocaleString('es-CO')}</td>
-                    <td>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-    <button onclick="event.preventDefault(); event.stopPropagation(); restarUnidadCarrito(${item.id})" 
-            style="background: #e74c3c; color: white; border: none; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">-</button>
-            
-    <span style="font-weight:600; color: #111; min-width: 20px; text-align: center;">${item.cantidad}</span>
-    
-    <button onclick="event.preventDefault(); event.stopPropagation(); sumarUnidadCarrito(${item.id})" 
-            style="background: #27ae60; color: white; border: none; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px;">+</button>
-</div>
+                    <td style="font-weight:600; padding: 5px 8px; font-size: 13px;">${item.nombre}</td>
+                    <td style="padding: 5px 8px; font-size: 13px;">$${item.precio.toLocaleString('es-CO')}</td>
+                    <td style="padding: 5px 8px;">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <button onclick="event.preventDefault(); event.stopPropagation(); restarUnidadCarrito('${item.id}')" 
+                                    style="background: #e74c3c; color: white; border: none; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px;">-</button>
+                                
+                            <span style="font-weight:600; color: #111; min-width: 15px; text-align: center; font-size: 13px;">${item.cantidad}</span>
+                            
+                            <button onclick="event.preventDefault(); event.stopPropagation(); sumarUnidadCarrito('${item.id}')" 
+                                    style="background: #27ae60; color: white; border: none; padding: 2px 6px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 11px;">+</button>
+                        </div>
                     </td>
-                    <td style="font-weight:600;">$${subtotal.toLocaleString('es-CO')}</td>
-                    <td style="text-align: center;">
-                        <button onclick="eliminarTodoElGrupo(${item.id})" style="background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 16px;" title="Eliminar este artículo">❌</button>
+                    <td style="font-weight:600; padding: 5px 8px; font-size: 13px;">$${subtotal.toLocaleString('es-CO')}</td>
+                    <td style="text-align: center; padding: 5px 4px;">
+                        <button onclick="eliminarTodoElGrupo('${item.id}')" style="background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 14px; padding: 2px;" title="Eliminar este artículo">❌</button>
                     </td>
                 </tr>
             `;
@@ -1021,7 +1031,7 @@ function eliminarDelCarrito(idProducto) {
                 text: 'Recuerda enviarnos tu comprobante de pago al WhatsApp y así procesar el envío.',
                 icon: 'warning', // Un icono de advertencia amigable para el comprobante
                 confirmButtonText: 'Aceptar',
-                confirmButtonColor: '#2ecc71'
+                confirmButtonColor: '#6a3005'
             }).then(() => {
                 // Redirigir a WhatsApp con el texto bien codificado
                 window.open(`https://wa.me/${numeroTuyo}?text=${encodeURIComponent(mensajewp)}`, '_blank');
@@ -1095,14 +1105,6 @@ function avisarAlDueñoPorWhatsApp(nombreCliente) {
         }, 4000); 
     }
 
-
-
-
-    
-
-
-
-
 document.addEventListener('DOMContentLoaded', () => {
     const boton = document.getElementById('boton-qr');
     const contenedor = document.getElementById('contenedor-qr');
@@ -1120,37 +1122,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
     </script>
-
-<script>
-    let prevScrollpos = window.pageYOffset;
-    window.onscroll = function() {
-        let currentScrollPos = window.pageYOffset;
-        let navbar = document.querySelector(".navbar");
-        let barraOfertas = document.getElementById("barra-ofertas");
-
-        // Obtenemos la altura del navbar dinámicamente si quieres ser más preciso
-        // O simplemente usa un valor fijo grande si lo prefieres
-        let navbarHeight = navbar.offsetHeight;
-        let offsetHeight = barraOfertas.offsetHeight;
-        
-        if (prevScrollpos > currentScrollPos) {
-            // Si subes, aparecen en su posición original
-            barraOfertas.style.top = "0";
-            
-            // La navbar debe estar debajo de la barra de ofertas
-            // Puedes usar offsetHeight para que sea preciso:
-            navbar.style.top = `${offsetHeight}px`; 
-        } else {
-            // Si bajas, los escondemos COMPLETAMENTE
-            // Moveremos la barra de ofertas hacia arriba más de su altura
-            barraOfertas.style.top = `-${offsetHeight + 10}px`; 
-            
-            // Moveremos la navbar hacia arriba más de la altura de ambas juntas
-            navbar.style.top = `-${navbarHeight + offsetHeight + 10}px`; 
-        }
-        prevScrollpos = currentScrollPos;
-    }
-</script>
 
 <script>
     function toggleBuscador() {
