@@ -190,16 +190,25 @@ app.post('/api/productos', upload.any(), async (req, res) => {
             console.log("URL de Cloudinary lista:", urlImagen);
         }
 
+        // --- CONCATENACIÓN AUTOMÁTICA PARA LA JEFA ---
+        // Si la categoría es "Arete" y el nombre es "Topo Azul", 
+        // nombreFinal se convierte automáticamente en "Arete Topo Azul"
+        const categoriaSeleccionada = req.body.categoria || "";
+        const nombreIngresado = req.body.nombre || "";
+        
+        // Unimos ambos textos limpiando espacios de sobra con .trim()
+        const nombreFinal = categoriaSeleccionada ? `${categoriaSeleccionada} ${nombreIngresado}`.trim() : nombreIngresado;
+
         // 2. DESPUÉS creamos el producto con la URL ya lista
         const nuevoProducto = new Producto({
-            nombre: req.body.nombre,
-            categoria: req.body.categoria,
+            nombre: nombreFinal,      // <--- Aquí guardamos el nombre ya concatenado
+            categoria: categoriaSeleccionada, // <--- La categoría se guarda INDEPENDIENTE para las búsquedas y filtros
             precioVenta: parseInt(req.body.precio || req.body.precioVenta || 0),
             costoCompra: parseFloat(req.body.costo || req.body.costoCompra || 0),
             cantidadStock: parseInt(req.body.stock || req.body.cantidadStock || 0),
             descuento: parseInt(req.body.descuento || req.body.descIndividual || 0),
-            imagen: urlImagen, // <--- Aquí ya viaja con el link listo
-            foto: urlImagen    // <--- Aquí también
+            imagen: urlImagen, 
+            foto: urlImagen    
         });
 
         const guardado = await nuevoProducto.save();
