@@ -443,7 +443,6 @@ async function notificarEnvioYFinalizarConDatos(id, cliente, telefono, totalNeto
     }
 }
 
-// Función definitiva con menú numérico para ventas externas
 async function registrarVentaConLista() {
     try {
         const resInv = await fetch('/api/productos'); 
@@ -458,38 +457,79 @@ async function registrarVentaConLista() {
             return;
         }
 
-        let listaTexto = "Elige el número del producto a vender:\n\n";
+        let listaTexto = "Elige el número del producto (o escribe el nombre del artículo externo):\n\n";
         productos.forEach((p, index) => {
             let stockActual = p.stock !== undefined ? p.stock : (p.disponibles || 0);
             let precioActual = p.precio || p.precioVenta || 0;
             listaTexto += `${index + 1}. ${p.nombre} - Stock: ${stockActual} - Precio: $${precioActual}\n`;
         });
+        
+        listaTexto += `\n(O escribe '0' o el nombre de un artículo del joyero fuera de la página)`;
 
         const seleccionIndex = prompt(listaTexto);
-        if (!seleccionIndex) return;
+        if (seleccionIndex === null || seleccionIndex.trim() === "") return;
 
-        const indexElegido = parseInt(seleccionIndex) - 1;
-        if (isNaN(indexElegido) || indexElegido < 0 || indexElegido >= productos.length) {
-            alert("Selección inválida.");
-            return;
+        let datosVenta = {};
+        const valorIngresado = seleccionIndex.trim();
+
+        // 🟢 Si escribes texto que no es un número, o escribes "0", asumimos que es un artículo libre del joyero
+        if (isNaN(valorIngresado) || valorIngresado === "0") {
+            // Si por casualidad escribiste el nombre de una vez en el primer prompt, lo usamos; si pusiste 0, se lo pedimos
+            const nombreLibre = (isNaN(valorIngresado) && valorIngresado !== "0") 
+                ? valorIngresado 
+                : prompt("Ingrese el nombre exacto del artículo del joyero:");
+            
+            if (!nombreLibre) return;
+
+            const costoLibre = prompt(`Ingrese el costo (lo que le costó a usted):`, "0");
+            if (costoLibre === null) return;
+
+            const precioLibre = prompt(`Ingrese el precio de venta para "${nombreLibre}":`, "0");
+            if (!precioLibre) return;
+
+            const cantidadLibre = prompt("Ingrese la cantidad vendida:", "1");
+            if (!cantidadLibre) return;
+
+            const clienteLibre = prompt("Nombre del cliente (Opcional):", "Venta Externa");
+
+            datosVenta = {
+                esArticuloLibre: true,
+                nombreLibre: nombreLibre,
+                costoLibre: Number(costoLibre),
+                precioLibre: Number(precioLibre),
+                cantidad: Number(cantidadLibre),
+                tipoVenta: "Venta Joyero / Externa",
+                cliente: clienteLibre || "Venta Externa"
+            };
+
+        } else {
+            // 🔵 Si pusiste un número válido de la lista de la tienda
+            const opcionElegida = parseInt(valorIngresado);
+            const indexElegido = opcionElegida - 1;
+            
+            if (indexElegido < 0 || indexElegido >= productos.length) {
+                alert("Selección inválida.");
+                return;
+            }
+
+            const productoSeleccionado = productos[indexElegido];
+
+            const nombreCliente = prompt("Nombre del cliente (Venta Externa):", "Cliente Presencial");
+            if (!nombreCliente) return;
+
+            let stockDisponible = productoSeleccionado.stock !== undefined ? productoSeleccionado.stock : (productoSeleccionado.disponibles || 0);
+            const cantidadVendida = parseInt(prompt(`Cantidad vendida de "${productoSeleccionado.nombre}" (Stock disponible: ${stockDisponible}):`, "1"));
+            if (!cantidadVendida || cantidadVendida <= 0) return;
+
+            datosVenta = {
+                productoIndex: indexElegido,
+                cantidad: cantidadVendida,
+                tipoVenta: "Venta Física / Externa",
+                cliente: nombreCliente
+            };
         }
 
-        const productoSeleccionado = productos[indexElegido];
-
-        const nombreCliente = prompt("Nombre del cliente (Venta Externa):", "Cliente Presencial");
-        if (!nombreCliente) return;
-
-        let stockDisponible = productoSeleccionado.stock !== undefined ? productoSeleccionado.stock : (productoSeleccionado.disponibles || 0);
-        const cantidadVendida = parseInt(prompt(`Cantidad vendida de "${productoSeleccionado.nombre}" (Stock disponible: ${stockDisponible}):`, "1"));
-        if (!cantidadVendida || cantidadVendida <= 0) return;
-
-        const datosVenta = {
-            productoIndex: indexElegido, // Mandamos la posición exacta
-            cantidad: cantidadVendida,
-            tipoVenta: "Venta Física / Externa",
-            cliente: nombreCliente
-        };
-
+        // Enviamos los datos al servidor
         const res = await fetch('/api/registrar-venta', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -499,15 +539,14 @@ async function registrarVentaConLista() {
         const resultado = await res.json();
 
         if (res.ok && resultado.exito) {
-            alert("¡Venta externa registrada con éxito, stock descontado y sumada al reporte!");
-            cargarPedidosAdmin();
-            if (typeof obtenerInventario === 'function') obtenerInventario();
+            alert("¡Venta registrada con éxito!");
+            location.reload(); 
         } else {
             alert("Error del servidor: " + (resultado.mensaje || "No se pudo registrar la venta."));
         }
 
     } catch (error) {
-        console.error("Error al procesar la venta externa:", error);
+        console.error("Error al procesar la venta:", error);
         alert("Ocurrió un error de red al conectar con el servidor.");
     }
 }
@@ -919,7 +958,7 @@ function limpiarFormularioAdmin() {
     }
 }
 
-async function registrarVentaExterna() {
+/*async function registrarVentaExterna() {
     const nombreProducto = prompt("Ingrese el nombre exacto del producto (ej: cadena):");
     if (!nombreProducto) return;
 
@@ -950,7 +989,7 @@ async function registrarVentaExterna() {
     } catch (err) {
         alert("Error de conexión con el servidor.");
     }
-}
+}*/
 
 /*// ====== MANEJADOR DEL FORMULARIO DE PRODUCTOS (CREAR / EDITAR) ======
 document.getElementById('formulario-admin').addEventListener('submit', async (e) => {

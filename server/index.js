@@ -670,57 +670,82 @@ app.post('/api/productos/editar', upload.any(), async (req, res) => {
 });
 
 // ==========================================
-// 🔥 RUTA 10: Registrar Venta Externa (MongoDB)
+// 🔥 RUTA 10: Registrar Venta (Web o Artículo Libre del Joyero)
 // ==========================================
 app.post('/api/registrar-venta', async (req, res) => {
     try {
-        const { productoIndex, cantidad, tipoVenta, cliente } = req.body; 
+        const { productoIndex, cantidad, tipoVenta, cliente, esArticuloLibre, nombreLibre, precioLibre } = req.body; 
 
-        if (productoIndex === undefined || !cantidad) {
-            return res.status(400).json({ exito: false, mensaje: 'Faltan datos del producto.' });
+        let itemVenta = {};
+        let subtotal = 0;
+
+        // 🟢 CASO 1: Es un artículo externo del joyero (fuera de la web)
+        if (esArticuloLibre) {
+            if (!nombreLibre || !precioLibre || !cantidad) {
+                return res.status(400).json({ exito: false, mensaje: 'Faltan datos del artículo libre.' });
+            }
+
+            const precioNum = Number(precioLibre);
+            const cantNum = Number(cantidad);
+            subtotal = precioNum * cantNum;
+
+            itemVenta = {
+                nombre: `${nombreLibre} (Joyero)`,
+                cantidad: cantNum,
+                costo: 0,
+                precioOriginal: precioNum,
+                precioConDescuento: precioNum,
+                subtotal: subtotal
+            };
+
+        } else {
+            // 🔵 CASO 2: Tu lógica original intacta para productos de la base de datos
+            if (productoIndex === undefined || !cantidad) {
+                return res.status(400).json({ exito: false, mensaje: 'Faltan datos del producto.' });
+            }
+
+            const productos = await Producto.find({}).sort({ _id: -1 });
+            const prodBD = productos[productoIndex];
+
+            if (!prodBD) {
+                return res.status(400).json({ exito: false, mensaje: 'El producto no existe en el inventario.' });
+            }
+
+            const stockActual = Number(
+                prodBD.cantidadStock !== undefined ? prodBD.cantidadStock : 
+                (prodBD.stock !== undefined ? prodBD.stock : 0)
+            );
+
+            if (stockActual < Number(cantidad)) {
+                return res.status(400).json({ exito: false, mensaje: `Stock insuficiente. Solo quedan ${stockActual} unidades.` });
+            }
+
+            const precioOriginal = prodBD.precioVenta || prodBD.precio || 0;
+            const costo = prodBD.costoCompra || prodBD.costo || 0;
+            const descuento = prodBD.descuento || prodBD.descIndividual || prodBD.descuentoIndividual || 0;
+            const precioEfectivo = descuento > 0 ? precioOriginal - (precioOriginal * (descuento / 100)) : precioOriginal;
+            subtotal = precioEfectivo * Number(cantidad);
+
+            // Descontar stock en MongoDB
+            prodBD.cantidadStock = stockActual - Number(cantidad);
+            if (prodBD.stock !== undefined) {
+                prodBD.stock = prodBD.cantidadStock;
+            }
+            await prodBD.save();
+
+            itemVenta = {
+                nombre: prodBD.nombre,
+                cantidad: Number(cantidad),
+                costo: costo,
+                precioOriginal: precioOriginal,
+                precioConDescuento: precioEfectivo,
+                subtotal: subtotal
+            };
         }
 
-        const productos = await Producto.find({}).sort({ _id: -1 });
-        const prodBD = productos[productoIndex];
-
-        if (!prodBD) {
-            return res.status(400).json({ exito: false, mensaje: 'El producto no existe en el inventario.' });
-        }
-
-        const stockActual = Number(
-            prodBD.cantidadStock !== undefined ? prodBD.cantidadStock : 
-            (prodBD.stock !== undefined ? prodBD.stock : 0)
-        );
-
-        if (stockActual < Number(cantidad)) {
-            return res.status(400).json({ exito: false, mensaje: `Stock insuficiente. Solo quedan ${stockActual} unidades.` });
-        }
-
-        const precioOriginal = prodBD.precioVenta || prodBD.precio || 0;
-        const costo = prodBD.costoCompra || prodBD.costo || 0;
-        const descuento = prodBD.descuento || prodBD.descIndividual || prodBD.descuentoIndividual || 0;
-        const precioEfectivo = descuento > 0 ? precioOriginal - (precioOriginal * (descuento / 100)) : precioOriginal;
-        const subtotal = precioEfectivo * Number(cantidad);
-
-        // Descontar stock en MongoDB
-        prodBD.cantidadStock = stockActual - Number(cantidad);
-        if (prodBD.stock !== undefined) {
-            prodBD.stock = prodBD.cantidadStock;
-        }
-        await prodBD.save();
-
+        // Lógica unificada de guardado del pedido
         const ultimoPedido = await Pedido.findOne().sort({ idPedido: -1 });
         const nuevoIdNum = ultimoPedido && typeof ultimoPedido.idPedido === 'number' ? ultimoPedido.idPedido + 1 : 1;
-
-        // Estructura unificada para que el panel y el reporte la lean perfecta
-        const itemVenta = {
-            nombre: prodBD.nombre,
-            cantidad: Number(cantidad),
-            costo: costo,
-            precioOriginal: precioOriginal,
-            precioConDescuento: precioEfectivo,
-            subtotal: subtotal
-        };
 
         const nuevoPedido = new Pedido({
             idPedido: nuevoIdNum,
@@ -730,10 +755,10 @@ app.post('/api/registrar-venta', async (req, res) => {
             telefono: "N/A",
             direccion: "Tienda Física",
             total: subtotal,
-            estado: 'ENTREGADO', // Nace finalizada para que aparezca lista en el panel
+            estado: 'ENTREGADO', 
             productos: [itemVenta],
             articulosDetallados: [itemVenta],
-            articulos: [`${prodBD.nombre} (x${cantidad})`]
+            articulos: [`${itemVenta.nombre} (x${cantidad})`]
         });
 
         await nuevoPedido.save();
