@@ -20,7 +20,7 @@ const pedidoSchema = new mongoose.Schema({
     estado: { type: String, default: 'PENDIENTE' }
 });
 const Pedido = mongoose.model('Pedido', pedidoSchema, 'pedidos');
-
+ 
 // 👉 MODELO DE BASE DE DATOS PARA PRODUCTOS (FALTABA ESTE)
 const productoSchema = new mongoose.Schema({
     nombre: String,
@@ -31,7 +31,9 @@ const productoSchema = new mongoose.Schema({
     cantidadStock: Number,
     descuento: Number,
     imagen: String,
-    foto: String
+    foto: String,
+    // 🟢 NUEVO CAMPO: Sirve para separar las tiendas ('glow' o 'volk')
+    tienda: { type: String, default: 'glow' } 
 });
 
 const Producto = mongoose.model('Producto', productoSchema, 'productos');
@@ -42,6 +44,26 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// ==========================================
+// RUTAS 0 PARA LAS DOS TIENDAS Y EL LANDING PAGE
+// ==========================================
+
+// 1. La portada principal con los dos círculos/logos
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/landing.html'));
+});
+
+// 2. Ruta para la tienda Glow
+app.get('/glow', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
+// 3. Ruta para la VOLK
+app.get('/volk', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
 
 // // CONFIGURACIÓN DE RUTAS ESTÁTICAS Y DIRECTORIOS
 app.use('/', express.static(path.join(__dirname, '../public')));
@@ -62,7 +84,12 @@ mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log('¡Conectado exitosamente a MongoDB Atlas!'))
   .catch(err => console.error('Error al conectar a MongoDB:', err));
 
+// Ponga esto abajito de su conexión a MongoDB en el index.js
+Producto.updateMany({ tienda: { $exists: false } }, { $set: { tienda: 'glow' } })
+    .then(() => console.log("✨ Productos antiguos marcados como 'glow' exitosamente"))
+    .catch(err => console.error("Error al actualizar:", err));
 
+    
 // Variable global para controlar las promociones del panel
 let ofertasTemporales = {
     global: 0,
@@ -70,12 +97,24 @@ let ofertasTemporales = {
     porcentajeCategoria: 0
 };
 
+
 // ==========================================
-// RUTA 1: Traer todos los productos desde MongoDB
+// RUTA 1: Traer productos (Con soporte para Admin y Tiendas)
 // ==========================================
 app.get('/api/productos', async (req, res) => {
     try {
-        let productos = await Producto.find({}).sort({ _id: -1 });
+        let filtro = {};
+
+        // Si viene desde el admin pidiendo todo el inventario unificado:
+        if (req.query.admin === 'true') {
+            filtro = {}; // Sin filtro, trae TODO de la base de datos
+        } else {
+            // Si viene de las páginas públicas, filtra estrictamente por la tienda solicitada (por defecto 'glow')
+            const tiendaSeleccionada = req.query.tienda || 'glow';
+            filtro.tienda = tiendaSeleccionada;
+        }
+
+        let productos = await Producto.find(filtro).sort({ _id: -1 });
 
         let productosProcesados = productos.map(doc => {
             const prod = doc.toObject();
@@ -89,7 +128,6 @@ app.get('/api/productos', async (req, res) => {
                 imagenFinal = ''; 
             }
             
-            // El descuento sale unificadamente del campo que ya tenga guardado el producto en Mongo
             const descuentoApplied = parseInt(prod.descuento || prod.descIndividual || prod.descuentoIndividual || 0);
 
             return {
@@ -116,51 +154,6 @@ app.get('/api/productos', async (req, res) => {
     }
 });
 
-// ====================================================
-// ✅ RUTA DE OFERTAS MASIVAS DIRECTO A MONGODB
-// ====================================================
-app.post('/api/ofertas/activar', async (req, res) => {
-    const { tipo, porcentaje, categoria } = req.body;
-    const nuevoDescuento = parseInt(porcentaje || 0);
-
-    try {
-        if (tipo === 'global') {
-            // Actualiza TODOS los productos de la base de datos
-            await Producto.updateMany({}, { $set: { descuento: nuevoDescuento, descIndividual: nuevoDescuento } });
-            return res.json({ exito: true, mensaje: "¡Oferta global aplicada a toda la tienda!" });
-        } 
-        
-        if (tipo === 'categoria' && categoria) {
-            // Actualiza solo los productos que coincidan con la categoría
-            await Producto.updateMany(
-                { categoria: { $regex: new RegExp('^' + categoria + '$', 'i') } }, 
-                { $set: { descuento: nuevoDescuento, descIndividual: nuevoDescuento } }
-            );
-            return res.json({ exito: true, mensaje: `¡Oferta aplicada a la categoría ${categoria}!` });
-        }
-
-        res.status(400).json({ exito: false, mensaje: "Tipo de oferta inválido." });
-    } catch (error) {
-        console.error('Error al activar ofertas masivas:', error);
-        res.status(500).json({ exito: false, mensaje: 'Error en el servidor al aplicar la oferta.' });
-    }
-});
-
-// ====================================================
-// ✅ RUTA PARA DESACTIVAR OFERTAS MASIVAS EN MONGODB
-// ====================================================
-app.post('/api/ofertas/desactivar', async (req, res) => {
-    try {
-        // Pone el descuento en 0 a absolutamente todos los productos en MongoDB
-        await Producto.updateMany({}, { $set: { descuento: 0, descIndividual: 0 } });
-        res.json({ exito: true, mensaje: "Ofertas desactivadas correctamente en el sistema." });
-    } catch (error) {
-        console.error('Error al desactivar ofertas:', error);
-        res.status(500).json({ exito: false, mensaje: 'Error al desactivar ofertas.' });
-    }
-});
-
-
 // ==========================================
 // RUTA 2: Recibir el accesorio nuevo y guardarlo en la nube (BLINDADA)
 // ==========================================
@@ -175,12 +168,18 @@ app.post('/api/productos', upload.any(), async (req, res) => {
             const subirACloudinary = (buffer) => {
                 return new Promise((resolve, reject) => {
                     const stream = cloudinary.uploader.upload_stream(
-                        { folder: "glowbymar_tienda" },
-                        (error, resultado) => {
-                            if (error) reject(error);
-                            else resolve(resultado);
-                        }
-                    );
+        { 
+            folder: "glowbymar_tienda",
+            transformation: [
+                { width: 800, crop: "limit" },
+                { quality: "auto", fetch_format: "auto" }
+            ]
+        },
+        (error, resultado) => {
+            if (error) reject(error);
+            else resolve(resultado);
+        }
+    );
                     stream.end(buffer);
                 });
             };
@@ -190,25 +189,25 @@ app.post('/api/productos', upload.any(), async (req, res) => {
             console.log("URL de Cloudinary lista:", urlImagen);
         }
 
-        // --- CONCATENACIÓN AUTOMÁTICA PARA LA JEFA ---
-        // Si la categoría es "Arete" y el nombre es "Topo Azul", 
-        // nombreFinal se convierte automáticamente en "Arete Topo Azul"
         const categoriaSeleccionada = req.body.categoria || "";
         const nombreIngresado = req.body.nombre || "";
         
-        // Unimos ambos textos limpiando espacios de sobra con .trim()
         const nombreFinal = categoriaSeleccionada ? `${categoriaSeleccionada} ${nombreIngresado}`.trim() : nombreIngresado;
 
-        // 2. DESPUÉS creamos el producto con la URL ya lista
+        // 🌟 CAPTURAMOS LA TIENDA QUE VIENE DESDE EL FORMULARIO (Si no envían nada, por defecto se va a 'glow')
+        const tiendaSeleccionada = req.body.tienda || 'glow';
+
+        // 2. DESPUÉS creamos el producto con la URL y la tienda ya listas
         const nuevoProducto = new Producto({
-            nombre: nombreFinal,      // <--- Aquí guardamos el nombre ya concatenado
-            categoria: categoriaSeleccionada, // <--- La categoría se guarda INDEPENDIENTE para las búsquedas y filtros
+            nombre: nombreFinal,      
+            categoria: categoriaSeleccionada, 
             precioVenta: parseInt(req.body.precio || req.body.precioVenta || 0),
             costoCompra: parseFloat(req.body.costo || req.body.costoCompra || 0),
             cantidadStock: parseInt(req.body.stock || req.body.cantidadStock || 0),
             descuento: parseInt(req.body.descuento || req.body.descIndividual || 0),
             imagen: urlImagen, 
-            foto: urlImagen    
+            foto: urlImagen,
+            tienda: tiendaSeleccionada // <--- ¡AQUÍ GUARDAMOS A QUÉ TIENDA PERTENECE!
         });
 
         const guardado = await nuevoProducto.save();
@@ -304,6 +303,8 @@ app.delete('/api/productos/:id', async (req, res) => {
 
 // ==========================================
 // // RUTA 5: Despachar un pedido asignando transportadora y guía en MongoDB Atlas
+// ==========================================
+
 app.put('/api/pedidos/:id/despachar', async (req, res) => {
     try {
         const idPedido = req.params.id;
@@ -467,10 +468,13 @@ app.get('/api/pedidos/:id/factura', async (req, res) => {
 });
 
 // ==========================================
-// RUTA 8: Reporte Mensual DETALLADO (MongoDB)
+// RUTA 8: Reporte Mensual DETALLADO por Tienda (MongoDB)
 // ==========================================
 app.get('/api/reportes/mensual', async (req, res) => {
     try {
+        const tiendaFiltro = (req.query.tienda || 'glow').toLowerCase();
+        const nombreTiendaTexto = tiendaFiltro === 'glow' ? 'Glow' : 'VOLK';
+
         const pedidos = await Pedido.find({});
         if (!pedidos || pedidos.length === 0) return res.status(404).send("<h1>No hay datos de ventas aún en MongoDB</h1>");
 
@@ -480,29 +484,36 @@ app.get('/api/reportes/mensual', async (req, res) => {
         let granTotalCaja = 0;
 
         pedidos.forEach(p => {
+            const listaArticulosOriginales = p.articulosDetallados || p.productos || [];
+            
+            const articulosFiltrados = listaArticulosOriginales.filter(art => {
+                const nombreArt = art.nombre || art.titulo || "";
+                const prodEnBD = productosBD.find(prod => prod.nombre.trim().toLowerCase() === nombreArt.trim().toLowerCase());
+                const tiendaProd = prodEnBD && prodEnBD.tienda ? prodEnBD.tienda.toLowerCase() : 'glow';
+                return tiendaProd === tiendaFiltro;
+            });
+
+            if (articulosFiltrados.length === 0) return;
+
             let mesAnio = 'General';
             if (p.fecha) {
                 const partes = p.fecha.replace(/\s+/g, '').split('/');
-                if (partes.length >= 3) mesAnio = `${partes[1]}/${partes[2].substring(0, 4)}`;
+                if (partes.length >= 3) mesAnio = partes[1] + '/' + partes[2].substring(0, 4);
             }
-
-            const valorPedido = parseInt(p.total || 0);
-            granTotalCaja += valorPedido;
 
             if (!resumenMeses[mesAnio]) {
                 resumenMeses[mesAnio] = { totalVentas: 0, cantidadPedidos: 0, listaDetallada: [] };
             }
-            
-            resumenMeses[mesAnio].totalVentas += valorPedido;
+
             resumenMeses[mesAnio].cantidadPedidos += 1;
 
-            // Unificamos la lectura por si viene de la web o de venta presencial
-            const listaArticulos = p.articulosDetallados || p.productos || [];
-
-            listaArticulos.forEach(art => {
+            articulosFiltrados.forEach(art => {
                 const nombreArt = art.nombre || art.titulo || "Producto";
                 const cantArt = art.cantidad || 1;
                 const subArt = art.subtotal || (art.precioConDescuento * cantArt) || (art.precio * cantArt) || 0;
+
+                granTotalCaja += subArt;
+                resumenMeses[mesAnio].totalVentas += subArt;
 
                 const prodEncontrado = productosBD.find(prod => prod.nombre.trim().toLowerCase() === nombreArt.trim().toLowerCase());
                 const costoReal = prodEncontrado ? (prodEncontrado.costoCompra || prodEncontrado.costo || 0) : (art.costo || 0);
@@ -524,12 +535,83 @@ app.get('/api/reportes/mensual', async (req, res) => {
             });
         });
 
+        if (Object.keys(resumenMeses).length === 0) {
+            return res.status(404).send("<h1>No hay registros de ventas para la tienda: " + nombreTiendaTexto + "</h1>");
+        }
+
+        let bloquesHtml = "";
+
+        Object.keys(resumenMeses).forEach(mes => {
+            const datosMes = resumenMeses[mes];
+            const lista = datosMes.listaDetallada;
+
+            let sumaCosto = 0;
+            let sumaPrecioOrig = 0;
+            let sumaPrecioProm = 0;
+            let sumaGanancia = 0;
+            let sumaSubtotal = 0;
+
+            let filasHtml = "";
+            lista.forEach(art => {
+                sumaCosto += (art.costo * art.cantidad || 0);
+                sumaPrecioOrig += (art.precioOriginal * art.cantidad || 0);
+                sumaPrecioProm += (art.precioPromocion || art.precioOriginal || 0);
+                sumaGanancia += (art.ganancia || 0);
+                sumaSubtotal += (art.subtotal || 0);
+
+                filasHtml += `
+                    <tr>
+                        <td>${art.nombre}</td>
+                        <td>${art.cantidad}</td>
+                        <td>$${(art.costo || 0).toLocaleString('es-CO')}</td>
+                        <td>$${(art.precioOriginal || 0).toLocaleString('es-CO')}</td>
+                        <td>$${(art.precioPromocion || art.precioOriginal || 0).toLocaleString('es-CO')}</td>
+                        <td>$${(art.ganancia || 0).toLocaleString('es-CO')}</td>
+                        <td>$${(art.subtotal || 0).toLocaleString('es-CO')}</td>
+                        <td><b>${art.obs || "Venta"}</b></td>
+                    </tr>
+                `;
+            });
+
+            bloquesHtml += `
+                <div class="ciclo-bloque">
+                    <h3>Ciclo: ${mes}</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th>Unidades</th>
+                                <th>Costo</th>
+                                <th>Precio Catálogo</th>
+                                <th>Precio Venta</th>
+                                <th>Ganancia</th>
+                                <th>Total Neto</th>
+                                <th>OBS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filasHtml}
+                            <tr style="font-weight: bold; background-color: #f8f9fa;">
+                                <td colspan="2">TOTAL CICLO</td>
+                                <td>$${sumaCosto.toLocaleString('es-CO')}</td>
+                                <td>$${sumaPrecioOrig.toLocaleString('es-CO')}</td>
+                                <td>$${sumaPrecioProm.toLocaleString('es-CO')}</td>
+                                <td>$${sumaGanancia.toLocaleString('es-CO')}</td>
+                                <td>$${sumaSubtotal.toLocaleString('es-CO')}</td>
+                                <td>-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        });
+
         const htmlReporte = `
             <!DOCTYPE html>
             <html lang="es">
             <head>
                 <meta charset="UTF-8">
-                <title>Reporte Detallado</title>
+                <title>Reporte Detallado - ${nombreTiendaTexto}</title>
                 <style>
                     body { font-family: sans-serif; padding: 20px; background-color: #f4f6f9; color: #333; }
                     h1 { color: #2c3e50; }
@@ -540,63 +622,9 @@ app.get('/api/reportes/mensual', async (req, res) => {
                 </style>
             </head>
             <body>
-                <h1>GLOW BY MAR - Reporte Detallado</h1>
-                ${Object.keys(resumenMeses).map(mes => `
-                    <div class="ciclo-bloque">
-                        <h3>Ciclo: ${mes}</h3>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Producto</th>
-                                    <th>Unidades</th>
-                                    <th>Costo</th>
-                                    <th>Precio Catálogo</th>
-                                    <th>Precio Venta</th>
-                                    <th>Ganancia</th>
-                                    <th>Total Neto</th>
-                                    <th>OBS</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${(() => {
-                                    const lista = resumenMeses[mes].listaDetallada;
-                                    const sums = lista.reduce((acc, art) => ({
-                                        costo: acc.costo + (art.costo * art.cantidad || 0),
-                                        precioOrig: acc.precioOrig + (art.precioOriginal * art.cantidad || 0),
-                                        precioProm: acc.precioProm + (art.precioPromocion || art.precioOriginal || 0),
-                                        ganancia: acc.ganancia + (art.ganancia || 0),
-                                        subtotal: acc.subtotal + (art.subtotal || 0)
-                                    }), { costo: 0, precioOrig: 0, precioProm: 0, ganancia: 0, subtotal: 0 });
-
-                                    return `
-                                        ${lista.map(art => `
-                                            <tr>
-                                                <td>${art.nombre}</td>
-                                                <td>${art.cantidad}</td>
-                                                <td>$${(art.costo || 0).toLocaleString('es-CO')}</td>
-                                                <td>$${(art.precioOriginal || 0).toLocaleString('es-CO')}</td>
-                                                <td>$${(art.precioPromocion || art.precioOriginal || 0).toLocaleString('es-CO')}</td>
-                                                <td>$${(art.ganancia || 0).toLocaleString('es-CO')}</td>
-                                                <td>$${(art.subtotal || 0).toLocaleString('es-CO')}</td>
-                                                <td><b>${art.obs || "Venta"}</b></td>
-                                            </tr>
-                                        `).join('')}
-                                        <tr style="font-weight: bold; background-color: #f8f9fa;">
-                                            <td colspan="2">TOTAL CICLO</td>
-                                            <td>$${sums.costo.toLocaleString('es-CO')}</td>
-                                            <td>$${sums.precioOrig.toLocaleString('es-CO')}</td>
-                                            <td>$${sums.precioProm.toLocaleString('es-CO')}</td>
-                                            <td>$${sums.ganancia.toLocaleString('es-CO')}</td>
-                                            <td>$${sums.subtotal.toLocaleString('es-CO')}</td>
-                                            <td>-</td>
-                                        </tr>
-                                    `;
-                                })()}
-                            </tbody>
-                        </table>
-                    </div>
-                `).join('')}
-                <h2>Total Histórico: $${granTotalCaja.toLocaleString('es-CO')}</h2>
+                <h1>GLOW BY MAR (${nombreTiendaTexto.toUpperCase()}) - Reporte Detallado</h1>
+                ${bloquesHtml}
+                <h2>Total Histórico (${nombreTiendaTexto}): $${granTotalCaja.toLocaleString('es-CO')} COP</h2>
             </body>
             </html>
         `;
@@ -608,7 +636,6 @@ app.get('/api/reportes/mensual', async (req, res) => {
         res.status(500).send("<h1>Error interno al generar el reporte desde MongoDB.</h1>");
     }
 });
-
 
 // ====================================================
 // 🔥 RUTA 9: Editar un producto existente (MongoDB + Cloudinary)
@@ -634,12 +661,16 @@ app.post('/api/productos/editar', upload.any(), async (req, res) => {
         const archivoSubido = req.files && req.files.length > 0 ? req.files[0] : null;
 
         if (archivoSubido) {
-            // Si hay archivo nuevo, lo mandamos a Cloudinary
+            // Si hay archivo nuevo, lo mandamos a Cloudinary (Corregido: archivoSubido en singular)
             const resultadoCloudinary = await cloudinary.uploader.upload(archivoSubido.path, {
-                folder: "glowbymar_tienda"
+                folder: "glowbymar_tienda",
+                transformation: [
+                    { width: 800, crop: "limit" },
+                    { quality: "auto", fetch_format: "auto" }
+                ]
             });
-            nuevaImagenUrl = resultadoCloudinary.secure_url;
-        }
+            nuevaImagenUrl = resultadoCloudinary.secure_url; // 👈 ¡Actualizamos la URL con la nueva imagen de la nube!
+        } // 👈 ¡Cerramos la llave del if correctamente!
 
         // 3. Actualizamos el producto en MongoDB
         await Producto.findByIdAndUpdate(id, {
@@ -674,10 +705,11 @@ app.post('/api/productos/editar', upload.any(), async (req, res) => {
 // ==========================================
 app.post('/api/registrar-venta', async (req, res) => {
     try {
-        const { productoIndex, cantidad, tipoVenta, cliente, esArticuloLibre, nombreLibre, precioLibre } = req.body; 
+        const { productoId, cantidad, tipoVenta, cliente, esArticuloLibre, nombreLibre, precioLibre, tienda } = req.body; 
 
         let itemVenta = {};
         let subtotal = 0;
+        const tiendaPedido = tienda ? tienda.toLowerCase().trim() : 'glow';
 
         // 🟢 CASO 1: Es un artículo externo del joyero (fuera de la web)
         if (esArticuloLibre) {
@@ -692,20 +724,19 @@ app.post('/api/registrar-venta', async (req, res) => {
             itemVenta = {
                 nombre: `${nombreLibre} (Joyero)`,
                 cantidad: cantNum,
-                costo: 0,
+                costo: req.body.costoLibre || 0,
                 precioOriginal: precioNum,
                 precioConDescuento: precioNum,
                 subtotal: subtotal
             };
 
         } else {
-            // 🔵 CASO 2: Tu lógica original intacta para productos de la base de datos
-            if (productoIndex === undefined || !cantidad) {
+            // 🔵 CASO 2: Producto de la base de datos buscado por su ID único
+            if (!productoId || !cantidad) {
                 return res.status(400).json({ exito: false, mensaje: 'Faltan datos del producto.' });
             }
 
-            const productos = await Producto.find({}).sort({ _id: -1 });
-            const prodBD = productos[productoIndex];
+            const prodBD = await Producto.findById(productoId);
 
             if (!prodBD) {
                 return res.status(400).json({ exito: false, mensaje: 'El producto no existe en el inventario.' });
@@ -743,7 +774,7 @@ app.post('/api/registrar-venta', async (req, res) => {
             };
         }
 
-        // Lógica unificada de guardado del pedido
+        // Lógica unificada de guardado del pedido asignando su respectiva tienda
         const ultimoPedido = await Pedido.findOne().sort({ idPedido: -1 });
         const nuevoIdNum = ultimoPedido && typeof ultimoPedido.idPedido === 'number' ? ultimoPedido.idPedido + 1 : 1;
 
@@ -756,6 +787,7 @@ app.post('/api/registrar-venta', async (req, res) => {
             direccion: "Tienda Física",
             total: subtotal,
             estado: 'ENTREGADO', 
+            tienda: tiendaPedido, // 👈 Guardamos la tienda en el pedido para que llegue a su reporte correcto
             productos: [itemVenta],
             articulosDetallados: [itemVenta],
             articulos: [`${itemVenta.nombre} (x${cantidad})`]
@@ -784,6 +816,79 @@ app.get('/api/pedidos', async (req, res) => {
         res.status(500).json([]);
     }
 });
+
+
+// ==========================================
+// RUTA 12 OFERTAS MASIVAS POR TIENDA
+// ==========================================
+
+// 1. Activar ofertas masivas (Global o por Categoría) para una tienda específica
+app.post('/api/ofertas/activar', async (req, res) => {
+    try {
+        const { tipo, porcentaje, categoria, tienda = 'glow' } = req.body;
+        const porc = Number(porcentaje) || 0;
+
+        // Filtramos estrictamente por la tienda seleccionada (glow o volk)
+        let filtro = { tienda: tienda.toLowerCase() };
+        
+        // Si el tipo es por categoría específica
+        if (tipo === 'categoria' && categoria) {
+            filtro.categoria = categoria;
+        }
+
+        // Actualizamos los productos directamente en MongoDB
+        const resultado = await Producto.updateMany(filtro, { 
+            $set: { descuento: porc } 
+        });
+
+        res.json({ 
+            exito: true, 
+            mensaje: `Ofertas aplicadas exitosamente a la tienda ${tienda}`,
+            modificados: resultado.modifiedCount 
+        });
+    } catch (error) {
+        console.error("Error al activar ofertas:", error);
+        res.status(500).json({ exito: false, mensaje: "Error del servidor al activar ofertas" });
+    }
+});
+
+// 2. Apagar/Remover ofertas de una tienda específica
+app.post('/api/ofertas/desactivar', async (req, res) => {
+    try {
+        const { tienda } = req.body;
+        
+        // Filtramos por la tienda o aplicamos a todas si no viene especificada
+        let filtro = tienda ? { tienda: tienda.toLowerCase() } : {};
+
+        // Limpiamos ambos campos de descuento para dejar los precios normales
+        const resultado = await Producto.updateMany(filtro, { 
+            $set: { 
+                descuento: 0, 
+                descIndividual: 0 
+            } 
+        });
+
+        res.json({ 
+            exito: true, 
+            mensaje: "Ofertas removidas exitosamente",
+            modificados: resultado.modifiedCount 
+        });
+    } catch (error) {
+        console.error("Error al desactivar ofertas:", error);
+        res.status(500).json({ exito: false, mensaje: "Error del servidor al desactivar ofertas" });
+    }
+});
+
+app.get('/api/ofertas/estado', async (req, res) => {
+    try {
+        // Puedes consultar si hay algún producto con descuento activo
+        const ofertasActivas = await Producto.countDocuments({ descuento: { $gt: 0 } });
+        res.json({ hayOfertas: ofertasActivas > 0 });
+    } catch (error) {
+        res.status(500).json({ hayOfertas: false });
+    }
+});
+
 
 // Intento de despliegue final
 // ==========================================

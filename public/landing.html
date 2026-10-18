@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenido - Elige tu Tienda</title>
+    <!-- Tipografía elegante de Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;1,500&family=Lato:wght@400;700&family=Montserrat:wght@600&display=swap" rel="stylesheet">
+    <!-- Iconos de FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            font-family: 'Lato', sans-serif;
+            display: flex;
+            flex-direction: column; /* 👈 Ordena los elementos de arriba a abajo */
+            justify-content: space-between; /* 👈 Empuja el footer al fondo de la pantalla */
+            min-height: 100vh; /* 👈 Asegura el alto total sin aplastar el contenido */
+            color: #ffffff;
+        }
+
+        .contenedor-principal {
+            text-align: center;
+            padding: 60px 20px 40px 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1 {
+            margin-bottom: 50px;
+            font-weight: 400;
+            letter-spacing: 3px;
+            color: #e0e0e0;
+            font-family: 'Playfair Display', serif;
+            font-size: 26px;
+        }
+
+        .marcas-container {
+            display: flex;
+            gap: 80px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* Estilo general para cada tarjeta de marca (Círculo + Textos abajo) */
+        .tarjeta-marca {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .tarjeta-marca:hover {
+            transform: translateY(-8px);
+        }
+
+        /* El círculo que contiene el logo o color */
+        .circulo-btn {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            overflow: hidden;
+            border: 1px solid #6D3C1C;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .tarjeta-marca:hover .circulo-btn {
+            box-shadow: 0 15px 35px rgba(255,255,255,0.2);
+        }
+
+        /* Imagen del logo dentro del círculo */
+        .circulo-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 10%;
+        }
+
+        /* Estilos específicos para Glow by Mar */
+        .btn-glow {
+            background: linear-gradient(135deg, #d4af37, #aa820a);
+        }
+
+        /* Estilos para VOLK */
+        .btn-volk {
+            background: linear-gradient(135deg, #2C3539, #1b2124);
+            color: #ffffff;
+        }
+
+        /* Textos debajo de los círculos */
+        .nombre-marca {
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            font-family: 'Playfair Display', serif;
+            margin-top: 15px;
+        }
+
+        .sub-marca {
+            color: #f4e8c1;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 4px;
+        }
+
+        /* Footer en fondo negro con textos beige */
+footer {
+    text-align: center;
+    padding: 30px 20px;
+    background-color: #121212; /* 👈 Fondo negro unificado */
+    border-top: none;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.footer-titulo {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #f4e8c1; /* 👈 Tono beige arena */
+    margin-top: 0;
+    margin-bottom: 18px;
+}
+
+.footer-redes {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+/* Íconos por defecto en tono beige/arena */
+.footer-redes a {
+    color: #e5d3b3; /* 👈 Tono beige arena suave */
+    font-size: 26px;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Efecto Hover: Se eleva y resplandece en dorado/arena sobre el fondo negro */
+.footer-redes a:hover {
+    transform: translateY(-5px) scale(1.15); /* 👈 Se eleva igual que las tarjetas de las tiendas */
+    color: #ffffff; /* Brillo blanco/dorado al pasar el mouse */
+    filter: drop-shadow(0px 5px 12px rgba(244, 232, 193, 0.5)); /* 👈 Resplandor arena */
+}
+
+.footer-copy {
+    font-size: 11px;
+    color: #a3957d; /* 👈 Beige/tierra atenúado */
+    margin: 0;
+    letter-spacing: 1px;
+    font-family: 'Montserrat', sans-serif;
+}
+
+    </style>
+</head>
+<body>
+
+    <div class="contenedor-principal">
+        <h1>ELIGE TU ESTILO, VIVE TU ESENCIA</h1>
+        <div class="marcas-container">
+            
+            <!-- Tarjeta Interactiva para Glow by Mar -->
+            <a href="/glow" class="tarjeta-marca">
+                <div class="circulo-btn btn-glow">
+                    <img src="imagenes/mi-logo.png" alt="Logo Glow by Mar" onerror="this.style.display='none'">
+                    <span style="color: #000; font-weight: bold; font-size: 12px; display: none;">Glow</span>
+                </div>
+                <span class="nombre-marca">Glow by Mar</span>
+                <span class="sub-marca">Accesorios</span>
+            </a>
+            
+            <!-- Tarjeta Interactiva para VOLK -->
+            <a href="/volk" class="tarjeta-marca">
+                <div class="circulo-btn btn-volk">
+                    <img src="imagenes/logo-volk.png" alt="Logo VOLK" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <span class="nombre-marca">Volk</span>
+                <span class="sub-marca">Ropa y Variedades</span>
+            </a>
+
+        </div>
+    </div>
+
+    <!-- PIE DE PÁGINA PRINCIPAL -->
+<footer>
+    <p class="footer-titulo">
+         Conéctate con Glow By Mar 
+    </p>
+
+    <div class="footer-redes">
+        <a href="https://instagram.com/glowbymaraccesorios?utm_source=qr" target="_blank" title="Instagram">
+            <i class="fab fa-instagram"></i>
+        </a>
+        <a href="https://www.tiktok.com/@glowbymar11?r=1&_t=ZS-98XJfT1c4KV" target="_blank" title="TikTok">
+            <i class="fab fa-tiktok"></i>
+        </a>
+        <a href="https://wa.me/573164457177?text=Hola!%20Vengo%20de%20la%20tienda%20Glow%20y%20me%20gustaría%20recibir%20asesoría" target="_blank" title="WhatsApp">
+            <i class="fab fa-whatsapp"></i>
+        </a>
+        <a href="https://www.facebook.com/share/1DDCCwaQHv/?mibextid=wwXIfr/" target="_blank" title="Facebook">
+            <i class="fab fa-facebook"></i>
+        </a>
+    </div>
+
+    <p class="footer-copy">
+        &copy; 2023 GLOW BY MAR - Todos los derechos reservados.
+    </p>
+</footer>
+
+</body>
+</html>

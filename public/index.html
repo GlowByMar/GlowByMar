@@ -8,78 +8,76 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
-    <style>
+<style>
+    html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100%;
+        overflow-x: hidden;
+    }
 
-        html, body {
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100%;
-    overflow-x: hidden;
-}
+    /* 🌟 1. ESTILOS POR DEFECTO PARA GLOW */
+    body, p, span, h1, h2, h3, h4, h5, h6, a, label, button {
+        color: #6D3C1C !important;
+    }
 
-body, p, span, h1, h2, h3, h4, h5, h6, a, label, button {
-    color: #6D3C1C !important;
-}
-
-button, .btn-agregar {
-    color: #ffffff !important;
-}
+    button, .btn-agregar {
+        color: #ffffff !important;
+    }
 
     /* Tipografía elegante y variables de color */
     @import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;600;700&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Playfair+Display:ital,wght@0,500;1,500&display=swap');
 
     :root {
-    --color-oscuro: #111111;
-    --color-dorado: #d4af37;
-    --color-gris-claro: #f9f9f9;
-    --color-texto: #6D3C1C; /* <- ¡Cámbialo aquí para que afecte a todo lo general! */
-}
-    
+        --color-oscuro: #111111;
+        --color-dorado: #d4af37;
+        --color-gris-claro: #f9f9f9;
+        --color-texto: #6D3C1C; 
+    }
+
     body { 
         font-family: 'Lato', sans-serif; 
         background: #ffffff;
         background-attachment: fixed;
         letter-spacing: 0.5px;
         margin: 0; 
-        padding-top: 80px; /* ⬅️ Espacio corregido para que la galería no se tape */
+        padding-top: 80px; 
         color: var(--color-texto);
     }
 
     /* Navbar Premium */
-    /* 1. Ajuste al menú: quitamos el top y lo dejamos pegado arriba del todo */
-.navbar {
-    background: color(white);
-    border-bottom: 1px solid #eaeaea;
-    padding: 15px 25px; /* Ajusté un poco el padding */
-    position: relative;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
+    .navbar {
+        background: #ffffff;
+        border-bottom: 1px solid #eaeaea;
+        padding: 15px 25px;
+        position: relative;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
 
-    /* 🛒 MINI EMERGENTE FLOTANTE (Corregido y posicionado al lado del botón) */
+    /* 🛒 MINI EMERGENTE FLOTANTE (GLOW) */
     .mini-carrito-dropdown {
-        display: none;             /* ⬅️ Empieza oculto para que el script funcione */
+        display: none;            
         position: fixed !important; 
-        bottom: 100px;              /* Abre justo encima del botón flotante */
-        right: 30px;               
+        bottom: 100px;              
+        right: 30px;              
         background: #f1d7be;
         border: 1px solid #382417;
         border-radius: 15px;
         box-shadow: 0 10px 30px #CBAC85;
-        z-index: 5000;             
+        z-index: 5000;            
         width: 290px;
         max-height: 400px;
         overflow-y: auto;
         padding: 12px;
     }
 
-    /* Clase que activa el JavaScript para mostrarlo */
     .mini-carrito-dropdown.activo {
         display: block !important;
     }
@@ -130,18 +128,18 @@ button, .btn-agregar {
     .contenedor { 
         max-width: 1200px; 
         margin: 5px auto; 
-        padding: 0 20px;
+        padding: 0 10px 20px 10px;
     }
 
     h2.seccion-titulo {
-    font-family: 'Playfair Display', serif;
-    text-align: center;
-    font-weight: 400; /* Más delicado y elegante */
-    font-size: 24px; /* Un poco más estilizado */
-    letter-spacing: 3px; /* Un respiro más amplio */
-    text-transform: uppercase;
-    margin-bottom: 20px;
-}
+        font-family: 'Playfair Display', serif;
+        text-align: center;
+        font-weight: 400;
+        font-size: 24px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+    }
 
     #lista-productos { 
         display: grid; 
@@ -150,19 +148,29 @@ button, .btn-agregar {
     }
 
     .producto-card { 
-    background: #ffffff !important; /* Fondo blanco para que resalte sobre la página */
-    border-radius: 12px; 
-    overflow: hidden; 
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03); /* Una sombrita muy sutil */
-    border: 1px solid rgba(109, 60, 28, 0.15); /* Un borde café muy elegante */
-    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
-    display: flex;
-    flex-direction: column;
-}
+        background: linear-gradient(135deg, #ffffff 0%, #f7f4ed 100%) !important;
+        border-radius: 16px !important; 
+        overflow: hidden; 
+        /* Sombra 3D multicapa + bisel de luz superior interno */
+        box-shadow: 
+            0 10px 25px -5px rgba(0, 0, 0, 0.08), 
+            0 8px 10px -6px rgba(0, 0, 0, 0.04),
+            inset 0 1px 1px 0 rgba(255, 255, 255, 0.9), 
+            inset 0 -2px 4px 0 rgba(0, 0, 0, 0.03) !important;
+        border: 1px solid rgba(109, 60, 28, 0.2) !important;
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+        display: flex;
+        flex-direction: column;
+    }
 
     .producto-card:hover { 
         transform: translateY(-8px); 
-        box-shadow: 0 15px 30px rgba(17, 17, 17, 0.08); 
+        /* Sombra más amplia cuando el usuario pasa el mouse para simular que flota */
+        box-shadow: 
+            0 18px 35px -6px rgba(0, 0, 0, 0.12), 
+            0 10px 15px -6px rgba(0, 0, 0, 0.06),
+            inset 0 1px 1px 0 rgba(255, 255, 255, 1),
+            inset 0 -2px 4px 0 rgba(0, 0, 0, 0.04) !important; 
     }
 
     .producto-imagen-wrapper {
@@ -190,11 +198,11 @@ button, .btn-agregar {
     }
 
     .producto-info { 
-    padding: 10px 0; /* Reducimos el espacio arriba y abajo */
-    display: flex;
-    flex-direction: column;
-    text-align: center;
-}
+        padding: 10px 0;
+        display: flex;
+        flex-direction: column;
+        text-align: center;
+    }
 
     .producto-categoria {
         font-size: 10px;
@@ -206,35 +214,35 @@ button, .btn-agregar {
     }
 
     .producto-card h3 { 
-    margin: 0 0 8px 0; 
-    font-size: 19px;
-    font-weight: 700;
-    color: var(--color-oscuro);
-    letter-spacing: 0.5px;
-    font-style: italic; /* <--- Esta es la línea mágica */
+        margin: 0 0 8px 0; 
+        font-size: 19px;
+        font-weight: 700;
+        color: var(--color-oscuro);
+        letter-spacing: 0.5px;
+        font-style: italic;
     }
 
     .producto-desc {
-       color: #4a4a4a; /* Un gris un poco más sólido */
-        margin-bottom: 10px; /* Reducimos la separación con el precio */
-    font-size: 14px;
+        color: #4a4a4a;
+        margin-bottom: 10px;
+        font-size: 14px;
     }
 
     .producto-meta {
-    display: flex;
-    justify-content: space-between; /* Mantiene precio a la izq y botón a la der */
-    align-items: center;
-    margin-top: 5px;               /* Un poquito más de separación */
-    padding-top: 10px;
-    border-top: 1px solid #f0f0f0;  /* Un tono un poco más visible para definir la sección */
-}
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 5px;
+        padding-top: 10px;
+        border-top: 1px solid #f0f0f0;
+    }
 
     .producto-precio { 
-    font-size: 19px; 
-    font-weight: 800;   /* Un poco más negrita */
-    color: #000;        /* Un negro suave en lugar de muy oscuro */
-    letter-spacing: -0.5px; /* Las fuentes premium suelen ir más juntitas */
-}
+        font-size: 19px; 
+        font-weight: 800;
+        color: #000;
+        letter-spacing: -0.5px;
+    }
 
     .producto-stock {
         font-size: 11px;
@@ -243,86 +251,86 @@ button, .btn-agregar {
         letter-spacing: 0.5px;
     }
 
+     /*🛒 NUEVO BOTÓN CIRCULAR MINIMALISTA Y DISCRETO (ESTILO JOYERÍA) */
     .btn-agregar {
-    background-color: #6A3005;
-    color: white;
-    padding: 12px 24px;
-    border: none;
-    border-radius: 50px; /* Bordes redondeados dan sensación de modernidad */
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    transition: background-color 0.3s ease, transform 0.2s;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center; /* Alinea icono y texto verticalmente */
-    justify-content: center; /* Centra todo en el botón */
-    gap: 8px; /* Espacio entre el carrito y la palabra */
-    padding: 6px 16px;
-    font-size: 16px; /* Un tamaño de letra más elegante y pequeño */
-    width: 100%; /* Esto hará que el botón ocupe todo el ancho de la tarjeta */
-    box-sizing: border-box;
-}
+        position: absolute !important;
+        bottom: 12px !important;
+        right: 12px !important;
+        width: 38px !important;
+        height: 38px !important;
+        padding: 0 !important;
+        border-radius: 50% !important; /* Círculo perfecto */
+        background-color: #6A3005 !important; /* Tono Glow por defecto */
+        color: #ffffff !important;
+        border: none !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+        cursor: pointer !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        z-index: 10 !important;
+    }
 
-.btn-agregar svg {
-        flex-shrink: 0; /* Evita que el icono se encoja */
+    .btn-agregar svg {
+        flex-shrink: 0;
         width: 16px !important;
         height: 16px !important;
     }
 
-.btn-agregar:hover {
-    background-color: #C4923E; /* Dorado un poco más oscuro al pasar el mouse */
-    transform: translateY(-1px); /* Un pequeño efecto de elevación */
-}
+    .btn-agregar:hover {
+        background-color: #C4923E !important; /* Brillo dorado al pasar el cursor */
+        transform: scale(1.12) !important;
+        box-shadow: 0 6px 15px rgba(196, 146, 62, 0.4) !important;
+    }
 
     .btn-agotado {
-    background-color: #CBAC85 !important;
-    color: #ffffff !important;
-    border: 1px solid #e6e6e6 !important;
-    cursor: not-allowed !important;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 14px;      /* <--- AJUSTA ESTE VALOR (puedes probar con 9px u 8px) */
-    text-align: center;
-    line-height: 1;        /* Ayuda a que el texto no se desplace verticalmente */
-    padding: 5px;          /* Un pequeño espacio para que no toque los bordes */
-    word-wrap: break-word; /* Si la palabra fuera larga, evita que se salga del círculo */
-
+        background-color: #CBAC85 !important;
+        color: #ffffff !important;
+        border: 1px solid #e6e6e6 !important;
+        cursor: not-allowed !important;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 14px;
+        text-align: center;
+        line-height: 1;
+        padding: 5px;
+        word-wrap: break-word;
     }
 
     #boton-qr {
-    background-color: #f8f8fa; /* Color de fondo suave */
-    border: 1px solid #d0ceda; /* Borde sutil */
-    color: #3e4144;            /* Color de letra profesional */
-    padding: 8px 15px;         /* Tamaño compacto */
-    border-radius: 5px;        /* Bordes redondeados */
-    font-weight: 500;
-    cursor: pointer;
-    width: 100%;               /* Que ocupe el ancho */
-    margin: 12px 0;            /* ¡ESTO ES LO QUE DA EL ESPACIO! */
-    text-align: center;
-    font-family: inherit;
-    transition: background 0.3s;
-}
+        background-color: #f8f8fa;
+        border: 1px solid #d0ceda;
+        color: #3e4144;
+        padding: 8px 15px;
+        border-radius: 5px;
+        font-weight: 500;
+        cursor: pointer;
+        width: 100%;
+        margin: 12px 0;
+        text-align: center;
+        font-family: inherit;
+        transition: background 0.3s;
+    }
 
-#boton-qr:hover {
-    background-color: #e2e6ea;
-}
+    #boton-qr:hover {
+        background-color: #e2e6ea;
+    }
 
-    /* 💎 ESTILOS DEL CARRITO FLOTANTE */
+    /* 💎 ESTILOS DEL CARRITO FLOTANTE (GLOW) */
     .carrito-flotante {
         position: fixed;
         bottom: 75px;      
-        right: 5px;       
-        background-color: #6A3005; 
+        right: 5px;      
+        background-color: #CBAC85; 
         color: #ffffff;
         border: 1px solid #3e1e04; 
         width: 60px;
         height: 60px;
         border-radius: 50px; 
         cursor: pointer;
-        z-index: 4000;     
+        z-index: 4000;    
         box-shadow: 0 4px 15px rgba(231, 4, 4, 0.2);
         display: flex;
         align-items: center;
@@ -361,68 +369,358 @@ button, .btn-agregar {
     }
     
     .ocultar-visualmente {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        border: 0;
+    }
+
+    @media (max-width: 600px) {
+        #barra-ofertas {
+            font-size: 11px !important;    
+            letter-spacing: 1px !important; 
+            padding: 5px 2px !important;    
+        }
+    }
+
+    .cinta-cuidados-container {
+        width: 100%;
+        background-color: #fcf6f0;
+        border-top: 1px solid #e8d5cc;
+        border-bottom: 1px solid #e8d5cc;
+        overflow: hidden;
+        white-space: nowrap;
+        padding: 10px 0;
+        box-sizing: border-box;
+        position: relative;
+        margin-top: 15px !important;
+    }
+
+    .cinta-track {
+        display: inline-block;
+        white-space: nowrap;
+        animation: desplazarCinta 45s linear infinite;
+    }
+
+    .cinta-track span {
+        display: inline-block;
+        font-size: 13px;
+        color: #5a4a42;
+        font-weight: 500;
+        padding-right: 50px;
+    }
+
+    @keyframes desplazarCinta {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
+
+
+    /* 🏷️ Estilos base por defecto para Glow */
+    .barra-superior-landing {
+        background: linear-gradient(to right, #F6E6D3, #E7C196, #B88654) !important;
+        color: #ffffff !important;
+    }
+    
+    /* 🏠 Botón de inicio transparente y sin bordes solo para Glow */
+    .barra-superior-landing a {
+        background: transparent !important;
+        color: #3B4238 !important;
+    border: none !important;
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    border-radius: 50% !important; /* Círculo perfecto */
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    }
+
+    
+    .barra-superior-landing a:hover {
+        background: rgba(255, 255, 255, 0.15) !important;
+    }
+
+
+    /* =========================================================================
+       ♻️ TEMA GLOBAL VOLK: VOLK (Moda Circular & Estilo - Verde Oliva & Arena)
+       ========================================================================= */
+
+    /* 1. Fondo general y color de texto base */
+    body.volk,
+    body.volk p, 
+    body.volk span, 
+    body.volk h1, 
+    body.volk h2, 
+    body.volk h3, 
+    body.volk h4, 
+    body.volk h5, 
+    body.volk h6, 
+    body.volk a, 
+    body.volk label {
+        color: #3B4238 !important; /* Verde oliva oscuro */
+    }
+
+    body.volk {
+        background-color: #F4F1EA !important; /* Fondo arena suave y cálido */
+    }
+
+    /* 2. Navbar y Barra superior */
+    body.volk .navbar {
+        background-color: #ffffff !important;
+        border-bottom: 1px solid #DCD6CD !important;
+    }
+
+    body.volk .barra-superior-landing {
+        background: #3B4238 !important;
+        color: #F4F1EA !important;
+        border-bottom: 1px solid #4A5245 !important;
+    }
+
+    body.volk .barra-superior-landing span,
+    body.volk .barra-superior-landing * {
+        color: #F4F1EA !important;
+    }
+
+    /* Botón de inicio circular perfecto para VOLK */
+body.volk .barra-superior-landing a {
+    background: #f4e8c1 !important;
+    color: #3B4238 !important;
+    border: none !important;
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    border-radius: 50% !important; /* Círculo perfecto */
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+}
+
+    body.volk .barra-superior-landing a:hover {
+        background: #EFECE6 !important;
+        color: #3B4238 !important;
+    }
+
+    /* 3. Tarjetas de productos */
+    body.volk .producto-card {
+        background-color: #ffffff !important;
+        border: 1px solid #DCD6CD !important;
+        box-shadow: 0 4px 15px rgba(59, 66, 56, 0.05) !important;
+    }
+
+    body.volk .producto-categoria {
+        color: #7A8475 !important;
+    }
+
+    body.volk .producto-desc {
+        color: #5A6256 !important;
+    }
+
+    body.volk .producto-precio {
+        color: #3B4238 !important;
+    }
+
+    /* 4. Botones principales (Agregar / Comprar) */
+    body.volk button,
+    /* Ajuste del botón para la tienda VOLK (Verde Oliva) */
+    body.volk .btn-agregar {
+        background-color: #3B4238 !important;
+        color: #F4F1EA !important;
+    }
+
+    body.volk button:hover,
+    body.volk .btn-agregar:hover {
+        background-color: #4A5245 !important;
+        color: #ffffff !important;
+        box-shadow: 0 6px 15px rgba(59, 66, 56, 0.35) !important;
+    }
+
+    /* 5. Carrito flotante y su desplegable */
+    body.volk .carrito-flotante {
+        background-color: #ffffff !important; 
+        color: #3B4238 !important;
+        border: 1px solid #DCD6CD !important;
+        box-shadow: 0 4px 15px rgba(59, 66, 56, 0.1) !important;
+    }
+
+    body.volk .carrito-flotante:hover {
+        background-color: #3B4238 !important; 
+        color: #F4F1EA !important;
+        border-color: #3B4238 !important;
+    }
+
+    body.volk .contador-burbuja {
+        background-color: #3B4238 !important; 
+        color: #F4F1EA !important;
+        border: 2px solid #F4F1EA !important;
+    }
+
+    body.volk .mini-carrito-dropdown {
+        background-color: #ffffff !important;
+        border: 1px solid #DCD6CD !important;
+        box-shadow: 0 10px 30px rgba(59, 66, 56, 0.12) !important;
+    }
+
+    body.volk .mini-carrito-dropdown * {
+        color: #3B4238 !important;
+        border-bottom-color: #EFECE6 !important;
+    }
+
+    body.volk .mini-carrito-dropdown button:not(.btn-ver-carrito-completo),
+    body.volk .mini-carrito-dropdown .btn-cantidad,
+    body.volk .mini-carrito-dropdown .btn-eliminar,
+    body.volk .mini-carrito-dropdown [class*="btn"] {
+        background-color: #3B4238 !important;
+        color: #F4F1EA !important;
+        border-color: #3B4238 !important;
+    }
+
+    body.volk .mini-carrito-dropdown .btn-ver-carrito-completo {
+        background-color: #3B4238 !important;
+        color: #F4F1EA !important;
+        font-weight: 700 !important;
+    }
+
+    body.volk .mini-carrito-dropdown .btn-ver-carrito-completo:hover {
+        background-color: #4A5245 !important;
+        color: #ffffff !important;
+    }
+
+    /* 6. Sección de Carrito Completo y Pago */
+    body.volk #seccion-carrito-completo {
+        background-color: #ffffff !important;
+        border: 1px solid #DCD6CD !important;
+        box-shadow: 0 10px 30px rgba(59, 66, 56, 0.08) !important;
+    }
+
+    body.volk #seccion-carrito-completo * {
+        color: #3B4238 !important;
+    }
+
+    body.volk #seccion-carrito-completo input,
+    body.volk #seccion-carrito-completo select,
+    body.volk #seccion-carrito-completo textarea {
+        background-color: #F9F8F6 !important;
+        border: 1px solid #DCD6CD !important;
+        color: #3B4238 !important;
+    }
+
+    body.volk #seccion-carrito-completo input:focus,
+    body.volk #seccion-carrito-completo textarea:focus {
+        border-color: #3B4238 !important;
+        outline: none !important;
+    }
+
+    /* 7. Cinta de cuidados o banners inferiores */
+    body.volk .cinta-cuidados-container {
+        background-color: #EFECE6 !important;
+        border-color: #DCD6CD !important;
+    }
+
+    body.volk .cinta-track span {
+        color: #3B4238 !important;
+    }
+
+    /* 🛠️ CORRECCIÓN DE CONTRASTE Y CAJAS EN VOLK */
+
+    /* 1. Forzar texto blanco en los botones grandes inferiores y de acción */
+    body.volk #seccion-carrito-completo button,
+    body.volk .btn-ver-carrito-completo,
+    body.volk button[type="submit"],
+    body.volk .btn-finalizar {
+        background-color: #3B4238 !important;
+        color: #F4F1EA !important; /* Texto color arena claro para que resalte */
+    }
+
+    body.volk #seccion-carrito-completo button:hover,
+    body.volk .btn-ver-carrito-completo:hover {
+        background-color: #4A5245 !important;
+        color: #ffffff !important;
+    }
+
+    /* 2. Arreglar la cajita del método de pago (Nequi) */
+    body.volk #seccion-carrito-completo [style*="background"],
+    body.volk #seccion-carrito-completo .metodo-pago,
+    body.volk #seccion-carrito-completo div[style*="border"] {
+        background-color: #ffffff !important; /* Fondo blanco limpio */
+        border: 1px solid #DCD6CD !important;
+        color: #3B4238 !important;
+    }
+
+    /* Asegurar que el texto dentro de la caja de pago sea legible */
+    body.volk #seccion-carrito-completo [style*="background"] *,
+    body.volk #seccion-carrito-completo .metodo-pago * {
+        color: #3B4238 !important;
+    }
+    
+    /* 🔄 REGLAS PARA CAMBIAR ENTRE GLOW Y VOLK AUTOMÁTICAMENTE */
+body:not(.volk) .logo-volk,
+body:not(.volk) .texto-volk,
+body:not(.volk) .sub-volk {
+    display: none !important;
+}
+
+body.volk .logo-glow,
+body.volk .texto-glow,
+body.volk .sub-glow {
+    display: none !important;
+}
+
+body.volk .logo-volk,
+body.volk .texto-volk,
+body.volk .sub-volk {
+    display: block !important;
+}
+
+/* 🏷️ Estilo de ícono flotante minimalista */
+.sticker-badge {
     position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    border: 0;
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    border-radius: 50%; /* 👈 Círculo perfecto */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+    z-index: 5;
+    backdrop-filter: blur(4px); /* Efecto cristal elegante */
 }
 
-/* Esto solo afecta pantallas pequeñas (celulares) */
-@media (max-width: 600px) {
-    #barra-ofertas {
-        font-size: 11px !important;    /* Hacemos la letra más pequeña */
-        letter-spacing: 1px !important; /* Reducimos el espacio entre letras */
-        padding: 5px 2px !important;    /* Ajustamos el relleno para que no se desborde */
-    }
+/* Segunda Mano: Estilo Etiqueta de Papel Ecológico Reciclado */
+.sticker-badge.segunda-mano {
+    background-color: #F4EFE6; /* Tono papel marfil / arena claro */
+    color: #2E4F23;            /* Verde ecología profundo */
+    border: 1px dashed #A89F91;  /* Borde punteado como costura/etiqueta */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    font-weight: bold;
 }
 
-/* 3. Ajuste a la cinta de cuidados: ahora debe ir justo después del navbar */
-.cinta-cuidados-container {
-    width: 100%;
-    background-color: #fcf6f0;
-    border-top: 1px solid #e8d5cc;
-    border-bottom: 1px solid #e8d5cc;
-    overflow: hidden;
-    white-space: nowrap;
-    padding: 4px 0; /* Damos un poco de aire vertical */
-    box-sizing: border-box;
-    position: relative;
-    /* Quitamos el margin: 0; innecesario */
+/* Nuevo: Dorado suave con la estrella */
+.sticker-badge.nuevo {
+    background-color: #F4F1EA;
+    border: 1px solid #707C6B;
 }
 
-/* Pista que contiene los textos y se mueve */
-.cinta-track {
-    display: inline-block;
-    white-space: nowrap;
-    animation: desplazarCinta 45s linear infinite;
-}
+</style>
 
-/* Estilo individual de cada frase */
-.cinta-track span {
-    display: inline-block;
-    font-size: 13px;
-    color: #5a4a42;
-    font-weight: 500;
-    padding-right: 50px; /* Espacio de separación entre frase y frase */
-}
-
-/* Animación fluida de derecha a izquierda */
-@keyframes desplazarCinta {
-    0% {
-        transform: translateX(0);
-    }
-    100% {
-        transform: translateX(-50%);
-    }
-}
-
-    </style>
 </head>
 <body>
+
+    <!-- Barra para volver a la Landing Page -->
+<div class="barra-superior-landing" style="padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; font-family: sans-serif; font-size: 14px; position: sticky; top: 0; z-index: 1000;">
+    <span>✨ ¿Y de que te antojas hoy?</span>
+    <a href="/landing.html" class="btn-inicio-barra" style="text-decoration: none; padding: 5px 15px; border-radius: 15px; font-weight: bold; transition: background 0.3s;">🏠 </a>
+</div>
+
 
     <div id="barra-ofertas" style="
     background: linear-gradient(to right, #F6E6D3, #E7C196, #B88654);
@@ -441,6 +739,24 @@ button, .btn-agregar {
     <span id="texto-oferta" style="transition: opacity 0.5s ease;">✨ BRILLA CON LUZ PROPIA, TE MERECES TODO LO LINDO. ✨</span>
 </div>
 
+<!-- 🌍 Barra de ofertas exclusiva para VOLK -->
+<div id="barra-ofertas-volk" style="
+    display: none; /* Por defecto oculta, el JS la prende solo si es VOLK */
+    background: linear-gradient(to right, #3b3842, #5a6655, #4d5749);
+    color: #ffffff;
+    text-align: center;
+    padding: 6px 15px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+    <span id="texto-oferta-volk" style="transition: opacity 0.5s ease; color: #eb0808; ">♻️ DALE UNA SEGUNDA OPORTUNIDAD A LA MODA Y VÍSTETE CON ESTILO ÚNICO. ♻️</span>
+</div>
+
 <!-- NAVBAR Y LOGO (Justo debajo, sin márgenes raros) -->
 <nav class="navbar" style="
     width: 100%; 
@@ -453,14 +769,20 @@ button, .btn-agregar {
     border-bottom: 1px solid #eaeaea;
     box-sizing: border-box;
 ">
-    <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
-        <img src="imagenes/mi-logo.png" alt="Logo" style="height: 60px; width: auto; display: block;">
-        <div style="font-family: 'Playfair Display', serif; font-weight: 500; font-size: 23px; letter-spacing: 4px; color: #6D3C1C; margin-top: 5px;">
-            GLOW BY MAR
-            <br>
-            <small style="font-size: 10px; letter-spacing: 4px; color: #6D3C1C; font-weight: 300; display: block; margin-top: 2px;">ACCESORIOS</small>
+    
+    <!-- 🖼️ Logo Dinámico según la Tienda -->
+        <div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+            <img src="imagenes/mi-logo.png" class="logo-glow" alt="Logo Glow by Mar" style="height: 60px; width: auto;">
+            <img src="imagenes/logo-volk.png" class="logo-volk" alt="Logo VOLK" style="height: 60px; width: auto; display: none;">
+            
+            <div id="titulo-logo-marca" style="font-family: 'Playfair Display', serif; font-weight: 500; font-size: 23px; letter-spacing: 4px; margin-top: 5px;">
+                <span class="texto-glow">GLOW BY MAR</span>
+                <span class="texto-volk" style="display: none;">VOLK</span>
+                <br>
+                <small class="sub-glow" style="font-size: 10px; letter-spacing: 4px; color: #6D3C1C; font-weight: 300;">ACCESORIOS</small>
+                <small class="sub-volk" style="font-size: 10px; letter-spacing: 4px; color: #3B4238; font-weight: 300; display: none;">MODA CIRCULAR & ESTILO</small>
+            </div>
         </div>
-    </div>
 </nav>
     
     <!-- CONTENEDOR PRINCIPAL DE PRODUCTOS -->
@@ -472,15 +794,10 @@ button, .btn-agregar {
     <button id="btn-lupa" onclick="toggleBuscador()" style="background: #fff; border: 1px solid rgba(109, 60, 28, 0.3); width: 45px; height: 45px; border-radius: 50%; font-size: 18px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center;" title="Filtrar por categoría">🔍</button>
 
     <div id="buscador-desplegable" style="display: none; margin-top: 15px;">
-        <select id="filtro-categoria" onchange="filtrarProductos(); toggleBuscador();" style="padding: 10px 20px; border-radius: 20px; border: 1px solid rgba(109, 60, 28, 0.3); outline: none; font-family: 'Montserrat', sans-serif; font-size: 12px; background: #fff; color: #111; cursor: pointer;">
-            <option value="Todos">✨ Mostrar Todo</option>
-            <option value="Aretes">Arete</option>
-            <option value="Anillos">Anillo</option>
-            <option value="Cadenas">Cadena</option>
-            <option value="Juegos">Juegos</option>
-            <option value="Pulseras">Pulsera</option>
-            <option value="Relojes">Reloj</option>
-        </select>
+        <select id="filtro-categoria" onchange="filtrarProductos(); toggleBuscador();" style="padding: 10px 20px; border: 1px solid rgba(109, 60, 28, 0.3); border-radius: 8px; background: #fff; font-size: 14px; cursor: pointer;">
+    <option value="Todos">✨ Mostrar Todo ✨</option>
+    <!-- Las categorías se cargarán dinámicamente con JavaScript -->
+</select>
     </div>
 </div>
 
@@ -592,56 +909,198 @@ button, .btn-agregar {
         </div>
     </div>
 
-    <!-- PIE DE PÁGINA (FOOTER INDEPENDIENTE Y AFUERA) -->
-    <footer style="text-align: center; padding: 20px 20px 15px 20px; background-color: rgba(255, 255, 255, 0.65); margin-top: 5px; border-top: 1px solid rgba(0,0,0,0.05); backdrop-filter: blur(5px);">
-        <p style="font-family: 'Montserrat', sans-serif; font-weight: 600; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: #111; margin-bottom: 10px;">
-            ✨ Conéctate con Glow By Mar ✨
-        </p>
-        <div style="display: flex; justify-content: center; gap: 25px;">
-            <a href="https://instagram.com/glowbymaraccesorios?utm_source=qr" target="_blank" style="color: #bc2a8d; font-size: 28px;"><i class="fab fa-instagram"></i></a>
-            <a href="https://www.tiktok.com/@glowbymar11?_r=1&_t=ZS-98XJfT1c4KV" target="_blank" style="color: #000000; font-size: 28px;"><i class="fab fa-tiktok"></i></a>
-            <a href="https://wa.me/573204315042?text=Hola!%20Vengo%20de%20la%20tienda%20Glow%20By%20Mar%20y%20me%20gustaría%20recibir%20asesoría%20sobre%20sus%20accesorios." target="_blank" style="color: #25d366; font-size: 28px;"><i class="fab fa-whatsapp"></i></a>
-            <a href="https://www.facebook.com/share/1DDCcWAQhv/?mibextid=wwXIfr/" target="_blank" style="color: #1877f2; font-size: 28px;"><i class="fab fa-facebook"></i></a>
-        </div>
-        <p style="font-size: 10px; color: #888; margin-top: 25px; letter-spacing: 1px; font-family: 'Montserrat', sans-serif;">
-            &copy; 2023 GLOW BY MAR - Todos los derechos reservados.
-        </p>
-    </footer>
+    
 
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // --- 1. LÓGICA DEL CÓDIGO QR ---
+        const boton = document.getElementById('boton-qr');
+        const contenedor = document.getElementById('contenedor-qr');
+
+        if (boton && contenedor) {
+            boton.addEventListener('click', () => {
+                if (contenedor.style.display === 'none') {
+                    contenedor.style.display = 'block';
+                } else {
+                    contenedor.style.display = 'none';
+                }
+            });
+        }
+
+        // --- 2. MULTI-TENANCY: DETECTAR SI ESTAMOS EN VOLK O GLOW ---
+        const esvolk = window.location.pathname.includes('volk');
+
+        if (esvolk) {
+            // Ocultar cinta de cuidados de joyas
+            const cintaCuidados = document.querySelector('.cinta-cuidados-container') || document.querySelector('[class*="cinta"]');
+            if (cintaCuidados) {
+                cintaCuidados.style.display = 'none';
+            }
+
+            // Cambiar estilos del banner superior para VOLK
+            const contenedorOfertas = document.getElementById('texto-oferta');
+            if (contenedorOfertas && contenedorOfertas.parentElement) {
+                contenedorOfertas.parentElement.style.background = 'linear-gradient(to right, #3b4238, #5a6655, #4d5749)';
+            }
+
+            // Traducir textos de la marca en toda la interfaz (incluyendo Footer)
+            document.querySelectorAll('*').forEach(el => {
+                if (el.children.length === 0) {
+                    if (el.textContent.includes('GLOW BY MAR')) {
+                        el.textContent = el.textContent.replace(/GLOW BY MAR/g, 'VOLK');
+                    }
+                    if (el.textContent.includes('Glow by Mar')) {
+                        el.textContent = el.textContent.replace(/Glow by Mar/g, 'VOLK');
+                    }
+                    if (el.textContent.includes('CONÉCTATE CON GLOW')) {
+                        el.textContent = el.textContent.replace('CONÉCTATE CON GLOW', 'CONÉCTATE CON VOLK');
+                    }
+                    if (el.textContent.includes('NUESTRA COLECCIÓN DE ACCESORIOS')) {
+                        el.textContent = "NUESTRA COLECCIÓN DE ROPA";
+                    }
+                }
+            });
+
+            // Cambiar color de botones para VOLK
+            document.querySelectorAll('button, .btn, .agregar').forEach(el => {
+                el.style.backgroundColor = '#2c3e50'; 
+            });
+            
+            document.title = "VOLK - Moda y Ropa";
+
+            // --- MENSAJES ROTATIVOS EXCLUSIVOS PARA VOLK ---
+            const ofertasVolk = [
+                "♻️ DALE UNA SEGUNDA OPORTUNIDAD A LA MODA Y VÍSTETE CON ESTILO ÚNICO ♻️",
+                "🍃 MENOS DESPERDICIO, MÁS PERSONALIDAD. CADA PRENDA TIENE UNA HISTORIA 🍃",
+                "🌿 MODA CIRCULAR: EXCLUSIVIDAD Y SOSTENIBILIDAD CON ESTILO PROPIO 🌿",
+                "💚 HECHO CON HISTORIA, RESCATADO CON AMOR 💚",
+                "🛍️ NO VENDEMOS ROPA VIEJA, RESCATAMOS PRENDAS CON ESTILO 🛍️"
+            ];
+
+            let ofertaVolkActual = 0;
+            const barraTextoVolk = document.getElementById('texto-oferta');
+
+                    
+
+if (barraTextoVolk) {
+    // 💥 1. Inyectar regla CSS con máxima prioridad (!important)
+    const estiloForzado = document.createElement('style');
+    estiloForzado.innerHTML = `
+        #texto-oferta, #texto-oferta * {
+            color: #f4e8c1 !important; /* 👈 Pon aquí el color de letra que quieras (ej: #ffffff, #2c3e50, #f4e8c1) */
+        }
+    `;
+    document.head.appendChild(estiloForzado);
+
+    // 2. Cargar el primer mensaje
+    barraTextoVolk.innerHTML = ofertasVolk[0];
+
+    // 3. Rotación de mensajes
+    setInterval(() => {
+        barraTextoVolk.style.opacity = 0;
+        setTimeout(() => {
+            ofertaVolkActual = (ofertaVolkActual + 1) % ofertasVolk.length;
+            barraTextoVolk.innerHTML = ofertasVolk[ofertaVolkActual];
+            barraTextoVolk.style.opacity = 1;
+        }, 500);
+    }, 4500);
+}
+
+        } else {
+            // Si es Glow: Ejecutar las ofertas y mensajes de joyería normales
+            const ofertas = [
+                "✨ Brilla con luz propia, te mereces todo lo lindo ✨",
+                "💖 Cada detalle cuenta, porque tú eres única y especial 💖",
+                "🌸 Lleva contigo la elegancia de sentirte segura y radiante 🌸",
+                "🎀 Un pequeño toque de brillo para la mujer increíble que eres 🎀",
+                "🌷 Date el gusto de brillar hoy y siempre 🌷"
+            ];
+
+            let ofertaActual = 0;
+            const barraTexto = document.getElementById('texto-oferta');
+
+            if (barraTexto) {
+                setInterval(() => {
+                    barraTexto.style.opacity = 0;
+                    setTimeout(() => {
+                        ofertaActual = (ofertaActual + 1) % ofertas.length;
+                        barraTexto.innerHTML = ofertas[ofertaActual];
+                        barraTexto.style.opacity = 1;
+                    }, 500);
+                }, 4000);
+            }
+        }
+    });
+</script>
+                
 </body>
 </html>
 
     <script>
-    let carrito = JSON.parse(localStorage.getItem('carrito-joyas')) || [];
-let todosLosProductos = []; 
+    // Aseguramos que cargue siempre lo que hay en la memoria compartida del navegador
+let carrito = JSON.parse(localStorage.getItem('carrito-tienda')) || [];
+let todosLosProductos = [];
 
+// Forzamos actualización visual apenas abra la página
 document.addEventListener('DOMContentLoaded', () => {
+    carrito = JSON.parse(localStorage.getItem('carrito-tienda')) || []; // <-- ¡Clave para sincronizar pestañas!
     cargarProductos();
     actualizarInterfazCarrito();
 });
 
 async function cargarProductos() {
     try {
-        const respuesta = await fetch('/api/productos');
+        // 1. Detectamos automáticamente si estamos en volk o en glow
+        const tiendaActual = window.location.pathname.includes('volk') ? 'volk' : 'glow';
+
+        // 2. Le mandamos esa tienda en el fetch al servidor
+        const respuesta = await fetch(`/api/productos?tienda=${tiendaActual}`);
         todosLosProductos = await respuesta.json(); 
         
         // DEBUG: Ver qué le llega al frontend
         console.log("Primer producto recibido:", todosLosProductos[0]);
 
-        // 1. Pintamos los productos una sola vez
+        // 🚀 3. ¡AQUÍ ESTABA EL DETALLE! Llamamos a la función para llenar el selector dinámicamente
+        poblarFiltroCategorias(todosLosProductos);
+
+        // 4. Pintamos los productos una sola vez
         renderizarProductosFiltrados(todosLosProductos);
         
-        // 2. Limpiar fantasmas usando _id de MongoDB
-        carrito = carrito.filter(itemCarrito => 
-            todosLosProductos.some(p => String(p._id) === String(itemCarrito.id || itemCarrito._id))
-        );
-        localStorage.setItem('carrito-joyas', JSON.stringify(carrito));
+        // 5. Mantenemos el carrito intacto sin borrar productos de la otra tienda
+        localStorage.setItem('carrito-tienda', JSON.stringify(carrito));
         
-        // 3. Actualizamos la burbuja y el carrito
+        // 6. Actualizamos la burbuja y el carrito
         actualizarInterfazCarrito();
         
     } catch (error) {
         console.error('Error al conectar con el servidor:', error);
+    }
+}
+
+// Y la función la puedes dejar abajo, solita y ordenada:
+function poblarFiltroCategorias(productos) {
+    const selectFiltro = document.getElementById('filtro-categoria');
+    if (!selectFiltro) return;
+
+    // Guardamos la categoría que el usuario tenía seleccionada (si la había)
+    const valorActual = selectFiltro.value;
+
+    // Extraemos las categorías únicas de los productos que llegaron de la base de datos
+    const categoriasUnicas = [...new Set(productos.map(p => p.categoria).filter(Boolean))];
+
+    // Reconstruimos el HTML del select limpiamente
+    selectFiltro.innerHTML = '<option value="Todos">✨ Mostrar Todo ✨</option>';
+
+    categoriasUnicas.forEach(cat => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.textContent = cat;
+        selectFiltro.appendChild(option);
+    });
+
+    // Si la categoría anterior sigue existiendo, la volvemos a seleccionar
+    if (categoriasUnicas.includes(valorActual)) {
+        selectFiltro.value = valorActual;
     }
 }
 
@@ -657,21 +1116,18 @@ function renderizarProductosFiltrados(productosA_Mostrar) {
 
     productosA_Mostrar.forEach(prod => {
         // 1. Imagen blindada (soporta Cloudinary o respaldos locales)
-        // Si prod.imagen o prod.foto tienen un valor real que no sea el default, úsalo; de lo contrario busca alternativas
-let urlImagen = 'default.jpg';
+        let urlImagen = 'default.jpg';
 
-if (prod.imagen && !prod.imagen.includes('default.jpg')) {
-    urlImagen = prod.imagen;
-} else if (prod.foto && !prod.foto.includes('default.jpg')) {
-    urlImagen = prod.foto;
-}
+        if (prod.imagen && !prod.imagen.includes('default.jpg')) {
+            urlImagen = prod.imagen;
+        } else if (prod.foto && !prod.foto.includes('default.jpg')) {
+            urlImagen = prod.foto;
+        }
 
-// Si no hay una URL válida de Cloudinary (http...), dejamos la ruta vacía o manejamos un contenedor alternativo
-const rutaImagen = urlImagen && urlImagen.startsWith('http') 
-    ? urlImagen 
-    : ''; // O una imagen placeholder online si prefieres
+        const rutaImagen = urlImagen && urlImagen.startsWith('http') 
+            ? urlImagen 
+            : ''; 
 
-        // Cambia la línea 698 por esta:
         const stockActual = prod.cantidadStock !== undefined ? prod.cantidadStock : (prod.stock || 0);
         const estaAgotado = stockActual <= 0;
         
@@ -693,35 +1149,61 @@ const rutaImagen = urlImagen && urlImagen.startsWith('http')
                     <span style="color: #ffffff; font-weight: bold; font-size: 20px;">$${precioFinal.toLocaleString('es-CO')}</span>
                 </div>`;
             htmlBadge = `
-                <div style="position: absolute; top: 10px; left: 9px; background: #e74c3c; color: white; padding: 4px 8px; border-radius: 60px; z-index: 1;">
-                    🔥 ${descuento}% OFF
-                </div>`;
+    <div style="position: absolute; top: 10px; left: 9px; background: #f7f3eb; color: #5c4d37; border: 1px solid #d4af37; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; font-family: 'Montserrat', sans-serif; letter-spacing: 1px; box-shadow: 0 2px 8px rgba(0,0,0,0.12); z-index: 1;">
+        ✨ ${descuento}% OFF
+    </div>`;
         } else {
             htmlPrecios = `<span style="font-weight: bold; font-size: 17px;">$${precioOriginal.toLocaleString('es-CO')}</span>`;
         }
 
-        // 5. Construcción de la tarjeta usando comillas invertidas y _id seguro de MongoDB
+        // 1. Detectar si estamos en la tienda VOLK o en GLOW
+        const esVolk = window.location.pathname.includes('volk') || document.body.classList.contains('volk');
+        
+        // 2. Normalizar la categoría del producto
+        const categoriaProd = (prod.categoria || '').toLowerCase().trim();
+                
+        // Si estamos en VOLK, agregamos el sticker minimalista (solo ícono)
+        if (esVolk) {
+            if (categoriaProd === 'segunda mano' || categoriaProd === 'segundamano') {
+                htmlBadge += `<span class="sticker-badge segunda-mano" title="Segunda Mano">♻️</span>`;
+            } else if (categoriaProd === 'nuevo') {
+                htmlBadge += `<span class="sticker-badge nuevo" title="Nuevo">🏷️</span>`;
+            }
+        }
+
+        // Limpiar el nombre automáticamente si trae la categoría pegada al inicio
+        let nombreLimpio = prod.nombre || '';
+        if (prod.categoria) {
+            const catLower = prod.categoria.toLowerCase().trim();
+            const nombreLower = nombreLimpio.toLowerCase().trim();
+            if (nombreLower.startsWith(catLower)) {
+                nombreLimpio = nombreLimpio.substring(prod.categoria.length).trim();
+            }
+        }
+
+        // 5. Construcción de la tarjeta
         const tarjeta = document.createElement('div');
         tarjeta.className = 'producto-card';
         tarjeta.style.position = 'relative';
         tarjeta.innerHTML = `
             ${htmlBadge}
             <div class="producto-imagen-wrapper">
-    ${rutaImagen ? `<img src="${rutaImagen}" alt="${prod.nombre}">` : `<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#aaa;">Sin imagen</div>`}
-</div>
+                ${rutaImagen ? `<img src="${rutaImagen}" alt="${nombreLimpio}">` : `<div style="display:flex; align-items:center; justify-content:center; height:100%; color:#aaa;">Sin imagen</div>`}
+            </div>
             <div class="producto-info">
-                <h3>${prod.nombre}</h3>
+                <h3>${nombreLimpio}</h3>
                 <div class="producto-meta" style="display: flex; flex-direction: column; align-items: center;">
                     ${htmlPrecios}
                     <span class="producto-stock" style="margin-top: 7px; color: ${estaAgotado ? '#ffee8c' : '#009293'}; font-size: 14px;">
                         ${estaAgotado ? ' ' : 'Disponibles: ' + stockActual}
                     </span>
                 </div>
-                <button class="btn-agregar ${estaAgotado ? 'btn-agotado' : ''}" 
-                        onclick="agregarAlCarrito('${prod._id}')" 
-                        ${estaAgotado ? 'disabled' : ''}>
-                    ${estaAgotado ? 'Agotado' : 'Agregar'}
-                </button>
+                <button class="btn-agregar ${estaAgotado ? 'btn-agotado' : ''}"
+        onclick="agregarAlCarrito('${prod._id}')"
+        title="${estaAgotado ? 'Agotado' : 'Agregar al carrito'}"
+        ${estaAgotado ? 'disabled' : ''}>
+    ${estaAgotado ? '❌' : '<i class="fas fa-shopping-cart" style="font-size: 13px;"></i>'}
+</button>
             </div>
         `;
         contenedor.appendChild(tarjeta);
@@ -744,8 +1226,13 @@ const rutaImagen = urlImagen && urlImagen.startsWith('http')
 }
 
     function agregarAlCarrito(id) {
+    // ⚠️ REFUERZO OBLIGATORIO: Traemos lo que ya esté en el carrito guardado antes de agregar algo nuevo
+    carrito = JSON.parse(localStorage.getItem('carrito-tienda')) || [];
+
     // 1. Buscamos el producto garantizando que soporte tanto _id de MongoDB como id plano
     const productoBase = todosLosProductos.find(p => String(p._id) === String(id) || String(p.id) === String(id));
+    
+    // ... de aquí para abajo dejas tu código tal cual como lo tienes
     
     if (!productoBase) {
         console.error("No se encontró el producto con ID:", id);
@@ -799,7 +1286,7 @@ const rutaImagen = urlImagen && urlImagen.startsWith('http')
         carrito.push({ _id: idReal, id: idReal, nombre, precio, cantidad: 1 });
     }
 
-    localStorage.setItem('carrito-joyas', JSON.stringify(carrito));
+    localStorage.setItem('carrito-tienda', JSON.stringify(carrito));
     actualizarInterfazCarrito();
 }
 
@@ -926,7 +1413,7 @@ const rutaImagen = urlImagen && urlImagen.startsWith('http')
 
     function vaciarCarrito() {
         carrito = [];
-        localStorage.removeItem('carrito-joyas');
+        localStorage.removeItem('carrito-tienda');
         actualizarInterfazCarrito();
     }
 
@@ -940,13 +1427,15 @@ function restarUnidadCarrito(idProducto) {
         if (item.cantidad <= 0) {
             carrito = carrito.filter(p => String(p.id) !== String(idProducto) && String(p._id) !== String(idProducto));
         }
-        localStorage.setItem('carrito-joyas', JSON.stringify(carrito));
+        localStorage.setItem('carrito-tienda', JSON.stringify(carrito));
         actualizarInterfazCarrito();
     }
 }
 
 // Suma una unidad respetando el stock real
 function sumarUnidadCarrito(idProducto) {
+    // Cargar la última versión del carrito
+    carrito = JSON.parse(localStorage.getItem('carrito-tienda')) || [];
     // 1. Buscamos en el catálogo original
     const prodOriginal = todosLosProductos.find(p => String(p.id) === String(idProducto) || String(p._id) === String(idProducto));
     // Validamos el stock buscando en diferentes posibles nombres de propiedad
@@ -976,7 +1465,7 @@ function sumarUnidadCarrito(idProducto) {
         return; 
     }
 
-    localStorage.setItem('carrito-joyas', JSON.stringify(carrito));
+    localStorage.setItem('carrito-tienda', JSON.stringify(carrito));
     actualizarInterfazCarrito();
     console.log("Carrito actualizado:", carrito);
 }
@@ -984,7 +1473,7 @@ function sumarUnidadCarrito(idProducto) {
 // Borra todo el producto del carrito de un solo clic
 function eliminarTodoElGrupo(idProducto) {
     carrito = carrito.filter(item => String(item.id) !== String(idProducto) && String(item._id) !== String(idProducto));
-    localStorage.setItem('carrito-joyas', JSON.stringify(carrito));
+    localStorage.setItem('carrito-tienda', JSON.stringify(carrito));
     actualizarInterfazCarrito();
 }
 
@@ -1040,7 +1529,7 @@ function eliminarDelCarrito(idProducto) {
 
             // Limpieza
             carrito = [];
-            localStorage.removeItem('carrito-joyas');
+            localStorage.removeItem('carrito-tienda');
             document.getElementById('envio-nombre').value = '';
             document.getElementById('envio-telefono').value = '';
             document.getElementById('envio-direccion').value = '';
@@ -1079,32 +1568,7 @@ function avisarAlDueñoPorWhatsApp(nombreCliente) {
 
     
     <script>
-    const ofertas = [
-        /*"✨ ¡Envío gratis por compras mayores a $250.000! 💎",*/
-        /*"👑 Joyería en Rodio 👑",*/
-        "✨ Brilla con luz propia, te mereces todo lo lindo.",
-        "💖 Cada detalle cuenta, porque tú eres única y especial.",
-        "🌸 Lleva contigo la elegancia de sentirte segura y radiante.",
-        "💫 Un pequeño toque de brillo para la mujer increíble que eres.",
-        "🌷 Date el gusto de brillar hoy y siempre."
-        
-        
-    ];
-
-    let ofertaActual = 0;
-    const barraTexto = document.getElementById("texto-oferta");
-
-    if (barraTexto) {
-        setInterval(() => {
-            barraTexto.style.opacity = 0; 
-            setTimeout(() => {
-                ofertaActual = (ofertaActual + 1) % ofertas.length;
-                barraTexto.innerHTML = ofertas[ofertaActual]; 
-                barraTexto.style.opacity = 1; 
-            }, 500);
-        }, 4000); 
-    }
-
+    
 document.addEventListener('DOMContentLoaded', () => {
     const boton = document.getElementById('boton-qr');
     const contenedor = document.getElementById('contenedor-qr');
@@ -1133,7 +1597,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    
+    document.addEventListener("DOMContentLoaded", () => {
+    // Si la URL contiene 'volk', le inyectamos la clase volk al body automáticamente
+    if (window.location.pathname.includes('volk')) {
+        document.body.classList.add('volk');
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    if (window.location.pathname.includes('volk')) {
+        
+        // 1. Aplicamos la clase moderna al body
+        document.body.classList.add('volk');
+        
+        // 2. Cambiamos el título grande de la sección
+        const tituloSeccion = document.querySelector('.seccion-titulo');
+        if (tituloSeccion) {
+            tituloSeccion.textContent = "Nuestra Colección";
+        }
+
+        // 3. Ocultamos el subtítulo "ACCESORIOS" del logo superior
+        const subtituloAccesorios = document.getElementById('subtitulo-accesorios');
+        if (subtituloAccesorios) {
+            subtituloAccesorios.style.display = 'none';
+        }
+
+        // 4. Cambiamos el color de "GLOW BY MAR" a grafito moderno
+        const tituloLogo = document.getElementById('titulo-logo-marca');
+        if (tituloLogo) {
+            tituloLogo.style.color = '#2C3539';
+        }
+    }
+});
+
 </script>
 
 <!--<script>

@@ -110,14 +110,51 @@ td {
             background-color: #fcfcfd;
             transition: background-color 0.2s ease;
         }
+
+        .btn-venta-glow {
+    background: linear-gradient(135deg, #B88654, #E7C196);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(255, 117, 140, 0.3);
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-venta-glow:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(255, 117, 140, 0.4);
+}
+
+.btn-venta-volk {
+    background: linear-gradient(135deg, #3B4238, #5A6256);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(44, 62, 80, 0.3);
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-venta-volk:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(44, 62, 80, 0.4);
+}
+
     </style>
 </head>
 <body>
 
-    <a href="/" onclick="window.location.href='/index.html?v=' + Date.now(); return false;" class="btn-volver"> ❤️ Ir a la Tienda</a>
+    <a href="/" onclick="window.location.href='/landing.html?v=' + Date.now(); return false;" class="btn-volver">  Ir a la Tienda</a>
 
     <div class="contenedor">
-        <h2>💎 Ingreso de mercancía</h2>
+        <h2> Ingreso de mercancía</h2>
         
         <form id="formulario-admin" enctype="multipart/form-data" autocomplete="off">
             <input type="hidden" id="edit-product-id" name="id" value="">
@@ -137,6 +174,11 @@ td {
                     <option value="Juegos">Juegos</option>
                     <option value="Pulseras">Pulsera</option>
                     <option value="Relojes">Reloj</option>
+                    
+                    <!-- Nuevas Categorías de Ropa (VOLK) -->
+                    <option value="Segunda Mano">Segunda Mano</option>
+                    <option value="Nuevo">Nuevo</option>
+
                 </select>
             </div>
 
@@ -160,6 +202,15 @@ td {
                 <input type="number" id="edit-descIndividual" name="descIndividual" placeholder="0" min="0" max="100">
             </div>
             
+            <div class="form-group">
+    <label for="tienda">Tienda de destino:</label>
+    <select id="tienda" name="tienda" class="form-control" required>
+        <option value="glow">Glow by Mar</option>
+        <option value="volk">Volk</option>
+    </select>
+</div>
+
+
             <div class="grupo-campo" id="campo-foto" style="width: 100%; box-sizing: border-box;">
     <label style="display: block; margin-bottom: 5px; font-weight: bold;">Foto del Producto:</label>
     
@@ -186,27 +237,33 @@ td {
 
 <div class="contenedor" style="margin-top: 20px; border: 2px dashed #e67e22; padding: 20px; background-color: #fff9f5; border-radius: 8px;">
     <h2 style="color: #d80606; margin-top: 0;">🔥 Panel de Ofertas Masivas 🔥 </h2>
-    <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Desde aquí puedes aplicar promociones relámpago a toda la tienda o congelar descuentos por categorías.</p>
+    <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Desde aquí puedes aplicar promociones relámpago a una tienda específica o congelar descuentos por categorías.</p>
     
     <form id="formulario-ofertas" autocomplete="off" style="display: flex; flex-direction: column; gap: 15px;">
+        
+        <!-- NUEVO: Selector de Tienda independiente -->
+        <div class="grupo-campo" style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-weight: bold; color: #333;">Selecciona la Tienda:</label>
+            <select id="tienda-oferta" required style="padding: 10px; border: 1px solid #ccc; border-radius: 6px; width: 100%; font-weight: bold;">
+                <option value="glow">💍 Glow</option>
+                <option value="volk">👕 VOLK</option>
+            </select>
+        </div>
+
         <div class="grupo-campo" style="display: flex; flex-direction: column; gap: 5px;">
             <label style="font-weight: bold; color: #333;">Tipo de Descuento:</label>
             <select id="tipo-oferta" required onchange="conmutarCamposOferta()" style="padding: 10px; border: 1px solid #ccc; border-radius: 6px; width: 100%;">
-                <option value="global">🛒 Toda la Tienda </option>
-                <option value="categoria">💎 Por Categoría </option>
+                <option value="global">🛒 Toda la Tienda Seleccionada</option>
+                <option value="categoria">💎 Por Categoría</option>
             </select>
         </div>
 
         <div class="grupo-campo" id="campo-categoria-oferta" style="display: none; flex-direction: column; gap: 5px;">
             <label style="font-weight: bold; color: #333;">Selecciona la Categoría:</label>
             <select id="categoria-oferta" style="padding: 10px; border: 1px solid #ccc; border-radius: 6px; width: 100%;">
-                <option value="Aretes">Arete</option>
-                <option value="Anillos">Anillo</option>
-                <option value="Cadenas">Cadena</option>
-                <option value="Juegos">Juegos</option>
-                <option value="Pulseras">Pulsera</option>
-                <option value="Relojes">Reloj</option>
-            </select>
+    <!-- Se llenará automáticamente según la tienda seleccionada -->
+</select>
+
         </div>
 
         <div class="grupo-campo" style="display: flex; flex-direction: column; gap: 5px;">
@@ -215,25 +272,48 @@ td {
         </div>
 
         <button type="submit" style="background-color: #e67e22; color: white; padding: 12px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; text-transform: uppercase; width: 100%;">Lanzar Promoción 🚀</button>
-        <button type="button" onclick="apagarOfertas()" style="background-color: #d32f2f; color: white; padding: 12px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; text-transform: uppercase; width: 100%; margin-top: 5px;">Apagar Todas las Ofertas 🛑</button>
+        <button type="button" onclick="apagarOfertasPorTienda()" style="background-color: #d32f2f; color: white; padding: 12px; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; text-transform: uppercase; width: 100%; margin-top: 5px;">Apagar Ofertas de la Tienda 🛑</button>
     </form>
     
     <p id="estado-ofertas" style="text-align: center; font-weight: bold; color: #7f8c8d; font-size: 14px; margin-top: 15px; padding: 10px; background: #eee; border-radius: 6px;"></p>
 </div>
 
+    <!-- ========================================== -->
+    <!-- SECCIÓN VENTAS TOTALES CON BOTONES SEPARADOS -->
+    <!-- ========================================== -->
     <div style="display: flex; justify-content: center; margin: 20px 0;">
         <div style="background: linear-gradient(135deg, #2c3e50, #1a252f); color: white; padding: 15px 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; min-width: 300px; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-            <span style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #bdc3c7;">Ventas Totales del Mes</span>
+            <span id="titulo-ventas-banner" style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #bdc3c7;">Ventas Totales del Mes (Glow)</span>
             <h2 id="total-ventas-banner" style="margin: 0; font-size: 28px; color: #2ecc71; font-weight: bold;">$0 COP</h2>
             
-            <button onclick="descargarReporteMensual()" style="background: #e67e22; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; margin-top: 5px; transition: background 0.3s;">
-                📄 Reporte Ventas
-            </button>
+            <div style="display: flex; gap: 8px; margin-top: 5px; width: 100%;">
+                <button onclick="descargarReportePorTienda('glow')" style="flex: 1; background: #e67e22; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; transition: background 0.3s;">
+                    📊 Reporte Glow
+                </button>
+                <button onclick="descargarReportePorTienda('volk')" style="flex: 1; background: #16a085; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; transition: background 0.3s;">
+                    📈 Reporte Volk
+                </button>
+            </div>
         </div>
     </div>
 
+    <!-- ========================================== -->
+    <!-- SECCIÓN INVENTARIO CON BOTONES DE TIENDA  -->
+    <!-- ========================================== -->
     <div class="contenedor-tabla">
-        <h3 style="margin-top: 0; color: #2c3e50; text-align: center;">📦 Inventario Actual en Sistema</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <h3 id="titulo-inventario-seccion" style="margin: 0; color: #2c3e50;">📦 Inventario Actual: Glow</h3>
+            
+            <div style="display: flex; gap: 8px;">
+                <button onclick="obtenerInventario('glow'); cargarVentasBanner('glow');" style="background: #e67e22; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">
+    💍 Ver Glow
+</button>
+<button onclick="obtenerInventario('volk'); cargarVentasBanner('volk');" style="background: #2c3e50; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer;">
+    👕 Ver Volk
+</button>
+            </div>
+        </div>
+
         <table>
             <thead>
                 <tr>
@@ -243,7 +323,6 @@ td {
                     <th>Descuento</th>
                     <th>Stock</th>
                     <th>Acción</th>
-
                 </tr>
             </thead>
             <tbody id="tabla-inventario"></tbody>
@@ -270,13 +349,40 @@ td {
 
 
 
-<button onclick="registrarVentaConLista()" style="background: #ddc36e; color: #111; padding: 10px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer;">
-    Registrar Venta Externa
-</button>
+<div style="display: flex; justify-content: center; gap: 15px; margin: 30px 0;">
+    <button onclick="registrarVentaTienda('glow')" class="btn-venta-glow">💎 Registrar Venta - Glow</button>
+    <button onclick="registrarVentaTienda('volk')" class="btn-venta-volk">👔 Registrar Venta - Volk</button>
+</div>
+
 
 
 
 <script>
+// ==========================================
+// VARIABLES GLOBALES DE CACHÉ
+// ==========================================
+let inventarioGlobalCache = [];
+let pedidosGlobalCache = [];
+
+
+// ==========================================
+// ARRANQUE AUTOMÁTICO AL CARGAR LA PÁGINA
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    obtenerInventario('glow');  
+    cargarVentasBanner('glow'); 
+    cargarPedidosAdmin(); 
+    obtenerEstadoOfertas();
+    actualizarCategoriasOferta();
+    
+    if (typeof limpiarFormularioAdmin === 'function') {
+        limpiarFormularioAdmin();
+    }
+});
+
+// ==========================================
+// FACTURAS Y REPORTES
+// ==========================================
 function descargarFactura(idPedido) {
     const ventanaImpresion = window.open(`/api/pedidos/${idPedido}/factura`, '_blank', 'width=900,height=700');
     
@@ -293,10 +399,13 @@ function descargarFactura(idPedido) {
     }
 }
 
-function descargarReporteMensual() {
-    window.open('/api/reportes/mensual', '_blank');
+function descargarReportePorTienda(tienda) {
+    window.open(`/api/reportes/mensual?tienda=${tienda}`, '_blank');
 }
 
+// ==========================================
+// GESTIÓN DE PEDIDOS Y BANNER DE VENTAS
+// ==========================================
 async function cargarPedidosAdmin() {
     try {
         const respuesta = await fetch('/api/pedidos');
@@ -324,11 +433,9 @@ async function cargarPedidosAdmin() {
             if (estadoActual.toLowerCase() === 'despachado') colorEstado = '#3498db'; 
             if (estadoActual.toLowerCase() === 'entregado') colorEstado = '#27ae60'; 
 
-            // Formatear teléfono de forma segura para WhatsApp
             let telefonoFormateado = (pedido.telefono || "").toString().trim().replace(/\s+/g, '');
             if (!telefonoFormateado.startsWith('57')) telefonoFormateado = '57' + telefonoFormateado;
 
-            // Leer productos de forma limpia para el mensaje
             let listaArticulosText = "Productos varios";
             let detalleProductosMensaje = "";
             if (pedido.productos && Array.isArray(pedido.productos)) {
@@ -336,11 +443,10 @@ async function cargarPedidosAdmin() {
                 detalleProductosMensaje = pedido.productos.map(prod => `• Artículo: ${prod.nombre || 'Accesorio'}\nValor: $${parseInt(prod.precioConDescuento || prod.precioVenta || prod.precio || 0).toLocaleString('es-CO')}\nCantidad: ${prod.cantidad || 1}`).join('\n\n');
             }
 
-            // Lógica del Botón Único Inteligente
             let botonAccionDinamico = '';
 
             if (estadoActual.toLowerCase() === 'pendiente') {
-                const textoWA = `Hola ${pedido.cliente}! Te habla Glow By Mar. Confirmamos que tu pago de $${totalNetoPedido.toLocaleString('es-CO')} COP fue recibido con éxito y ya estamos alistando tus accesorios con mucho amor.`;
+                const textoWA = `Hola ${pedido.cliente}! Te habla Glow By Mar. Confirmamos que tu pago de $${totalNetoPedido.toLocaleString('es-CO')} COP fue recibido con éxito y ya estamos alistando tus productos con mucho amor.`;
                 const urlWA = `https://wa.me/${telefonoFormateado}?text=${encodeURIComponent(textoWA)}`;
                 
                 botonAccionDinamico = `<a href="${urlWA}" target="_blank" onclick="confirmarPagoYPreparar('${pedido.idPedido}')" style="background: #e67e22; color: white; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: bold; text-transform: uppercase; display: inline-block;">💬 Confirmar Pago</a>`;
@@ -376,16 +482,124 @@ async function cargarPedidosAdmin() {
             `;
         });
 
-        const reporteElemento = document.getElementById('total-ventas-banner');
-        if (reporteElemento) {
-            reporteElemento.innerText = `$${totalCaja.toLocaleString('es-CO')} COP`;
-        }
-
     } catch (error) {
         console.error("Error al cargar los pedidos:", error);
     }
 }
 
+async function cargarVentasBanner(tiendaFiltro = 'glow') {
+    try {
+        if (pedidosGlobalCache.length === 0) {
+            const respuesta = await fetch('/api/pedidos');
+            pedidosGlobalCache = await respuesta.json();
+        }
+
+        const tituloBanner = document.getElementById('titulo-ventas-banner');
+        const totalBanner = document.getElementById('total-ventas-banner');
+        
+        const nombreTienda = tiendaFiltro === 'glow' ? 'Glow' : 'VOLK';
+        if (tituloBanner) tituloBanner.innerText = `Ventas Totales del Mes (${nombreTienda})`;
+
+        const respProd = await fetch('/api/productos?admin=true');
+        const productosBD = await respProd.json();
+
+        let sumaTotalTienda = 0;
+
+        pedidosGlobalCache.forEach(p => {
+            const articulos = p.articulosDetallados || p.productos || [];
+            
+            articulos.forEach(art => {
+                const nombreArt = art.nombre || art.titulo || "";
+                const prodEnBD = productosBD.find(prod => prod.nombre.trim().toLowerCase() === nombreArt.trim().toLowerCase());
+                const tiendaProd = prodEnBD && prodEnBD.tienda ? prodEnBD.tienda.toLowerCase() : 'glow';
+
+                if (tiendaProd === tiendaFiltro.toLowerCase()) {
+                    const subArt = art.subtotal || (art.precioConDescuento * (art.cantidad || 1)) || (art.precio * (art.cantidad || 1)) || 0;
+                    sumaTotalTienda += subArt;
+                }
+            });
+        });
+
+        if (totalBanner) {
+            totalBanner.innerText = `$${sumaTotalTienda.toLocaleString('es-CO')} COP`;
+        }
+
+    } catch (error) {
+        console.error("Error al cargar ventas del banner:", error);
+    }
+}
+
+// ==========================================
+// GESTIÓN DE INVENTARIO POR TIENDA
+// ==========================================
+async function obtenerInventario(tiendaFiltro = 'glow') {
+    try {
+        if (inventarioGlobalCache.length === 0) {
+            const respuesta = await fetch('/api/productos?admin=true');
+            inventarioGlobalCache = await respuesta.json();
+        }
+
+        const cuerpoTabla = document.getElementById('tabla-inventario');
+        const tituloSeccion = document.getElementById('titulo-inventario-seccion');
+        if (!cuerpoTabla) return;
+        cuerpoTabla.innerHTML = '';
+
+        if (tituloSeccion) {
+            tituloSeccion.innerText = tiendaFiltro === 'glow' ? '📦 Inventario Actual: Glow' : '📦 Inventario Actual: Volk';
+        }
+
+        const productosFiltrados = inventarioGlobalCache.filter(prod => {
+            const tiendaProd = prod.tienda ? prod.tienda.toLowerCase() : 'glow';
+            return tiendaProd === tiendaFiltro.toLowerCase();
+        });
+
+        if (productosFiltrados.length === 0) {
+            cuerpoTabla.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#95a5a6; padding: 20px;">No hay mercancía registrada en esta tienda.</td></tr>`;
+            return;
+        }
+
+        let costoTotalInventario = 0;
+
+        productosFiltrados.forEach(prod => {
+            let colorStock = '#27ae60';
+            if (prod.stock <= 0) colorStock = '#e74c3c';
+            else if (prod.stock <= 2) colorStock = '#c0392b';
+
+            const costo = prod.costo || 0;
+            const stockActual = prod.stock !== undefined ? prod.stock : 0;
+            costoTotalInventario += (costo * stockActual);
+
+            const valorIndividual = parseInt(prod.descIndividual || 0);
+            const valorMasivo = parseInt(prod.descuento || 0);
+            const descuentoFinal = valorIndividual > 0 ? valorIndividual : valorMasivo;
+
+            const etiquetaDescuento = descuentoFinal > 0 
+                ? `<span style="background: #e67e22; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">${descuentoFinal}% OFF</span>` 
+                : `<span style="color: #95a566;">Sin desc.</span>`;
+
+            cuerpoTabla.innerHTML += `
+                <tr>
+                    <td style="font-weight: bold; color: #34495e;">${prod.nombre}</td>
+                    <td>$${costo.toLocaleString('es-CO')}</td>
+                    <td>$${(prod.precioVenta || prod.precio || 0).toLocaleString('es-CO')}</td>
+                    <td>${etiquetaDescuento}</td>
+                    <td style="color: ${colorStock};">${stockActual} unds</td>
+                    <td style="display: flex; flex-direction: column; gap: 5px; align-items: center;">
+                        <button class="btn-editar" onclick="editarProducto('${prod._id}')">✏️ Editar</button>
+                        <button class="btn-eliminar" onclick="eliminarProducto('${prod._id}')">❌ Eliminar</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+    } catch (error) {
+        console.error("Error al obtener inventario:", error);
+    }
+}
+
+// ==========================================
+// ACCIONES DE WHATSAPP Y ESTADOS DE PEDIDOS
+// ==========================================
 async function confirmarPagoYPreparar(id) {
     try {
         const res = await fetch(`/api/pedidos/${id}/despachar`, {
@@ -411,7 +625,6 @@ async function notificarEnvioYFinalizarConDatos(id, cliente, telefono, totalNeto
     }
 
     const detalleProductos = decodeURIComponent(encodedProductos);
-
     const textoWA = `Hola ${cliente}! Te habla Glow By Mar. Tu pedido ya fue despachado con éxito. \n\n--- RESUMEN DE COMPRA ---\n${detalleProductos}\n\nTotal Neto: $${Number(totalNeto).toLocaleString('es-CO')} COP\n\n--- DATOS DE ENVÍO ---\nEmpresa transportadora: ${empresa}\nNúmero de guía: ${guia}\n\n¡Gracias por tu compra! `;
     const urlWA = `https://wa.me/${telFormateado}?text=${encodeURIComponent(textoWA)}`;
 
@@ -424,13 +637,8 @@ async function notificarEnvioYFinalizarConDatos(id, cliente, telefono, totalNeto
 
         if (resEnvio.ok) {
             await fetch(`/api/pedidos/${id}/entregar`, { method: 'PUT' });
-
-            // Recargamos la tabla para que pase a estado finalizado sin perder la vista
             setTimeout(() => cargarPedidosAdmin(), 500);
 
-            // Creamos un enlace invisible pero con target="_blank" y simulamos el clic.
-            // Al venir después de un prompt hecho por el usuario, Chrome suele permitirlo si se hace rápido,
-            // o en su defecto te dejará un aviso limpio en la barra de direcciones sin cerrar tu panel.
             const link = document.createElement('a');
             link.href = urlWA;
             link.target = '_blank';
@@ -443,28 +651,40 @@ async function notificarEnvioYFinalizarConDatos(id, cliente, telefono, totalNeto
     }
 }
 
-async function registrarVentaConLista() {
+// ==========================================
+// REGISTRO DE VENTA DIRECTO POR TIENDA (SINCRONIZADO CON LA TABLA)
+// ==========================================
+async function registrarVentaTienda(tiendaElegida) {
     try {
-        const resInv = await fetch('/api/productos'); 
+        // 1. Llamamos a la misma API de inventario de administrador
+        const resInv = await fetch('/api/productos?admin=true'); 
         if (!resInv.ok) {
             alert("No se pudo cargar el inventario.");
             return;
         }
         
-        const productos = await resInv.json();
+        const todosLosProductos = await resInv.json();
+        
+        // 2. Usamos exactamente EL MISMO FILTRO que usa la tabla de tu admin
+        const productos = todosLosProductos.filter(prod => {
+            const tiendaProd = prod.tienda ? prod.tienda.toLowerCase().trim() : 'glow';
+            return tiendaProd === tiendaElegida.toLowerCase().trim();
+        });
+
         if (!productos || productos.length === 0) {
-            alert("No hay productos registrados en el inventario.");
+            alert(`No hay productos registrados en esta tienda (${tiendaElegida.toUpperCase()}).`);
             return;
         }
 
-        let listaTexto = "Elige el número del producto (o escribe el nombre del artículo externo):\n\n";
+        // 3. Armamos la lista con los productos reales de esa tienda
+        let listaTexto = `VENTA EXTERNA - ${tiendaElegida.toUpperCase()}\nElige el número del producto:\n\n`;
         productos.forEach((p, index) => {
             let stockActual = p.stock !== undefined ? p.stock : (p.disponibles || 0);
-            let precioActual = p.precio || p.precioVenta || 0;
+            let precioActual = p.precioVenta || p.precio || 0;
             listaTexto += `${index + 1}. ${p.nombre} - Stock: ${stockActual} - Precio: $${precioActual}\n`;
         });
         
-        listaTexto += `\n(O escribe '0' o el nombre de un artículo del joyero fuera de la página)`;
+        listaTexto += `\n(O escribe '0' para un artículo externo)`;
 
         const seleccionIndex = prompt(listaTexto);
         if (seleccionIndex === null || seleccionIndex.trim() === "") return;
@@ -472,40 +692,33 @@ async function registrarVentaConLista() {
         let datosVenta = {};
         const valorIngresado = seleccionIndex.trim();
 
-        // 🟢 Si escribes texto que no es un número, o escribes "0", asumimos que es un artículo libre del joyero
         if (isNaN(valorIngresado) || valorIngresado === "0") {
-            // Si por casualidad escribiste el nombre de una vez en el primer prompt, lo usamos; si pusiste 0, se lo pedimos
-            const nombreLibre = (isNaN(valorIngresado) && valorIngresado !== "0") 
-                ? valorIngresado 
-                : prompt("Ingrese el nombre exacto del artículo del joyero:");
-            
+            const nombreLibre = (isNaN(valorIngresado) && valorIngresado !== "0") ? valorIngresado : prompt("Nombre del artículo:");
             if (!nombreLibre) return;
 
-            const costoLibre = prompt(`Ingrese el costo (lo que le costó a usted):`, "0");
+            const costoLibre = prompt("Costo:", "0");
             if (costoLibre === null) return;
 
-            const precioLibre = prompt(`Ingrese el precio de venta para "${nombreLibre}":`, "0");
+            const precioLibre = prompt("Precio de venta:", "0");
             if (!precioLibre) return;
 
-            const cantidadLibre = prompt("Ingrese la cantidad vendida:", "1");
+            const cantidadLibre = prompt("Cantidad:", "1");
             if (!cantidadLibre) return;
 
-            const clienteLibre = prompt("Nombre del cliente (Opcional):", "Venta Externa");
+            const clienteLibre = prompt("Nombre del cliente:", "Venta Externa");
 
             datosVenta = {
                 esArticuloLibre: true,
-                nombreLibre: nombreLibre,
+                nombreLibre,
                 costoLibre: Number(costoLibre),
                 precioLibre: Number(precioLibre),
                 cantidad: Number(cantidadLibre),
                 tipoVenta: "Venta Joyero / Externa",
-                cliente: clienteLibre || "Venta Externa"
+                cliente: clienteLibre || "Venta Externa",
+                tienda: tiendaElegida.toLowerCase() // 👈 Se va directo a su tienda
             };
-
         } else {
-            // 🔵 Si pusiste un número válido de la lista de la tienda
-            const opcionElegida = parseInt(valorIngresado);
-            const indexElegido = opcionElegida - 1;
+            const indexElegido = parseInt(valorIngresado) - 1;
             
             if (indexElegido < 0 || indexElegido >= productos.length) {
                 alert("Selección inválida.");
@@ -513,23 +726,22 @@ async function registrarVentaConLista() {
             }
 
             const productoSeleccionado = productos[indexElegido];
-
-            const nombreCliente = prompt("Nombre del cliente (Venta Externa):", "Cliente Presencial");
+            const nombreCliente = prompt("Nombre del cliente:", "Cliente Presencial");
             if (!nombreCliente) return;
 
             let stockDisponible = productoSeleccionado.stock !== undefined ? productoSeleccionado.stock : (productoSeleccionado.disponibles || 0);
-            const cantidadVendida = parseInt(prompt(`Cantidad vendida de "${productoSeleccionado.nombre}" (Stock disponible: ${stockDisponible}):`, "1"));
+            const cantidadVendida = parseInt(prompt(`Cantidad vendida (Stock: ${stockDisponible}):`, "1"));
             if (!cantidadVendida || cantidadVendida <= 0) return;
 
             datosVenta = {
-                productoIndex: indexElegido,
+                productoId: productoSeleccionado._id,
                 cantidad: cantidadVendida,
                 tipoVenta: "Venta Física / Externa",
-                cliente: nombreCliente
+                cliente: nombreCliente,
+                tienda: tiendaElegida.toLowerCase() // 👈 Se va directo a su tienda
             };
         }
 
-        // Enviamos los datos al servidor
         const res = await fetch('/api/registrar-venta', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -542,160 +754,27 @@ async function registrarVentaConLista() {
             alert("¡Venta registrada con éxito!");
             location.reload(); 
         } else {
-            alert("Error del servidor: " + (resultado.mensaje || "No se pudo registrar la venta."));
+            alert("Error: " + (resultado.mensaje || "No se pudo registrar."));
         }
 
     } catch (error) {
-        console.error("Error al procesar la venta:", error);
-        alert("Ocurrió un error de red al conectar con el servidor.");
+        console.error("Error:", error);
+        alert("Error de red.");
     }
 }
 
-async function avanzarADespachado(id) {
-    const empresa = prompt("Empresa de transporte (Ej: Inter Rapidísimo, Servientrega):");
-    if (!empresa) return;
-    const guia = prompt("Número de guía de envío:");
-    if (!guia) return;
-
-    try {
-        const res = await fetch(`/api/pedidos/${id}/despachar`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ transportadora: empresa, numeroGuia: guia })
-        });
-        if (res.ok) {
-            setTimeout(() => cargarPedidosAdmin(), 1000);
-        }
-    } catch (error) { console.error(error); }
-}
-
-async function marcarEntregadoDirecto(id) {
-    try {
-        const res = await fetch(`/api/pedidos/${id}/entregar`, { method: 'PUT' });
-        if (res.ok) {
-            setTimeout(() => cargarPedidosAdmin(), 1000);
-        }
-    } catch (error) { console.error(error); }
-}
-
-function verGuiaEnvio(cliente, tel, dir, total) {
-    alert(`📋 DATOS DE ENVIO:\n\nDESTINATARIO: ${cliente}\nTELEFONO: ${tel}\nDIRECCION: ${dir}\nTOTAL NETO A COBRAR: $${parseInt(total).toLocaleString('es-CO')} COP`);
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    obtenerInventario();  
-    cargarPedidosAdmin(); 
-    obtenerEstadoOfertas();
-});
-
-// ====== AQUÍ SE REORGANIZÓ LA TABLA PARA INCLUIR EL BOTÓN EDITAR ======
-async function obtenerInventario() {
-    try {
-        const respuesta = await fetch('/api/productos');
-        const productos = await respuesta.json();
-        const cuerpoTabla = document.getElementById('tabla-inventario');
-        if (!cuerpoTabla) return;
-        cuerpoTabla.innerHTML = '';
-
-        if (productos.length === 0) {
-            cuerpoTabla.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#95a5a6;">No hay mercancía.</td></tr>`;
-            return;
-        }
-
-        let costoTotalInventario = 0;
-
-        productos.forEach(prod => {
-            let colorStock = '#27ae60';
-            if (prod.stock <= 0) colorStock = '#e74c3c';
-            else if (prod.stock <= 2) colorStock = '#c0392b';
-
-            // Cálculo del costo total invertido
-            const costo = prod.costo || 0;
-            const stockActual = prod.stock !== undefined ? prod.stock : 0;
-            costoTotalInventario += (costo * stockActual);
-
-            // Buscamos el descuento real ganador
-            const valorIndividual = parseInt(prod.descIndividual || 0);
-            const valorMasivo = parseInt(prod.descuento || 0);
-
-            const descuentoFinal = valorIndividual > 0 ? valorIndividual : valorMasivo;
-
-            const etiquetaDescuento = descuentoFinal > 0 
-                ? `<span style="background: #e67e22; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold;">${descuentoFinal}% OFF</span>` 
-                : `<span style="color: #95a566;">Sin desc.</span>`;
-
-            cuerpoTabla.innerHTML += `
-                <tr>
-                    <td style="font-weight: bold; color: #34495e;">${prod.nombre}</td>
-                    <td>$${costo.toLocaleString('es-CO')}</td>
-                    <td>$${(prod.precioVenta || prod.precio || 0).toLocaleString('es-CO')}</td>
-                    <td>${etiquetaDescuento}</td>
-                    <td style="color: ${colorStock};">${stockActual} unds</td>
-                    <td style="display: flex; flex-direction: column; gap: 5px; align-items: center;">
-                        <button class="btn-editar" onclick="editarProducto('${prod._id}')">✏️ Editar</button>
-                        <button class="btn-eliminar" onclick="eliminarProducto('${prod._id}')">❌ Eliminar</button>
-                    </td>
-                </tr>
-            `;
-        });
-
-        // Fila final con el total invertido
-        cuerpoTabla.innerHTML += `
-            <tr style="font-weight: bold; background-color: #f8f8f8;">
-                <td style="text-align: right;">TOTAL INVERTIDO:</td>
-                <td colspan="5" style="color: #2c3e50;">$${costoTotalInventario.toLocaleString('es-CO')} COP</td>
-            </tr>
-        `;
-
-    } catch (error) { console.error("Error al obtener inventario:", error); }
-}
-
-/*// ====== FUNCIÓN PARA CARGAR LOS DATOS EN EL FORMULARIO AL EDITAR ======
-async function editarProducto(id) {
-    try {
-        const respuesta = await fetch('/api/productos');
-        const productos = await respuesta.json();
-        
-        // Buscamos el producto por su _id de MongoDB
-        const producto = productos.find(p => String(p._id) === String(id));
-
-        if (producto) {
-            // Asignamos el _id al campo oculto para saber que estamos editando
-            if (document.getElementById('edit-product-id')) {
-                document.getElementById('edit-product-id').value = producto._id;
-            }
-
-            // Llenamos los inputs del formulario
-            if (document.getElementById('nombre')) document.getElementById('nombre').value = producto.nombre || '';
-            if (document.getElementById('categoria')) document.getElementById('categoria').value = producto.categoria || '';
-            if (document.getElementById('precio')) document.getElementById('precio').value = producto.precioVenta || producto.precio || '';
-            if (document.getElementById('costo')) document.getElementById('costo').value = producto.costo || '';
-            if (document.getElementById('stock')) document.getElementById('stock').value = producto.stock !== undefined ? producto.stock : '';
-            if (document.getElementById('descIndividual')) document.getElementById('descIndividual').value = producto.descIndividual || 0;
-
-            // Desplazamos la pantalla hacia arriba suavemente para ver el formulario cargado
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    } catch (error) {
-        console.error("Error al cargar producto para editar:", error);
-    }
-}*/
-
-// ====== LÓGICA UNIFICADA PARA MANEJAR "CREACIÓN" O "EDICIÓN" CON FormData ======
 document.getElementById('formulario-admin').addEventListener('submit', async (e) => {
     e.preventDefault();
     
     const idEdicion = document.getElementById('edit-product-id').value.trim();
     const datosFormulario = new FormData(e.target);
     
-    // URL y método por defecto para CREAR
     let url = '/api/productos';
     let method = 'POST'; 
     
-    // Si hay un ID, cambiamos a la ruta de EDICIÓN por POST
     if (idEdicion) {
-        url = '/api/productos/editar'; // Esta ruta ya la probamos y funciona con POST
-        datosFormulario.append('id', idEdicion); // Aseguramos que se envíe el ID
+        url = '/api/productos/editar'; 
+        datosFormulario.append('id', idEdicion); 
     }
     
     try {
@@ -706,20 +785,20 @@ document.getElementById('formulario-admin').addEventListener('submit', async (e)
         });
         
         const respuesta = await fetch(url, {
-            method: method, // Ahora usamos la variable que acabamos de definir
+            method: method,
             body: datosFormulario
         });
         
         const resultado = await respuesta.json().catch(() => ({}));
 
-        // Validamos tanto el ok del http como la propiedad 'exito' que devuelve tu backend
         if (respuesta.ok && resultado.exito) {
             Swal.fire({ 
                 title: idEdicion ? '¡Actualizado con éxito!' : '¡Guardado con éxito!', 
                 icon: 'success' 
             });
-            limpiarFormularioAdmin(); // Vacía el formulario y el ID oculto
-            obtenerInventario();      // Recarga la tabla
+            limpiarFormularioAdmin(); 
+            obtenerInventario('glow');     
+            cargarVentasBanner('glow');
         } else {
             Swal.fire({ 
                 title: resultado.mensaje || 'Error al procesar la solicitud', 
@@ -732,13 +811,13 @@ document.getElementById('formulario-admin').addEventListener('submit', async (e)
     }
 });
 
-// ====== ELIMINAR PRODUCTO ======
 async function eliminarProducto(id) {
     if (!confirm("¿Borrar producto?")) return;
     try {
         const respuesta = await fetch(`/api/productos/${id}`, { method: 'DELETE' });
         if (respuesta.ok) {
-            obtenerInventario();
+            inventarioGlobalCache = []; // Limpiamos caché para forzar recarga
+            obtenerInventario('glow');
         } else {
             alert("No se pudo eliminar el producto de la base de datos.");
         }
@@ -751,8 +830,11 @@ function conmutarCamposOferta() {
     campoCat.style.display = tipo === 'categoria' ? 'flex' : 'none';
 }
 
+// ====== ACTIVAR OFERTAS MASIVAS POR TIENDA ======
 document.getElementById('formulario-ofertas')?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    
+    const tienda = document.getElementById('tienda-oferta').value;
     const tipo = document.getElementById('tipo-oferta').value;
     const porcentaje = document.getElementById('porcentaje-oferta').value;
     const categoria = document.getElementById('categoria-oferta').value;
@@ -761,43 +843,51 @@ document.getElementById('formulario-ofertas')?.addEventListener('submit', async 
         const respuesta = await fetch('/api/ofertas/activar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tipo, porcentaje, categoria })
+            body: JSON.stringify({ tienda, tipo, porcentaje, categoria })
         });
 
         if (respuesta.ok) {
-            Swal.fire({ title: '¡Oferta Activada!', text: 'El descuento masivo ya se refleja en la tienda.', icon: 'success' });
+            Swal.fire({ title: '¡Oferta Activada!', text: `El descuento masivo ya se refleja en ${tienda.toUpperCase()}.`, icon: 'success' });
             obtenerEstadoOfertas();
-            obtenerInventario(); 
+            inventarioGlobalCache = []; // Limpiamos caché para forzar recarga
+            obtenerInventario(tienda);  // Recargamos el inventario de la tienda afectada
         }
-    } catch (error) { console.error("Error al activar oferta:", error); }
+    } catch (error) { 
+        console.error("Error al activar oferta:", error); 
+    }
 });
 
-async function apagarOfertas() {
-    if (!confirm("¿Seguro que deseas remover todas las promociones masivas?")) return;
+// ====== APAGAR OFERTAS DE LA TIENDA SELECCIONADA ======
+async function apagarOfertasPorTienda() {
+    const tiendaSeleccionada = document.getElementById('tienda-oferta').value;
+    
+    if (!confirm(`¿Seguro que deseas remover todas las ofertas de la tienda ${tiendaSeleccionada.toUpperCase()}?`)) return;
+    
     try {
-        const respuesta = await fetch('/api/ofertas/desactivar', { method: 'POST' });
+        const respuesta = await fetch('/api/ofertas/desactivar', { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tienda: tiendaSeleccionada })
+        });
         const resultado = await respuesta.json();
         
         if (resultado.exito) {
-            Swal.fire({ title: 'Ofertas Removidas', text: 'Volviendo a precios normales.', icon: 'info' });
-            // REFRESCAR TODO EL SISTEMA DE AVISOS
+            Swal.fire({ title: 'Ofertas Removidas', text: `Volviendo a precios normales en ${tiendaSeleccionada.toUpperCase()}.`, icon: 'info' });
             await obtenerEstadoOfertas(); 
-            await obtenerInventario(); // Recarga la tabla de productos para ver el 0%
+            inventarioGlobalCache = [];
+            await obtenerInventario(tiendaSeleccionada); 
         }
     } catch (error) {
         console.error("Error al apagar ofertas:", error);
     }
 }
 
-// En tu admin/index.html dentro de <script>
-// Reemplaza tu función actual en admin/index.html por esta:
 async function obtenerEstadoOfertas() {
     try {
         const respuesta = await fetch('/api/productos');
         const productos = await respuesta.json();
         const letrero = document.getElementById('estado-ofertas');
         
-        // Buscamos si existe al menos un producto con descuento > 0
         const productoEnOferta = productos.find(p => p.descuento > 0);
 
         if (productoEnOferta) {
@@ -810,85 +900,37 @@ async function obtenerEstadoOfertas() {
     }
 }
 
-/*async function editarProducto(id) {
-    try {
-        const respuesta = await fetch('/api/productos');
-        const productos = await respuesta.json();
-        const producto = productos.find(p => p.id == id);
-
-        if (producto) {
-            // Mapeo seguro: ID del elemento en HTML -> Valor del objeto
-            const campos = {
-                'edit-product-id': producto.id,
-                'nombre': producto.nombre,
-                'precio': producto.precio,
-                'categoria': producto.categoria,
-                'stock': producto.stock,
-                'edit-descIndividual': producto.descIndividual || 0,
-                'descripcion': producto.descripcion
-
-            };
-
-            for (const [idElemento, valor] of Object.entries(campos)) {
-                const elemento = document.getElementById(idElemento);
-                if (elemento) {
-                    elemento.value = valor || '';
-                } else {
-                    console.warn(`Campo no encontrado: ${idElemento}`);
-                }
-            }
-
-            // Cambiar el texto del botón de forma segura
-            const btn = document.getElementById('btn-guardar');
-            if (btn) {
-                btn.innerText = '🔄 Actualizar Producto';
-        btn.style.backgroundColor = '#3498db'; // Azul profesional
-        btn.className = 'btn-azul'; // Aplica el azul
-            }
-        }
-    window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-            
-            console.log("¡Scroll al tope realizado!");
-        }
-     catch (error) {
-        console.error("Error al editar:", error);
-    }
-} */
-
-// ====== FUNCIÓN ÚNICA Y CORREGIDA PARA EDITAR ======
+// ====== FUNCIÓN CORREGIDA PARA EDITAR PRODUCTO ======
 async function editarProducto(id) {
     try {
-        const respuesta = await fetch('/api/productos');
-        const productos = await respuesta.json();
+        // Si el caché está vacío, lo cargamos
+        if (!inventarioGlobalCache || inventarioGlobalCache.length === 0) {
+            const respuesta = await fetch('/api/productos?admin=true');
+            inventarioGlobalCache = await respuesta.json();
+        }
         
-        // ¡OJO AQUÍ! Buscamos usando String(_id) porque MongoDB usa _id
-        const producto = productos.find(p => String(p._id) === String(id));
+        // Buscamos el producto comparando el ID como texto plano para evitar problemas de tipos
+        const producto = inventarioGlobalCache.find(p => String(p._id) === String(id));
 
         if (producto) {
-            // Mapeo seguro: ID del elemento en HTML -> Valor del objeto en MongoDB
             const campos = {
-                'edit-product-id': producto._id, // Usamos _id
+                'edit-product-id': producto._id,
                 'nombre': producto.nombre,
-                'precio': producto.precioVenta, // Nombre real en DB
-                'costoProducto': producto.costoCompra,  // Nombre real en DB
-                'stock': producto.cantidadStock,// Nombre real en DB
-                'edit-descIndividual': producto.descuento || producto.descIndividual || 0, // O el ID exacto que tenga tu input en el HTML de admin
-                'categoria': producto.categoria,
-                'descripcion': producto.descripcion
+                'precio': producto.precioVenta || producto.precio || 0, 
+                'costoProducto': producto.costoCompra || producto.costo || 0,  
+                'stock': producto.stock !== undefined ? producto.stock : (producto.cantidadStock || 0),
+                'edit-descIndividual': producto.descuento || producto.descIndividual || 0, 
+                'categoria': producto.categoria || '',
+                'descripcion': producto.descripcion || ''
             };
 
-            // Llenar campos
             for (const [idElemento, valor] of Object.entries(campos)) {
                 const elemento = document.getElementById(idElemento);
                 if (elemento) {
-                    elemento.value = valor || '';
+                    elemento.value = valor !== undefined && valor !== null ? valor : '';
                 }
             }
 
-            // Cambiar el botón a modo "Actualizar"
             const btn = document.getElementById('btn-guardar');
             if (btn) {
                 btn.innerText = '🔄 Actualizar Producto';
@@ -896,172 +938,36 @@ async function editarProducto(id) {
             }
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            alert("No se encontró el producto en la memoria.");
         }
     } catch (error) {
         console.error("Error al editar:", error);
     }
 }
 
-/*// Mapea los datos del producto seleccionado de vuelta al formulario
-function prepararEdicion(productoRecibido) {
-    const producto = typeof productoRecibido === 'string' ? JSON.parse(productoRecibido) : productoRecibido;
-    console.log("Datos del producto cargados:", producto);
-
-    // Mapeo de IDs que deben existir en tu HTML
-    const mapeo = {
-        'edit-product-id': producto.id,
-        'nombre': producto.nombre,
-        'precio': producto.precio,
-        'stock': producto.stock || 0,
-        'categoria': producto.categoria,
-        'descripcion': producto.descripcion
-    };
-
-    // Intentar rellenar campos de forma segura
-    for (const [id, valor] of Object.entries(mapeo)) {
-        const elemento = document.getElementById(id);
-        if (elemento) {
-            elemento.value = valor || '';
-        } else {
-            console.warn(`⚠️ Atención: El campo con ID "${id}" no existe en tu HTML. Verifica el formulario.`);
-        }
-    }
-
-    // Configuración del botón
-    const botonGuardar = document.getElementById('btn-guardar');
-    if (botonGuardar) botonGuardar.innerText = '🔄 Actualizar Producto';
-
-   setTimeout(() => {
-        const form = document.getElementById('formulario-admin');
-        if (form) {
-            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        } else {
-            console.warn("No se encontró el formulario para hacer scroll.");
-        }
-    }, 100); // 100 milisegundos son suficientes para que el navegador reaccione
-}*/
-
-
-// Limpia el formulario y lo restaura a su modo original de creación
 function limpiarFormularioAdmin() {
-    document.getElementById('formulario-admin').reset();
+    const form = document.getElementById('formulario-admin');
+    if (form) form.reset();
     
-    // ESTA LÍNEA ES LA CLAVE DE ORO PARA QUE NO SE DUPLIQUE:
     const idOculto = document.getElementById('edit-product-id');
     if (idOculto) idOculto.value = ''; 
 
-    // Y regresamos el botón a su estado normal (Verde / Guardar)
     const btn = document.getElementById('btn-guardar');
     if (btn) {
         btn.innerText = '💾 Guardar Producto';
-        btn.style.backgroundColor = ''; // Regresa al color original de tu CSS
+        btn.style.backgroundColor = ''; 
     }
 }
 
-/*async function registrarVentaExterna() {
-    const nombreProducto = prompt("Ingrese el nombre exacto del producto (ej: cadena):");
-    if (!nombreProducto) return;
+function verGuiaEnvio(cliente, tel, dir, total) {
+    alert(`📋 DATOS DE ENVIO:\n\nDESTINATARIO: ${cliente}\nTELEFONO: ${tel}\nDIRECCION: ${dir}\nTOTAL NETO A COBRAR: $${parseInt(total).toLocaleString('es-CO')} COP`);
+}
 
-    const cantidad = prompt("Ingrese la cantidad vendida:", "1");
-    if (!cantidad) return;
-
-    const cliente = prompt("Nombre del cliente (Opcional):", "Venta Externa");
-
-    try {
-        const respuesta = await fetch('/api/registrar-venta', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                nombreProducto: nombreProducto,
-                cantidad: Number(cantidad),
-                tipoVenta: "Venta Externa", // Esto llenará la casilla OBS como lo pidió
-                cliente: cliente
-            })
-        });
-
-        const resultado = await respuesta.json();
-        if (resultado.exito) {
-            alert(resultado.mensaje);
-            location.reload(); 
-        } else {
-            alert("Error: " + resultado.mensaje);
-        }
-    } catch (err) {
-        alert("Error de conexión con el servidor.");
-    }
-}*/
-
-/*// ====== MANEJADOR DEL FORMULARIO DE PRODUCTOS (CREAR / EDITAR) ======
-document.getElementById('formulario-admin').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const formData = new FormData(e.target);
-    
-    // Verificamos si hay un ID de edición cargado
-    const idEdicion = document.getElementById('edit-product-id') ? document.getElementById('edit-product-id').value.trim() : '';
-    
-    // Por defecto asumimos que es CREAR (POST a /api/productos)
-    let url = '/api/productos';
-    let method = 'POST';
-
-    // Si hay un ID, es EDITAR: cambiamos la ruta y le inyectamos el ID al FormData
-    if (idEdicion) {
-        url = '/api/productos/editar'; // La ruta por POST que ya usa tu servidor
-        formData.append('id', idEdicion);     // Aseguramos que el ID viaje dentro de los datos
-    } else {
-        formData.delete('id'); // Si es nuevo, nos aseguramos que no viaje ningún ID viejo
-    }
-
-    try {
-        const respuesta = await fetch(url, {
-            method: method, // Siempre será 'POST', seguro y sin errores 404
-            body: formData
-        });
-
-        const resultado = await respuesta.json();
-
-        if (respuesta.ok && (resultado.exito !== false)) {
-            alert('¡Producto guardado con éxito!');
-            document.getElementById('formulario-admin').reset();
-            if (typeof limpiarFormularioAdmin === 'function') limpiarFormularioAdmin();
-            if (typeof obtenerInventario === 'function') obtenerInventario();
-        } else {
-            alert('Error: ' + (resultado.mensaje || 'No se pudo guardar'));
-        }
-    } catch (error) {
-        console.error('Error en la petición:', error);
-        alert('Hubo un error de conexión con el servidor.');
-    }
-});*/
-
-// Asegurar que el formulario inicie completamente limpio
-document.addEventListener('DOMContentLoaded', () => {
-    if (typeof limpiarFormularioAdmin === 'function') {
-        limpiarFormularioAdmin();
-    }
-});
-
-
-</script>
-
-<!-- MODAL PARA VER EL COMPROBANTE SIN SALIR DEL PANEL -->
-<div id="modalComprobante" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.8); justify-content:center; align-items:center;">
-    <div style="background:#fff; padding:20px; border-radius:10px; max-width:500px; text-align:center; position:relative;">
-        <span onclick="cerrarModalPago()" style="position:absolute; top:10px; right:15px; font-size:24px; font-weight:bold; cursor:pointer; color:#333;">&times;</span>
-        <h3 style="margin-top:0; color:#2c3e50;">Comprobante de Pago</h3>
-        <div id="contenedorImagenPago" style="margin:15px 0; max-height:400px; overflow:auto;">
-            <!-- Aquí se cargará la foto -->
-        </div>
-        <button onclick="cerrarModalPago()" style="background:#e74c3c; color:white; border:none; padding:8px 20px; border-radius:5px; font-weight:bold; cursor:pointer;">Cerrar</button>
-    </div>
-</div>
-
-<script>
 function abrirModalPago(urlImagen) {
     const modal = document.getElementById('modalComprobante');
     const contenedor = document.getElementById('contenedorImagenPago');
     
-    // Validamos que la URL venga limpia y con contenido real
     if(urlImagen && urlImagen !== "undefined" && urlImagen.trim() !== "" && urlImagen !== "null") {
         contenedor.innerHTML = `<img src="${urlImagen}" style="max-width:100%; max-height:350px; border-radius:6px; border:1px solid #ddd;">`;
     } else {
@@ -1069,9 +975,54 @@ function abrirModalPago(urlImagen) {
     }
     modal.style.display = 'flex';
 }
+
 function cerrarModalPago() {
     document.getElementById('modalComprobante').style.display = 'none';
 }
+
+// Función para actualizar las categorías disponibles según la tienda elegida
+async function actualizarCategoriasOferta() {
+    const tiendaSeleccionada = document.getElementById('tienda-oferta').value;
+    const selectCat = document.getElementById('categoria-oferta');
+    if (!selectCat) return;
+
+    selectCat.innerHTML = '<option value="">Cargando categorías...</option>';
+
+    try {
+        if (!inventarioGlobalCache || inventarioGlobalCache.length === 0) {
+            const respuesta = await fetch('/api/productos?admin=true');
+            inventarioGlobalCache = await respuesta.json();
+        }
+
+        const productosTienda = inventarioGlobalCache.filter(p => {
+            const t = p.tienda ? p.tienda.toLowerCase() : 'glow';
+            return t === tiendaSeleccionada.toLowerCase();
+        });
+
+        const categoriasUnicas = [...new Set(productosTienda.map(p => p.categoria).filter(Boolean))];
+
+        selectCat.innerHTML = '';
+        if (categoriasUnicas.length === 0) {
+            selectCat.innerHTML = '<option value="">No hay categorías registradas en esta tienda</option>';
+            return;
+        }
+
+        categoriasUnicas.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat;
+            option.textContent = cat;
+            selectCat.appendChild(option);
+        });
+
+    } catch (error) {
+        console.error("Error al cargar categorías para ofertas:", error);
+        selectCat.innerHTML = '<option value="">Error al cargar categorías</option>';
+    }
+}
+
+// Escuchar el cambio en el selector de tienda
+document.getElementById('tienda-oferta')?.addEventListener('change', actualizarCategoriasOferta);
+
 </script>
 
 </body>
