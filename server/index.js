@@ -107,11 +107,17 @@ app.get('/api/productos', async (req, res) => {
 
         // Si viene desde el admin pidiendo todo el inventario unificado:
         if (req.query.admin === 'true') {
-            filtro = {}; // Sin filtro, trae TODO de la base de datos
+            filtro = {}; // Sin filtro, trae TODO de la base de datos (incluyendo agotados)
         } else {
-            // Si viene de las páginas públicas, filtra estrictamente por la tienda solicitada (por defecto 'glow')
+            // Si viene de las páginas públicas, filtra estrictamente por la tienda y stock > 0
             const tiendaSeleccionada = req.query.tienda || 'glow';
-            filtro.tienda = tiendaSeleccionada;
+            filtro = {
+                tienda: tiendaSeleccionada,
+                $or: [
+                    { cantidadStock: { $gt: 0 } },
+                    { stock: { $gt: 0 } }
+                ]
+            };
         }
 
         let productos = await Producto.find(filtro).sort({ _id: -1 });
